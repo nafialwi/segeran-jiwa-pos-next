@@ -2,6 +2,5 @@
   "name": "Segeran Jiwa POS Next",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:24-bookworm",
   "features": {},
-  "postCreateCommand": "npm ci",
-  "remoteUser": "node"
+  "postCreateCommand": "npm ci"
 }
