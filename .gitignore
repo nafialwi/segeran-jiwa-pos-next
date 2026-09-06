@@ -10,3 +10,6 @@ dist/
 # Python generated artifacts
 __pycache__/
 *.py[cod]
+
+# Prevent root-level transit packages in canonical source
+/*.zip

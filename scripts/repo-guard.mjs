@@ -18,6 +18,8 @@ export function findForbiddenTrackedPaths(paths) {
       return true;
     }
 
+    if (!lower.includes('/') && lower.endsWith('.zip')) return true;
+
     return (
       lower.includes('secret') ||
       lower.endsWith('.pem') ||
