@@ -208,7 +208,7 @@ jobs:
           REVISION="$(jq -er '.revision | strings' "$MANIFEST_JSON")"
           TARGET_BRANCH="$(jq -er '.target_branch | strings' "$MANIFEST_JSON")"
           BASE_COMMIT="$(jq -er '.base_commit | strings' "$MANIFEST_JSON")"
-          RETRY_SAFE="$(jq -er '.retry_safe | booleans' "$MANIFEST_JSON")"
+          RETRY_SAFE="$(jq -r 'if (.retry_safe | type) == "boolean" then .retry_safe else error("retry_safe must be boolean") end' "$MANIFEST_JSON")"
           SCHEMA_EXPECTED="$(jq -er '.schema_version_expected | numbers' "$MANIFEST_JSON")"
 
           [[ "$PACKAGE_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || fail "package_id is unsafe for audit-state paths"

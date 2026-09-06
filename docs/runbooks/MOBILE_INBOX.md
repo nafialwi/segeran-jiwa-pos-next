@@ -52,3 +52,13 @@ Workflow normal setelah `CS-01 LOCKED` adalah one-upload workflow dari browser A
 - Blueprint baseline: `v1.0 FINAL LOCK`.
 - Snapshot workflow authority: `docs/blueprint/15_WORKFLOW_PROFILE.md`.
 - Checkpoint/state aktual proyek harus dibaca dari checkpoint terbaru, bukan dari snapshot BP-LOCKED.
+
+## Preview and Production release guard
+
+For the current CS-01 environment:
+
+- verified `work/**` branches may trigger Cloudflare Preview;
+- Cloudflare automatic Production deployment from `main` is disabled;
+- inbox upload does not constitute Production approval;
+- Production promotion remains an explicit Owner/release gate;
+- GitHub release guard mode is `PROCESS-GUARD` while the repository remains private on the current account entitlement.
