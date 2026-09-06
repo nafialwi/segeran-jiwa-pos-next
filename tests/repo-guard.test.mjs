@@ -34,6 +34,17 @@ describe('repository guard', () => {
     ]);
   });
 
+  it('rejects generated Python cache artifacts', () => {
+    const violations = findForbiddenTrackedPaths([
+      'tests/__pycache__/test_example.cpython-312.pyc',
+      'src/app.ts',
+    ]);
+
+    expect(violations).toEqual([
+      'tests/__pycache__/test_example.cpython-312.pyc',
+    ]);
+  });
+
   it('contains every canonical quality phase in order', () => {
     expect(canonicalCommands.map(({ label }) => label)).toEqual([
       'node scripts/repo-guard.mjs',

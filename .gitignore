@@ -6,3 +6,7 @@ dist/
 *.log
 .DS_Store
 .worktrees/
+
+# Python generated artifacts
+__pycache__/
+*.py[cod]

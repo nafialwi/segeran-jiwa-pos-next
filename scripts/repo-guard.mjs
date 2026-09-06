@@ -4,8 +4,20 @@ import { pathToFileURL } from 'node:url';
 export function findForbiddenTrackedPaths(paths) {
   return paths.filter((path) => {
     const lower = path.toLowerCase();
+
     if (lower === '.env.example') return false;
+
     if (lower === '.env' || lower.startsWith('.env.')) return true;
+
+    if (
+      lower.includes('/__pycache__/') ||
+      lower.startsWith('__pycache__/') ||
+      lower.endsWith('.pyc') ||
+      lower.endsWith('.pyo')
+    ) {
+      return true;
+    }
+
     return (
       lower.includes('secret') ||
       lower.endsWith('.pem') ||
@@ -24,6 +36,7 @@ function main() {
     .filter(Boolean);
 
   const violations = findForbiddenTrackedPaths(tracked);
+
   if (violations.length > 0) {
     console.error('Forbidden tracked paths:');
     for (const path of violations) console.error(`- ${path}`);
@@ -31,6 +44,9 @@ function main() {
   }
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
   main();
 }
