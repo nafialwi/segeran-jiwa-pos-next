@@ -1,0 +1,19 @@
+{
+  "workspace": "Segeran Jiwa Next Vol. 1",
+  "product": "Segeran Jiwa POS Next",
+  "blueprint_baseline": "1.0 FINAL LOCK",
+  "checkpoint": "CS-01 LOCKED",
+  "milestone": "CS-01",
+  "plan_revision": "R2",
+  "app_source_commit": "7f8aeb435a9855ea3da2a736c3d68f8b1ea98f6e",
+  "schema_version": 0,
+  "release_guard_mode": "PROCESS-GUARD",
+  "production_automatic_deployment": false,
+  "mobile_inbox_enabled": true,
+  "canonical_verify": "PASS",
+  "positive_android_uat": "PASS",
+  "negative_checksum_uat": "PASS",
+  "whole_project_weighted_progress_percent": 20.0,
+  "closeout_package_id": "SJPOSNEXT-CS-01-CLOSEOUT-R1",
+  "next_action": "CS-02 — Core System: Database, Schema & Data Authority Foundation"
+}
