@@ -1,0 +1,52 @@
+name: canonical-ci
+
+on:
+  push:
+    branches:
+      - main
+      - 'work/**'
+
+permissions:
+  contents: read
+  statuses: write
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - id: verify
+        continue-on-error: true
+        run: npm run verify
+
+      - name: Publish canonical verification status
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERIFY_OUTCOME: ${{ steps.verify.outcome }}
+        run: |
+          if [ "$VERIFY_OUTCOME" = "success" ]; then
+            STATE=success
+            DESCRIPTION="Canonical verification passed"
+          else
+            STATE=failure
+            DESCRIPTION="Canonical verification failed"
+          fi
+          gh api \
+            --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${GITHUB_SHA}" \
+            -f state="$STATE" \
+            -f context="canonical-verify" \
+            -f description="$DESCRIPTION"
+
+      - name: Fail job when verification failed
+        if: steps.verify.outcome != 'success'
+        run: exit 1

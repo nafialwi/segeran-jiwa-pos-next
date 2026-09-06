@@ -58,3 +58,18 @@ describe('repository guard', () => {
     ]);
   });
 });
+
+describe('canonical CI contract', () => {
+  it('uses push CI for main/work branches and publishes canonical-verify', () => {
+    const workflow = readFileSync(
+      new URL('../.github/workflows/ci.yml', import.meta.url),
+      'utf8',
+    );
+
+    expect(workflow).toContain("'work/**'");
+    expect(workflow).toContain('npm run verify');
+    expect(workflow).toContain('canonical-verify');
+    expect(workflow).toContain('statuses: write');
+    expect(workflow).not.toMatch(/^\s*pull_request\s*:/m);
+  });
+});
