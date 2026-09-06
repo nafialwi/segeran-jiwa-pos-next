@@ -1,0 +1,26 @@
+name: mobile-inbox-trigger
+
+on:
+  push:
+    branches:
+      - mobile-inbox
+    paths:
+      - 'inbox/*.zip'
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch canonical intake worker
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRANSPORT_SHA: ${{ github.sha }}
+        run: |
+          gh workflow run mobile-inbox-worker.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            -f transport_sha="$TRANSPORT_SHA"

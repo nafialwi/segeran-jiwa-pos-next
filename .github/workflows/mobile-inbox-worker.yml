@@ -1,0 +1,518 @@
+name: mobile-inbox-worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      transport_sha:
+        description: Exact commit SHA from mobile-inbox dispatcher
+        required: true
+        type: string
+
+concurrency:
+  group: mobile-inbox
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  statuses: write
+
+jobs:
+  intake:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out canonical main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          path: canonical
+
+      - name: Check out mobile inbox transport
+        uses: actions/checkout@v4
+        with:
+          ref: mobile-inbox
+          fetch-depth: 0
+          path: transport
+
+      - name: Set up canonical Node runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: canonical/.nvmrc
+          cache: npm
+          cache-dependency-path: canonical/package-lock.json
+
+      - name: Run guarded canonical intake
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TRANSPORT_SHA: ${{ inputs.transport_sha }}
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+
+          PHASE="bootstrap"
+          ZIP_PATH=""
+          PACKAGE_ID=""
+          SOURCE_ZIP_SHA256=""
+          TARGET_BRANCH=""
+          BASE_COMMIT=""
+          RESULT_COMMIT=""
+          PR_NUMBER=""
+          TARGET_PREEXISTED=0
+          SOURCE_PUSHED=0
+          PR_CREATED=0
+          REASON=""
+
+          RUN_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          ROOT="${GITHUB_WORKSPACE}"
+          CANONICAL="${ROOT}/canonical"
+          TRANSPORT="${ROOT}/transport"
+          TARGET_DIR="${RUNNER_TEMP}/target"
+          PACKAGE_ZIP="${RUNNER_TEMP}/package.zip"
+          EXTRACT_DIR="${RUNNER_TEMP}/sjpos-package"
+          MANIFEST_JSON="${RUNNER_TEMP}/manifest.normalized.json"
+
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          write_failure_report() {
+            local code="$1"
+            local line="$2"
+            trap - ERR
+            set +e
+
+            if [ -z "$REASON" ]; then
+              REASON="phase ${PHASE} failed (exit ${code}, line ${line})"
+            fi
+            echo "INTAKE FAILURE: ${REASON}" >&2
+
+            if [ "$SOURCE_PUSHED" -eq 1 ] && [ -n "$TARGET_BRANCH" ] && [ -n "$RESULT_COMMIT" ]; then
+              PHASE="rollback_source_branch"
+              if [ "$TARGET_PREEXISTED" -eq 1 ]; then
+                git -C "$TARGET_DIR" push \
+                  --force-with-lease="refs/heads/${TARGET_BRANCH}:${RESULT_COMMIT}" \
+                  origin "${BASE_COMMIT}:refs/heads/${TARGET_BRANCH}" || true
+              else
+                git -C "$TARGET_DIR" push origin --delete "$TARGET_BRANCH" || true
+              fi
+            fi
+
+            PHASE="failure_report"
+            git -C "$TRANSPORT" fetch origin mobile-inbox
+            git -C "$TRANSPORT" checkout -B mobile-inbox origin/mobile-inbox
+
+            local safe_id
+            safe_id="${PACKAGE_ID:-unknown}"
+            safe_id="$(printf '%s' "$safe_id" | tr -c 'A-Za-z0-9._-' '_')"
+            local report_path="reports/${safe_id}-${GITHUB_RUN_ID}.json"
+
+            PACKAGE_ID_VALUE="${PACKAGE_ID}" \
+            SOURCE_SHA_VALUE="${SOURCE_ZIP_SHA256}" \
+            TRANSPORT_SHA_VALUE="${TRANSPORT_SHA}" \
+            ZIP_PATH_VALUE="${ZIP_PATH}" \
+            PHASE_VALUE="${PHASE}" \
+            REASON_VALUE="${REASON}" \
+            RUN_URL_VALUE="${RUN_URL}" \
+            RUN_ID_VALUE="${GITHUB_RUN_ID}" \
+            REPORT_PATH_VALUE="${report_path}" \
+            python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          payload = {
+              "status": "failure",
+              "transport_sha": os.environ["TRANSPORT_SHA_VALUE"],
+              "zip_path": os.environ["ZIP_PATH_VALUE"] or None,
+              "package_id": os.environ["PACKAGE_ID_VALUE"] or None,
+              "source_zip_sha256": os.environ["SOURCE_SHA_VALUE"] or None,
+              "failing_phase": os.environ["PHASE_VALUE"],
+              "reason": os.environ["REASON_VALUE"][:1200],
+              "run_url": os.environ["RUN_URL_VALUE"],
+              "run_id": os.environ["RUN_ID_VALUE"],
+              "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+          }
+          path = Path(os.environ["REPORT_PATH_VALUE"])
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+
+            git -C "$TRANSPORT" add reports
+            if ! git -C "$TRANSPORT" diff --cached --quiet; then
+              git -C "$TRANSPORT" commit -m "chore(mobile-inbox): record failed intake ${GITHUB_RUN_ID}" || true
+              git -C "$TRANSPORT" push origin mobile-inbox || true
+            fi
+
+            exit "$code"
+          }
+
+          trap 'write_failure_report $? $LINENO' ERR
+
+          fail() {
+            REASON="$1"
+            echo "ERROR: $REASON" >&2
+            return 1
+          }
+
+          PHASE="transport_validation"
+          [[ "$TRANSPORT_SHA" =~ ^[0-9a-f]{40}$ ]] || fail "transport_sha must be 40 lower-case hexadecimal characters"
+
+          git -C "$TRANSPORT" fetch origin mobile-inbox
+          git -C "$TRANSPORT" cat-file -e "${TRANSPORT_SHA}^{commit}" || fail "transport_sha does not exist"
+          git -C "$TRANSPORT" merge-base --is-ancestor "$TRANSPORT_SHA" origin/mobile-inbox || fail "transport_sha is not on mobile-inbox history"
+
+          PARENT_LINE="$(git -C "$TRANSPORT" rev-list --parents -n 1 "$TRANSPORT_SHA")"
+          [ "$(wc -w <<<"$PARENT_LINE")" -eq 2 ] || fail "transport commit must have exactly one parent"
+
+          git -C "$TRANSPORT" diff-tree \
+            --no-commit-id \
+            --name-status \
+            -r "${TRANSPORT_SHA}^" "$TRANSPORT_SHA" \
+            > "${RUNNER_TEMP}/transport.name-status"
+
+          ZIP_PATH="$(
+            python3 "$CANONICAL/tools/mobile_inbox/transport_guard.py" \
+              "${RUNNER_TEMP}/transport.name-status"
+          )"
+
+          PHASE="dispatcher_integrity"
+          git -C "$TRANSPORT" show \
+            "${TRANSPORT_SHA}:.github/workflows/mobile-inbox-trigger.yml" \
+            > "${RUNNER_TEMP}/deployed-trigger.yml"
+          cmp -s \
+            "$CANONICAL/tools/mobile_inbox/mobile-inbox-trigger.yml" \
+            "${RUNNER_TEMP}/deployed-trigger.yml" \
+            || fail "mobile-inbox dispatcher differs from canonical template"
+
+          PHASE="package_export"
+          git -C "$TRANSPORT" show "${TRANSPORT_SHA}:${ZIP_PATH}" > "$PACKAGE_ZIP"
+          SOURCE_ZIP_SHA256="$(sha256sum "$PACKAGE_ZIP" | awk '{print $1}')"
+
+          PHASE="package_validation"
+          cd "$CANONICAL"
+          if ! PYTHONPATH=. python3 tools/mobile_inbox/intake.py validate \
+            "$PACKAGE_ZIP" \
+            --extract-dir "$EXTRACT_DIR" \
+            --schema-version-current 0 \
+            > "$MANIFEST_JSON" \
+            2> "${RUNNER_TEMP}/validator.err"
+          then
+            REASON="$(tr '\n' ' ' < "${RUNNER_TEMP}/validator.err" | tail -c 1200)"
+            false
+          fi
+
+          PACKAGE_ID="$(jq -er '.package_id | strings' "$MANIFEST_JSON")"
+          MILESTONE="$(jq -er '.milestone | strings' "$MANIFEST_JSON")"
+          TITLE="$(jq -er '.title | strings' "$MANIFEST_JSON")"
+          REVISION="$(jq -er '.revision | strings' "$MANIFEST_JSON")"
+          TARGET_BRANCH="$(jq -er '.target_branch | strings' "$MANIFEST_JSON")"
+          BASE_COMMIT="$(jq -er '.base_commit | strings' "$MANIFEST_JSON")"
+          RETRY_SAFE="$(jq -er '.retry_safe | booleans' "$MANIFEST_JSON")"
+          SCHEMA_EXPECTED="$(jq -er '.schema_version_expected | numbers' "$MANIFEST_JSON")"
+
+          [[ "$PACKAGE_ID" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || fail "package_id is unsafe for audit-state paths"
+          [[ "$MILESTONE" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || fail "milestone is unsafe"
+          [[ "$REVISION" =~ ^R[1-9][0-9]*$ ]] || fail "revision is invalid"
+
+          PHASE="duplicate_receipt_check"
+          RECEIPT_TMP="${RUNNER_TEMP}/existing-receipt.json"
+          if git -C "$TRANSPORT" show "origin/mobile-inbox:processed/${PACKAGE_ID}.json" > "$RECEIPT_TMP" 2>/dev/null; then
+            if [ "$RETRY_SAFE" != "true" ]; then
+              fail "duplicate successful package_id"
+            fi
+
+            RECORDED_SHA="$(jq -er '.source_zip_sha256 | strings' "$RECEIPT_TMP")"
+            if [ "$RECORDED_SHA" != "$SOURCE_ZIP_SHA256" ]; then
+              fail "successful package_id cannot represent different ZIP content"
+            fi
+
+            PHASE="idempotent_noop_state"
+            git -C "$TRANSPORT" fetch origin mobile-inbox
+            git -C "$TRANSPORT" checkout -B mobile-inbox origin/mobile-inbox
+
+            REPORT_PATH="reports/${PACKAGE_ID}-${GITHUB_RUN_ID}.json"
+            PACKAGE_ID_VALUE="$PACKAGE_ID" \
+            SOURCE_SHA_VALUE="$SOURCE_ZIP_SHA256" \
+            TRANSPORT_SHA_VALUE="$TRANSPORT_SHA" \
+            RUN_URL_VALUE="$RUN_URL" \
+            RUN_ID_VALUE="$GITHUB_RUN_ID" \
+            REPORT_PATH_VALUE="$REPORT_PATH" \
+            python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          payload = {
+              "status": "already_processed_same_content",
+              "package_id": os.environ["PACKAGE_ID_VALUE"],
+              "source_zip_sha256": os.environ["SOURCE_SHA_VALUE"],
+              "transport_sha": os.environ["TRANSPORT_SHA_VALUE"],
+              "run_url": os.environ["RUN_URL_VALUE"],
+              "run_id": os.environ["RUN_ID_VALUE"],
+              "timestamp": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+          }
+          path = Path(os.environ["REPORT_PATH_VALUE"])
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+
+            CURRENT_BLOB="$(git -C "$TRANSPORT" rev-parse "origin/mobile-inbox:${ZIP_PATH}" 2>/dev/null || true)"
+            TRIGGER_BLOB="$(git -C "$TRANSPORT" rev-parse "${TRANSPORT_SHA}:${ZIP_PATH}")"
+            if [ -n "$CURRENT_BLOB" ] && [ "$CURRENT_BLOB" = "$TRIGGER_BLOB" ]; then
+              git -C "$TRANSPORT" rm -f "$ZIP_PATH"
+            fi
+
+            git -C "$TRANSPORT" add reports
+            git -C "$TRANSPORT" commit -m "chore(mobile-inbox): record idempotent retry ${PACKAGE_ID}"
+            git -C "$TRANSPORT" push origin mobile-inbox
+
+            trap - ERR
+            echo "MOBILE_INBOX_RESULT=already_processed_same_content"
+            exit 0
+          fi
+
+          PHASE="target_resolution"
+          git -C "$CANONICAL" fetch origin '+refs/heads/*:refs/remotes/origin/*'
+
+          if git -C "$CANONICAL" show-ref --verify --quiet "refs/remotes/origin/${TARGET_BRANCH}"; then
+            TARGET_PREEXISTED=1
+            REMOTE_HEAD="$(git -C "$CANONICAL" rev-parse "origin/${TARGET_BRANCH}")"
+            [ "$REMOTE_HEAD" = "$BASE_COMMIT" ] || fail "target branch HEAD does not equal base_commit"
+            git -C "$CANONICAL" worktree add --detach "$TARGET_DIR" "origin/${TARGET_BRANCH}"
+            git -C "$TARGET_DIR" switch -C "$TARGET_BRANCH"
+          else
+            git -C "$CANONICAL" cat-file -e "${BASE_COMMIT}^{commit}" || fail "base_commit does not exist"
+            git -C "$CANONICAL" merge-base --is-ancestor "$BASE_COMMIT" origin/main || fail "base_commit is not reachable from main"
+            git -C "$CANONICAL" worktree add -b "$TARGET_BRANCH" "$TARGET_DIR" "$BASE_COMMIT"
+          fi
+
+          PHASE="apply_validated_patch"
+          MANIFEST_PATH="$MANIFEST_JSON" \
+          EXTRACT_PATH="$EXTRACT_DIR" \
+          TARGET_PATH="$TARGET_DIR" \
+          PYTHONPATH="$CANONICAL" \
+          python3 - <<'PY'
+          import json
+          import os
+          import shutil
+          from pathlib import Path
+
+          from tools.mobile_inbox.contract import is_forbidden_path, is_protected_path
+
+          manifest = json.loads(Path(os.environ["MANIFEST_PATH"]).read_text(encoding="utf-8"))
+          extract = Path(os.environ["EXTRACT_PATH"]) / "payload"
+          target = Path(os.environ["TARGET_PATH"])
+
+          for entry in manifest["files_manifest"]:
+              rel = entry["path"]
+              if is_forbidden_path(rel) or is_protected_path(rel):
+                  raise SystemExit(f"forbidden/protected apply path: {rel}")
+              src = extract / rel
+              dst = target / rel
+              dst.parent.mkdir(parents=True, exist_ok=True)
+              shutil.copyfile(src, dst)
+
+          for rel in manifest["delete_paths"]:
+              if is_forbidden_path(rel) or is_protected_path(rel):
+                  raise SystemExit(f"forbidden/protected delete path: {rel}")
+              dst = target / rel
+              if dst.is_dir():
+                  shutil.rmtree(dst)
+              elif dst.exists():
+                  dst.unlink()
+          PY
+
+          git -C "$TARGET_DIR" add -A
+          if git -C "$TARGET_DIR" diff --cached --quiet; then
+            fail "validated package produced no source change"
+          fi
+
+          MANIFEST_PATH="$MANIFEST_JSON" \
+          CHANGED_PATHS="$(git -C "$TARGET_DIR" diff --cached --name-only)" \
+          PYTHONPATH="$CANONICAL" \
+          python3 - <<'PY'
+          import json
+          import os
+          from pathlib import PurePosixPath
+
+          from tools.mobile_inbox.contract import is_forbidden_path, is_protected_path
+
+          manifest = json.loads(open(os.environ["MANIFEST_PATH"], encoding="utf-8").read())
+          allowed = {entry["path"] for entry in manifest["files_manifest"]} | set(manifest["delete_paths"])
+          changed = {line for line in os.environ["CHANGED_PATHS"].splitlines() if line}
+
+          undeclared = changed - allowed
+          if undeclared:
+              raise SystemExit(f"undeclared changed paths: {sorted(undeclared)}")
+
+          for path in changed:
+              if is_forbidden_path(path) or is_protected_path(path):
+                  raise SystemExit(f"forbidden/protected diff path: {path}")
+          PY
+
+          PHASE="canonical_verify"
+          cd "$TARGET_DIR"
+          npm ci
+          npm run verify
+
+          PHASE="commit_result"
+          MILESTONE_LOWER="$(printf '%s' "$MILESTONE" | tr '[:upper:]' '[:lower:]')"
+          git commit \
+            -m "patch(${MILESTONE_LOWER}): ${PACKAGE_ID} ${TITLE}" \
+            -m "Package-ID: ${PACKAGE_ID}
+          Blueprint: 1.0
+          Base-Commit: ${BASE_COMMIT}
+          Source-ZIP-SHA256: ${SOURCE_ZIP_SHA256}
+          Schema-Expected: ${SCHEMA_EXPECTED}
+          Actions-Run-ID: ${GITHUB_RUN_ID}"
+          RESULT_COMMIT="$(git rev-parse HEAD)"
+
+          PHASE="push_verified_result"
+          git push origin "HEAD:refs/heads/${TARGET_BRANCH}"
+          SOURCE_PUSHED=1
+
+          PHASE="publish_canonical_status"
+          gh api \
+            --method POST \
+            "repos/${GITHUB_REPOSITORY}/statuses/${RESULT_COMMIT}" \
+            -f state="success" \
+            -f context="canonical-verify" \
+            -f description="Mobile inbox canonical verification passed"
+
+          PHASE="create_or_update_pr"
+          PR_NUMBER="$(
+            gh pr list \
+              --repo "$GITHUB_REPOSITORY" \
+              --head "$TARGET_BRANCH" \
+              --state open \
+              --json number \
+              --jq '.[0].number // empty'
+          )"
+
+          PR_BODY="${RUNNER_TEMP}/pr-body.md"
+          cat > "$PR_BODY" <<EOF
+          ## Milestone
+          ${MILESTONE} — ${TITLE} ${REVISION}
+
+          ## Blueprint baseline
+          1.0
+
+          ## Package ID / source SHA256
+          ${PACKAGE_ID}
+          ${SOURCE_ZIP_SHA256}
+
+          ## What changed
+          Guarded mobile-inbox package applied to \`${TARGET_BRANCH}\`.
+
+          ## Verification evidence
+          \`npm ci\` + \`npm run verify\` PASS in Actions run ${GITHUB_RUN_ID}.
+
+          ## \`canonical-verify\` status
+          success on ${RESULT_COMMIT}
+
+          ## Manual Work Budget
+          LOW
+
+          ## Real-device QA
+          Pending Preview / milestone QA.
+
+          ## Preview
+          Pending Cloudflare Preview.
+
+          ## Rollback / recovery note
+          Base commit: ${BASE_COMMIT}
+          EOF
+
+          if [ -z "$PR_NUMBER" ]; then
+            PR_URL="$(
+              gh pr create \
+                --repo "$GITHUB_REPOSITORY" \
+                --head "$TARGET_BRANCH" \
+                --base main \
+                --title "${MILESTONE} — ${TITLE} ${REVISION}" \
+                --body-file "$PR_BODY"
+            )"
+            PR_NUMBER="${PR_URL##*/}"
+            PR_CREATED=1
+          else
+            gh pr edit "$PR_NUMBER" \
+              --repo "$GITHUB_REPOSITORY" \
+              --body-file "$PR_BODY"
+          fi
+
+          PHASE="success_state"
+          git -C "$TRANSPORT" fetch origin mobile-inbox
+          git -C "$TRANSPORT" checkout -B mobile-inbox origin/mobile-inbox
+
+          RECEIPT_PATH="processed/${PACKAGE_ID}.json"
+          REPORT_PATH="reports/${PACKAGE_ID}-${GITHUB_RUN_ID}.json"
+
+          PACKAGE_ID_VALUE="$PACKAGE_ID" \
+          SOURCE_SHA_VALUE="$SOURCE_ZIP_SHA256" \
+          BASE_COMMIT_VALUE="$BASE_COMMIT" \
+          RESULT_COMMIT_VALUE="$RESULT_COMMIT" \
+          TARGET_BRANCH_VALUE="$TARGET_BRANCH" \
+          PR_NUMBER_VALUE="$PR_NUMBER" \
+          RUN_ID_VALUE="$GITHUB_RUN_ID" \
+          RECEIPT_PATH_VALUE="$RECEIPT_PATH" \
+          REPORT_PATH_VALUE="$REPORT_PATH" \
+          TRANSPORT_SHA_VALUE="$TRANSPORT_SHA" \
+          RUN_URL_VALUE="$RUN_URL" \
+          python3 - <<'PY'
+          import json
+          import os
+          from datetime import datetime, timezone
+          from pathlib import Path
+
+          now = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+          receipt = {
+              "package_id": os.environ["PACKAGE_ID_VALUE"],
+              "source_zip_sha256": os.environ["SOURCE_SHA_VALUE"],
+              "base_commit": os.environ["BASE_COMMIT_VALUE"],
+              "result_commit": os.environ["RESULT_COMMIT_VALUE"],
+              "target_branch": os.environ["TARGET_BRANCH_VALUE"],
+              "pr_number": int(os.environ["PR_NUMBER_VALUE"]),
+              "status": "success",
+              "processed_at": now,
+              "run_id": os.environ["RUN_ID_VALUE"],
+          }
+          receipt_path = Path(os.environ["RECEIPT_PATH_VALUE"])
+          receipt_path.parent.mkdir(parents=True, exist_ok=True)
+          receipt_path.write_text(json.dumps(receipt, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+          report = {
+              "status": "success",
+              "package_id": os.environ["PACKAGE_ID_VALUE"],
+              "source_zip_sha256": os.environ["SOURCE_SHA_VALUE"],
+              "transport_sha": os.environ["TRANSPORT_SHA_VALUE"],
+              "result_commit": os.environ["RESULT_COMMIT_VALUE"],
+              "target_branch": os.environ["TARGET_BRANCH_VALUE"],
+              "pr_number": int(os.environ["PR_NUMBER_VALUE"]),
+              "run_url": os.environ["RUN_URL_VALUE"],
+              "run_id": os.environ["RUN_ID_VALUE"],
+              "timestamp": now,
+          }
+          report_path = Path(os.environ["REPORT_PATH_VALUE"])
+          report_path.parent.mkdir(parents=True, exist_ok=True)
+          report_path.write_text(json.dumps(report, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+          PY
+
+          CURRENT_BLOB="$(git -C "$TRANSPORT" rev-parse "origin/mobile-inbox:${ZIP_PATH}" 2>/dev/null || true)"
+          TRIGGER_BLOB="$(git -C "$TRANSPORT" rev-parse "${TRANSPORT_SHA}:${ZIP_PATH}")"
+          if [ -n "$CURRENT_BLOB" ] && [ "$CURRENT_BLOB" = "$TRIGGER_BLOB" ]; then
+            git -C "$TRANSPORT" rm -f "$ZIP_PATH"
+          fi
+
+          git -C "$TRANSPORT" add processed reports
+          git -C "$TRANSPORT" commit -m "chore(mobile-inbox): record successful intake ${PACKAGE_ID}"
+          git -C "$TRANSPORT" push origin mobile-inbox
+
+          trap - ERR
+          echo "MOBILE_INBOX_RESULT=success"
+          echo "PACKAGE_ID=${PACKAGE_ID}"
+          echo "RESULT_COMMIT=${RESULT_COMMIT}"
+          echo "TARGET_BRANCH=${TARGET_BRANCH}"
+          echo "PR_NUMBER=${PR_NUMBER}"
