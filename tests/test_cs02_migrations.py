@@ -19,6 +19,7 @@ EXPECTED_MIGRATIONS = [
     "20260906173248_cs02_restrict_auto_rls_helper.sql",
     "20260906173339_cs02_performance_hardening.sql",
     "20260907013121_cs02_correct_schema_source_anchor.sql",
+    "20260907193000_cs02_revoke_non_dml_table_privileges.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -91,7 +92,7 @@ class CS02MigrationSourceTests(unittest.TestCase):
         legacy = "c7bce7498b27ea6bd5f8c1981597f068ca4f6f53"
         canonical = "c7bce7498b27eab6d5f8c1981597f068ca4f6f53"
         first = (MIGRATIONS / EXPECTED_MIGRATIONS[0]).read_text(encoding="utf-8")
-        correction = (MIGRATIONS / EXPECTED_MIGRATIONS[-1]).read_text(encoding="utf-8")
+        correction = (MIGRATIONS / "20260907013121_cs02_correct_schema_source_anchor.sql").read_text(encoding="utf-8")
         self.assertIn(legacy, first)
         self.assertIn(legacy, correction)
         self.assertIn(canonical, correction)
