@@ -1,0 +1,20 @@
+grant select on public.businesses to authenticated;
+grant select on public.profiles to authenticated;
+grant select on public.access_roles to authenticated;
+grant select on public.business_memberships to authenticated;
+grant select on public.locations to authenticated;
+grant select on public.stock_items to authenticated;
+grant select on public.money_accounts to authenticated;
+grant select on public.operation_receipts to authenticated;
+grant select on public.audit_events to authenticated;
+grant select on public.inventory_movements to authenticated;
+grant select on public.inventory_movement_lines to authenticated;
+grant select on public.money_movements to authenticated;
+grant select on public.inventory_balances to authenticated;
+grant select on public.money_balances to authenticated;
+
+revoke insert, update, delete on public.operation_receipts from anon, authenticated;
+revoke insert, update, delete on public.audit_events from anon, authenticated;
+revoke insert, update, delete on public.inventory_movements from anon, authenticated;
+revoke insert, update, delete on public.inventory_movement_lines from anon, authenticated;
+revoke insert, update, delete on public.money_movements from anon, authenticated;
