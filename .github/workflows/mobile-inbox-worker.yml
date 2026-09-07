@@ -191,10 +191,30 @@ jobs:
 
           PHASE="package_validation"
           cd "$CANONICAL"
+          SCHEMA_VERSION_CURRENT="$(
+          python3 - "$CANONICAL/docs/checkpoints/RELEASE_MANIFEST.json" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          manifest_path = Path(sys.argv[1])
+          try:
+              manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+          except (OSError, json.JSONDecodeError) as exc:
+              raise SystemExit(f"schema authority unreadable: {exc}")
+
+          value = manifest.get("schema_version")
+          if type(value) is not int or value < 0:
+              raise SystemExit(
+                  "schema authority invalid: schema_version must be a non-negative integer"
+              )
+          print(value)
+          PY
+          )"
           if ! PYTHONPATH=. python3 tools/mobile_inbox/intake.py validate \
             "$PACKAGE_ZIP" \
             --extract-dir "$EXTRACT_DIR" \
-            --schema-version-current 0 \
+            --schema-version-current "$SCHEMA_VERSION_CURRENT" \
             > "$MANIFEST_JSON" \
             2> "${RUNNER_TEMP}/validator.err"
           then

@@ -35,7 +35,7 @@
       "pattern": "^R[1-9][0-9]*$"
     },
     "package_type": {
-      "const": "patch"
+      "enum": ["patch", "schema_patch"]
     },
     "blueprint_baseline": {
       "const": "1.0"
