@@ -327,7 +327,7 @@ jobs:
 
           for entry in manifest["files_manifest"]:
               rel = entry["path"]
-              if is_forbidden_path(rel) or is_protected_path(rel):
+              if is_forbidden_path(rel) or is_protected_path(rel, manifest["package_type"], for_delete=False):
                   raise SystemExit(f"forbidden/protected apply path: {rel}")
               src = extract / rel
               dst = target / rel
@@ -335,7 +335,7 @@ jobs:
               shutil.copyfile(src, dst)
 
           for rel in manifest["delete_paths"]:
-              if is_forbidden_path(rel) or is_protected_path(rel):
+              if is_forbidden_path(rel) or is_protected_path(rel, manifest["package_type"], for_delete=True):
                   raise SystemExit(f"forbidden/protected delete path: {rel}")
               dst = target / rel
               if dst.is_dir():
@@ -368,7 +368,7 @@ jobs:
               raise SystemExit(f"undeclared changed paths: {sorted(undeclared)}")
 
           for path in changed:
-              if is_forbidden_path(path) or is_protected_path(path):
+              if is_forbidden_path(path) or is_protected_path(path, manifest["package_type"], for_delete=path in set(manifest["delete_paths"])):
                   raise SystemExit(f"forbidden/protected diff path: {path}")
           PY
 
