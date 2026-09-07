@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path, PurePosixPath
 
 BLUEPRINT_BASELINE = "1.0"
-ALLOWED_PACKAGE_TYPES = {"patch"}
+ALLOWED_PACKAGE_TYPES = {"patch", "schema_patch"}
 TARGET_BRANCH_RE = re.compile(r"^work/[a-z0-9][a-z0-9._/-]*$")
 SHA40_RE = re.compile(r"^[0-9a-f]{40}$")
 SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -52,7 +52,14 @@ def is_forbidden_path(path: str) -> bool:
     )
 
 
-def is_protected_path(path: str) -> bool:
+def is_protected_path(
+    path: str,
+    package_type: str = "patch",
+    *,
+    for_delete: bool = False,
+) -> bool:
+    if path.startswith("supabase/migrations/"):
+        return for_delete or package_type != "schema_patch"
     return any(path.startswith(prefix) for prefix in PROTECTED_PREFIXES)
 
 
@@ -119,7 +126,7 @@ def validate_manifest(manifest: dict, current_schema_version: int) -> dict:
             raise ValueError("duplicate files_manifest path")
         if is_forbidden_path(path):
             raise ValueError("forbidden path")
-        if is_protected_path(path):
+        if is_protected_path(path, manifest["package_type"]):
             raise ValueError("protected path")
         sha256 = entry["sha256"]
         if not isinstance(sha256, str) or not SHA256_RE.fullmatch(sha256):
@@ -135,7 +142,11 @@ def validate_manifest(manifest: dict, current_schema_version: int) -> dict:
             raise ValueError("duplicate delete_paths path")
         if is_forbidden_path(path):
             raise ValueError("forbidden delete path")
-        if is_protected_path(path):
+        if is_protected_path(
+            path,
+            manifest["package_type"],
+            for_delete=True,
+        ):
             raise ValueError("protected delete path")
         seen_deletes.add(path)
         normalized_deletes.append(path)

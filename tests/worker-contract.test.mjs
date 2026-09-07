@@ -24,7 +24,7 @@ describe('mobile inbox canonical worker', () => {
       'mobile-inbox-trigger.yml',
       'package.zip',
       'intake.py validate',
-      '--schema-version-current 0',
+      '--schema-version-current "$SCHEMA_VERSION_CURRENT"',
       'retry_safe',
       'base_commit',
       'npm ci',
