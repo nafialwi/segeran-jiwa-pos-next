@@ -21,6 +21,8 @@ EXPECTED_MIGRATIONS = [
     "20260907013121_cs02_correct_schema_source_anchor.sql",
     "20260907193000_cs02_revoke_non_dml_table_privileges.sql",
     "20260908013000_cs03_identity_session_permission.sql",
+    "20260908102825_cs03_revoke_private_helper_execute.sql",
+    "20260908190000_cs03_bootstrap_uuid_correction.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
