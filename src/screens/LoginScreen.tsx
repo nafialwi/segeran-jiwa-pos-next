@@ -1,6 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
+import { toLoginErrorMessage } from '../auth/login-error';
 import {
   getDeviceKind,
   getRememberedUsernames,
@@ -34,12 +35,7 @@ export function LoginScreen() {
     try {
       await login(username, password, deviceKind);
     } catch (error) {
-      const code = error instanceof Error ? error.message : '';
-      setMessage(
-        code === 'SJ_LOGIN_INVALID'
-          ? 'Username atau password salah.'
-          : code || 'Tidak dapat masuk. Coba lagi.',
-      );
+      setMessage(toLoginErrorMessage(error));
     } finally {
       setPassword('');
       setSubmitting(false);
