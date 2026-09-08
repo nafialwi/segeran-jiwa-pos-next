@@ -20,6 +20,7 @@ EXPECTED_MIGRATIONS = [
     "20260906173339_cs02_performance_hardening.sql",
     "20260907013121_cs02_correct_schema_source_anchor.sql",
     "20260907193000_cs02_revoke_non_dml_table_privileges.sql",
+    "20260908013000_cs03_identity_session_permission.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -28,6 +29,8 @@ EXPECTED_SQL_TESTS = [
     "004_inventory.sql",
     "005_money.sql",
     "006_immutability.sql",
+    "007_cs03_identity_permission.sql",
+    "008_cs03_session_authority.sql",
 ]
 
 
