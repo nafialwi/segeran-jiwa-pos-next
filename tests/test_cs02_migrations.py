@@ -23,6 +23,8 @@ EXPECTED_MIGRATIONS = [
     "20260908013000_cs03_identity_session_permission.sql",
     "20260908102825_cs03_revoke_private_helper_execute.sql",
     "20260908190000_cs03_bootstrap_uuid_correction.sql",
+    "20260910170000_cs04_sales_foundation.sql",
+    "20260910190000_cs04_sales_rpc_foundation.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
