@@ -43,6 +43,7 @@ PASS
 ## Audit Scope
 
 Checked:
+
 - Source code implementation
 - Database/schema reference
 - Business rules
