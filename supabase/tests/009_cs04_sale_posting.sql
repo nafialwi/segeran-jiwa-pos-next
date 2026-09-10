@@ -174,6 +174,16 @@ BEGIN
       RAISE EXCEPTION 'CS04_MONEY_TRACE_FAILED';
   END IF;
 
+  IF NOT EXISTS(
+      SELECT 1
+      FROM public.money_movements
+      WHERE source_ref='INV-CS04-001'
+      AND amount=10000
+  )
+  THEN
+      RAISE EXCEPTION 'CS04_MONEY_AMOUNT_FAILED';
+  END IF;
+
 
   SELECT metadata
   INTO v_audit
@@ -218,6 +228,10 @@ BEGIN
 
   IF COALESCE(v_result->>'already_posted','false') <> 'true' THEN
       RAISE EXCEPTION 'CS04_IDEMPOTENCY_REPLAY_FAILED';
+  END IF;
+
+  IF v_result->>'sale_id' <> v_sale::text THEN
+      RAISE EXCEPTION 'CS04_REPLAY_SALE_ID_FAILED';
   END IF;
 
 
