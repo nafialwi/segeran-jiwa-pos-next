@@ -218,8 +218,6 @@ begin
                         'SALE_PAYMENT'
                     );
 
-            end if;
-
         end;
 
     end if;
