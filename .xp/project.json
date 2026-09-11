@@ -1,0 +1,18 @@
+{
+  "database_adapter": "postgresql",
+  "deployment_adapter": null,
+  "metadata": {
+    "blueprint_baseline": "1.0 FINAL LOCK",
+    "current_canonical_milestone": "CS-04",
+    "deployment_status": "UNVERIFIED_DISABLED"
+  },
+  "name": "Segeran Jiwa POS Next",
+  "profile_version": 1,
+  "project_id": "segeran-jiwa-pos-next",
+  "runtimes": [
+    "node",
+    "python"
+  ],
+  "source_adapter": "git",
+  "verify_adapter": "npm-script"
+}

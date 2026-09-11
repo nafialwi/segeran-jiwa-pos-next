@@ -1,0 +1,14 @@
+{
+  "database_commands": [
+    "psql"
+  ],
+  "min_xp_version": "2.0.0-rc1",
+  "primary_platform": "Android + Termux",
+  "required_commands": [
+    "git",
+    "python",
+    "node",
+    "npm"
+  ],
+  "supabase_cli_required": false
+}
