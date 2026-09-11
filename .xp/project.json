@@ -9,10 +9,7 @@
   "name": "Segeran Jiwa POS Next",
   "profile_version": 1,
   "project_id": "segeran-jiwa-pos-next",
-  "runtimes": [
-    "node",
-    "python"
-  ],
+  "runtimes": ["node", "python"],
   "source_adapter": "git",
   "verify_adapter": "npm-script"
 }

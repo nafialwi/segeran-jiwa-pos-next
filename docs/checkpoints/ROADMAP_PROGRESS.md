@@ -1,4 +1,4 @@
-# ROADMAP PROGRESS v1.0
+# ROADMAP PROGRESS v1.1
 
 ## Purpose
 
@@ -26,18 +26,21 @@
 - Weight: `12%`
 - Completion: `0%`
 - Earned: `0.0%`
+- Note: TIDAK CLEAR — kode dan test ada, laporan checkpoint dan artefak lock belum dibuat (lihat CS-02_CS-03_CLOSURE_AUDIT.md).
 
-### Identity, Device Control, Permissions, Settings & Design System
+### CS-03 — Identity, Device Control, Permissions, Settings & Design System
 
 - Weight: `10%`
 - Completion: `0%`
 - Earned: `0.0%`
+- Note: TIDAK CLEAR — laporan masih LOCK CANDIDATE, belum ada stempel lock final (lihat CS-02_CS-03_CLOSURE_AUDIT.md).
 
-### Sales, Checkout, Payment Engine & Manual QRIS
+### CS-04 — Sales, Checkout, Payment Engine & Manual QRIS
 
 - Weight: `12%`
-- Completion: `0%`
-- Earned: `0.0%`
+- Completion: `100%`
+- Earned: `12.0%`
+- Note: Locked via Expert Workstation XP on 2026-09-11 (Opsi A owner).
 
 ### Shift, Cash, Handover & Reconciliation
 
@@ -72,7 +75,7 @@
 ## Current total
 
 - Total roadmap weight: `100%`
-- Whole-project earned progress: `20.0%`
+- Whole-project earned progress: `32.0%`
 
 ## Reporting rules
 
@@ -82,3 +85,7 @@
 4. Resolved historical failures are evidence, not current blockers.
 5. Mockups alone do not earn implementation progress.
 6. Final `100%` requires cutover-hardening acceptance.
+
+## Reconciliation history
+
+- 2026-09-11: CS-04 locked via XP; CS-02/CS-03 diaudit TIDAK CLEAR (Opsi A owner). Progress 20.0% menjadi 32.0%.

@@ -1,8 +1,5 @@
 {
-  "allowed_branch_prefixes": [
-    "work/",
-    "xp/recovery/"
-  ],
+  "allowed_branch_prefixes": ["work/", "xp/recovery/"],
   "database": {
     "adapter": "postgresql",
     "normal_migration_single_transaction": true,
@@ -12,10 +9,7 @@
     "production": "DISABLED",
     "reason": "mechanism not externally verified"
   },
-  "protected_branches": [
-    "main",
-    "master"
-  ],
+  "protected_branches": ["main", "master"],
   "remote_safepoint": {
     "enabled": true,
     "remote": "origin"
@@ -27,11 +21,7 @@
     }
   ],
   "warnings": {
-    "detect": [
-      "INEFFECTIVE_DYNAMIC_IMPORT"
-    ],
-    "known": [
-      "INEFFECTIVE_DYNAMIC_IMPORT"
-    ]
+    "detect": ["INEFFECTIVE_DYNAMIC_IMPORT"],
+    "known": ["INEFFECTIVE_DYNAMIC_IMPORT"]
   }
 }
