@@ -25,6 +25,7 @@ EXPECTED_MIGRATIONS = [
     "20260908190000_cs03_bootstrap_uuid_correction.sql",
     "20260910170000_cs04_sales_foundation.sql",
     "20260910190000_cs04_sales_rpc_foundation.sql",
+    "20260910200000_cs04_sale_posting_engine.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -35,6 +36,7 @@ EXPECTED_SQL_TESTS = [
     "006_immutability.sql",
     "007_cs03_identity_permission.sql",
     "008_cs03_session_authority.sql",
+    "009_cs04_sale_posting.sql",
 ]
 
 
