@@ -26,6 +26,7 @@ EXPECTED_MIGRATIONS = [
     "20260910170000_cs04_sales_foundation.sql",
     "20260910190000_cs04_sales_rpc_foundation.sql",
     "20260910200000_cs04_sale_posting_engine.sql",
+    "20260912100000_cs05_shift_foundation.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -37,6 +38,7 @@ EXPECTED_SQL_TESTS = [
     "007_cs03_identity_permission.sql",
     "008_cs03_session_authority.sql",
     "009_cs04_sale_posting.sql",
+    "010_cs05_shift.sql",
 ]
 
 
