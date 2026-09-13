@@ -24,20 +24,23 @@
 ### CS-02 — Database, Schema & Data Authority Foundation
 
 - Weight: `12%`
-- Completion: `0%`
-- Earned: `0.0%`
+- Completion: `100%`
+- Earned: `12.0%`
+- Note: Locked via retroactive closure on 2026-09-13 (XP+ 2.1.0, closure audit gap closed).
 
 ### Identity, Device Control, Permissions, Settings & Design System
 
 - Weight: `10%`
-- Completion: `0%`
-- Earned: `0.0%`
+- Completion: `100%`
+- Earned: `10.0%`
+- Note: Locked via retroactive closure on 2026-09-13 (XP+ 2.1.0, closure audit gap closed).
 
 ### Sales, Checkout, Payment Engine & Manual QRIS
 
 - Weight: `12%`
-- Completion: `0%`
-- Earned: `0.0%`
+- Completion: `100%`
+- Earned: `12.0%`
+- Note: Locked via Expert Workstation XP on 2026-09-11 (Opsi A owner).
 
 ### Shift, Cash, Handover & Reconciliation
 
@@ -72,7 +75,7 @@
 ## Current total
 
 - Total roadmap weight: `100%`
-- Whole-project earned progress: `20.0%`
+- Whole-project earned progress: `54.0%`
 
 ## Reporting rules
 
@@ -82,3 +85,8 @@
 4. Resolved historical failures are evidence, not current blockers.
 5. Mockups alone do not earn implementation progress.
 6. Final `100%` requires cutover-hardening acceptance.
+
+## Reconciliation history
+
+- 2026-09-11: CS-04 locked via XP; CS-02/CS-03 diaudit TIDAK CLEAR (Opsi A owner). Progress 20.0% menjadi 32.0%.
+- 2026-09-13: CS-02 & CS-03 locked via retroactive closure (XP+ 2.1.0, governance gap closed). Progress 32.0% menjadi 54.0%.
