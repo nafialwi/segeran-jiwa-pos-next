@@ -1,4 +1,4 @@
-# ROADMAP PROGRESS v1.1
+# ROADMAP PROGRESS v1.0
 
 ## Purpose
 
@@ -24,18 +24,18 @@
 ### CS-02 — Database, Schema & Data Authority Foundation
 
 - Weight: `12%`
-- Completion: `0%`
-- Earned: `0.0%`
-- Note: TIDAK CLEAR — kode dan test ada, laporan checkpoint dan artefak lock belum dibuat (lihat CS-02_CS-03_CLOSURE_AUDIT.md).
+- Completion: `100%`
+- Earned: `12.0%`
+- Note: Locked via retroactive closure on 2026-09-13 (XP+ 2.1.0, closure audit gap closed).
 
-### CS-03 — Identity, Device Control, Permissions, Settings & Design System
+### Identity, Device Control, Permissions, Settings & Design System
 
 - Weight: `10%`
-- Completion: `0%`
-- Earned: `0.0%`
-- Note: TIDAK CLEAR — laporan masih LOCK CANDIDATE, belum ada stempel lock final (lihat CS-02_CS-03_CLOSURE_AUDIT.md).
+- Completion: `100%`
+- Earned: `10.0%`
+- Note: Locked via retroactive closure on 2026-09-13 (XP+ 2.1.0, closure audit gap closed).
 
-### CS-04 — Sales, Checkout, Payment Engine & Manual QRIS
+### Sales, Checkout, Payment Engine & Manual QRIS
 
 - Weight: `12%`
 - Completion: `100%`
@@ -75,7 +75,7 @@
 ## Current total
 
 - Total roadmap weight: `100%`
-- Whole-project earned progress: `32.0%`
+- Whole-project earned progress: `54.0%`
 
 ## Reporting rules
 
@@ -89,3 +89,4 @@
 ## Reconciliation history
 
 - 2026-09-11: CS-04 locked via XP; CS-02/CS-03 diaudit TIDAK CLEAR (Opsi A owner). Progress 20.0% menjadi 32.0%.
+- 2026-09-13: CS-02 & CS-03 locked via retroactive closure (XP+ 2.1.0, governance gap closed). Progress 32.0% menjadi 54.0%.
