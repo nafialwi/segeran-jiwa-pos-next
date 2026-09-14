@@ -133,6 +133,20 @@ BEGIN
   );
 
 
+  INSERT INTO public.shifts(
+      business_id,
+      location_id,
+      cashier_profile_id,
+      opening_balance
+  )
+  VALUES(
+      v_business,
+      v_location,
+      v_profile,
+      0
+  );
+
+
   INSERT INTO public.payments(
       sale_id,
       method,

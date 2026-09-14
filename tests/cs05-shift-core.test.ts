@@ -78,6 +78,9 @@ describe('shift-core rules', () => {
     expect(toShiftErrorMessage(new Error('SJ_HANDOVER_NOT_PENDING'))).toContain(
       'sudah diproses',
     );
+    expect(toShiftErrorMessage(new Error('SJ_SHIFT_NOT_OPEN'))).toContain(
+      'Shift belum dibuka',
+    );
   });
 
   it('passes through non-SJ errors', () => {

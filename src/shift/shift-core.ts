@@ -51,6 +51,8 @@ export function toShiftErrorMessage(error: unknown): string {
         return 'Target serah-terima tidak valid atau bukan rekan satu bisnis.';
       case 'SJ_HANDOVER_NOT_PENDING':
         return 'Serah-terima ini sudah diproses sebelumnya.';
+      case 'SJ_SHIFT_NOT_OPEN':
+        return 'Shift belum dibuka. Buka shift terlebih dahulu untuk transaksi tunai.';
       default:
         return `Operasi gagal (${code}).`;
     }
