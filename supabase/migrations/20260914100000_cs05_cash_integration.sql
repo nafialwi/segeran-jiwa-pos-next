@@ -30,7 +30,7 @@ as $$
     where s.id = p_shift;
 $$;
 
-create function private.cs05_capture_cash_sale()
+create or replace function private.cs05_capture_cash_sale()
 returns trigger
 language plpgsql
 security definer
@@ -77,10 +77,6 @@ begin
         'SALE',
         new.sale_id
     );
-
-    update public.sales
-    set shift_id = v_shift
-    where id = new.sale_id and shift_id is null;
 
     return new;
 end;

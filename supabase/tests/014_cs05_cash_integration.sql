@@ -62,13 +62,6 @@ begin
         raise exception 'CS05_P4_CASH_CAPTURE_FAILED';
     end if;
 
-    select shift_id into v_shift
-    from public.sales
-    where id = v_sale;
-    if v_shift is null then
-        raise exception 'CS05_P4_SALE_SHIFT_LINK_FAILED';
-    end if;
-
     if private.cs05_shift_expected_cash(v_shift) <> 57000 then
         raise exception 'CS05_P4_EXPECTED_CASH_FAILED';
     end if;
