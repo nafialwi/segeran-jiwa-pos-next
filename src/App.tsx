@@ -5,6 +5,9 @@ import { AccessDeniedScreen } from './screens/AccessDeniedScreen';
 import { HomeScreen } from './screens/HomeScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { OwnerUsersScreen } from './screens/OwnerUsersScreen';
+import { ShiftManagementScreen } from './screens/ShiftManagementScreen';
+import { HandoverScreen } from './screens/HandoverScreen';
+import { ShiftHistoryScreen } from './screens/ShiftHistoryScreen';
 
 function RootRoute() {
   const { state } = useAuth();
@@ -48,6 +51,30 @@ export function App() {
         element={
           <RequireAccess ownerOnly>
             <OwnerUsersScreen />
+          </RequireAccess>
+        }
+      />
+      <Route
+        path="/shift"
+        element={
+          <RequireAccess permission="SHIFT_OPEN_CLOSE">
+            <ShiftManagementScreen />
+          </RequireAccess>
+        }
+      />
+      <Route
+        path="/handover"
+        element={
+          <RequireAccess permission="SHIFT_OPEN_CLOSE">
+            <HandoverScreen />
+          </RequireAccess>
+        }
+      />
+      <Route
+        path="/shift-history"
+        element={
+          <RequireAccess permission="SHIFT_READ_OWN">
+            <ShiftHistoryScreen />
           </RequireAccess>
         }
       />

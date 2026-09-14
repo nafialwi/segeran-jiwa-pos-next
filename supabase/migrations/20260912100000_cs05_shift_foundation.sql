@@ -21,9 +21,12 @@ create table public.shifts (
     updated_at timestamptz not null default now(),
 
     constraint shifts_closed_at_check check (closed_at is null or closed_at >= opened_at),
-    constraint shifts_closing_balance_check check (closing_balance is null or status = 'CLOSED'),
-    constraint shifts_open_shift_unique unique (business_id, location_id, cashier_profile_id) where (status = 'OPEN')
+    constraint shifts_closing_balance_check check (closing_balance is null or status = 'CLOSED')
 );
+
+create unique index shifts_open_shift_unique
+    on public.shifts (business_id, location_id, cashier_profile_id)
+    where (status = 'OPEN');
 
 
 create table public.cash_transactions (

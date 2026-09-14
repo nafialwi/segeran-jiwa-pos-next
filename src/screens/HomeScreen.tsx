@@ -53,6 +53,21 @@ export function HomeScreen() {
             Pengguna
           </Link>
         )}
+        {hasPermission(authority, 'SHIFT_OPEN_CLOSE') && (
+          <Link className="nav-card" to="/shift">
+            Shift Saya
+          </Link>
+        )}
+        {hasPermission(authority, 'SHIFT_OPEN_CLOSE') && (
+          <Link className="nav-card" to="/handover">
+            Serah Terima
+          </Link>
+        )}
+        {hasPermission(authority, 'SHIFT_READ_OWN') && (
+          <Link className="nav-card" to="/shift-history">
+            Riwayat Shift
+          </Link>
+        )}
       </nav>
 
       <div className="button-row">
@@ -74,3 +89,5 @@ export function HomeScreen() {
     </main>
   );
 }
+
+// CS-05-P3: Shift navigation cards added below existing nav

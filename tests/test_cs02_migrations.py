@@ -29,6 +29,7 @@ EXPECTED_MIGRATIONS = [
     "20260912100000_cs05_shift_foundation.sql",
     "20260912110000_cs05_shift_logic.sql",
     "20260913100000_cs05_shift_api.sql",
+    "20260913110000_cs05_handover_target.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -43,6 +44,7 @@ EXPECTED_SQL_TESTS = [
     "010_cs05_shift.sql",
     "011_cs05_shift_logic.sql",
     "012_cs05_shift_api.sql",
+    "013_cs05_handover_target.sql",
 ]
 
 
