@@ -32,6 +32,7 @@ EXPECTED_MIGRATIONS = [
     "20260913110000_cs05_handover_target.sql",
     "20260914100000_cs05_cash_integration.sql",
     "20260915100000_cs06_p1_products_suppliers_units.sql",
+    "20260915110000_cs06_p2a_rls_fix.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -49,6 +50,7 @@ EXPECTED_SQL_TESTS = [
     "013_cs05_handover_target.sql",
     "014_cs05_cash_integration.sql",
     "cs06_p1_products_suppliers_units_test.sql",
+    "cs06_p2a_rls_fix_test.sql",
 ]
 
 
