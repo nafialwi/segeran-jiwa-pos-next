@@ -31,6 +31,7 @@ EXPECTED_MIGRATIONS = [
     "20260913100000_cs05_shift_api.sql",
     "20260913110000_cs05_handover_target.sql",
     "20260914100000_cs05_cash_integration.sql",
+    "20260915100000_cs06_p1_products_suppliers_units.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -47,6 +48,7 @@ EXPECTED_SQL_TESTS = [
     "012_cs05_shift_api.sql",
     "013_cs05_handover_target.sql",
     "014_cs05_cash_integration.sql",
+    "cs06_p1_products_suppliers_units_test.sql",
 ]
 
 
