@@ -36,6 +36,7 @@ EXPECTED_MIGRATIONS = [
     "20260915120000_cs06_p2b_inventory_balances.sql",
     "20260915130000_cs06_p2c_migrate_to_stock_items.sql",
     "20260915140000_cs06_p3_purchase_orders.sql",
+    "20260915150000_cs06_p4_goods_receipts.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -57,6 +58,7 @@ EXPECTED_SQL_TESTS = [
     "cs06_p2b_inventory_balances_test.sql",
     "cs06_p2c_migrate_to_stock_items_test.sql",
     "cs06_p3_purchase_orders_test.sql",
+    "cs06_p4_goods_receipts_test.sql",
 ]
 
 
