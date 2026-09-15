@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   canAcceptHandover,
   canCloseShift,
+  formatIdr,
+  formatMovementLabel,
   formatVariance,
+  reconciliationExpectedCash,
+  reconciliationVariance,
   toShiftErrorMessage,
   type Handover,
   type Shift,
@@ -87,5 +91,65 @@ describe('shift-core rules', () => {
     expect(toShiftErrorMessage(new Error('Network timeout'))).toBe(
       'Network timeout',
     );
+  });
+});
+
+describe('P4-B helpers', () => {
+  it('formatIdr renders with prefix and decimals', () => {
+    expect(formatIdr(1234.5)).toBe('Rp 1.234,50');
+  });
+
+  it('formatMovementLabel returns Indonesian labels', () => {
+    expect(formatMovementLabel('CASH_IN')).toBe('Uang Masuk');
+    expect(formatMovementLabel('CASH_OUT')).toBe('Uang Keluar');
+    expect(formatMovementLabel('ADJUSTMENT')).toBe('Penyesuaian');
+  });
+
+  it('reconciliationExpectedCash sums correctly', () => {
+    const r = {
+      shift_id: 'x',
+      opening_balance: 100000,
+      sale_total: 50000,
+      refund_total: 5000,
+      cash_in_total: 10000,
+      cash_out_total: 3000,
+      adjustment_total: 2000,
+      expected_cash: 0,
+      actual_cash: null,
+      variance: null,
+    };
+    expect(reconciliationExpectedCash(r)).toBe(154000);
+  });
+
+  it('reconciliationVariance computes actual minus expected', () => {
+    const r = {
+      shift_id: 'x',
+      opening_balance: 100000,
+      sale_total: 50000,
+      refund_total: 0,
+      cash_in_total: 0,
+      cash_out_total: 0,
+      adjustment_total: 0,
+      expected_cash: 0,
+      actual_cash: 148000,
+      variance: 0,
+    };
+    expect(reconciliationVariance(r)).toBe(-2000);
+  });
+
+  it('reconciliationVariance returns null when actual is null', () => {
+    const r = {
+      shift_id: 'x',
+      opening_balance: 0,
+      sale_total: 0,
+      refund_total: 0,
+      cash_in_total: 0,
+      cash_out_total: 0,
+      adjustment_total: 0,
+      expected_cash: 0,
+      actual_cash: null,
+      variance: null,
+    };
+    expect(reconciliationVariance(r)).toBeNull();
   });
 });

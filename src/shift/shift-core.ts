@@ -76,3 +76,49 @@ export function formatVariance(variance: number | null): string {
   const prefix = variance > 0 ? '+' : '';
   return `${prefix}${variance.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
+
+export type CashMovementType = 'CASH_IN' | 'CASH_OUT' | 'ADJUSTMENT';
+
+export function formatMovementLabel(type: CashMovementType): string {
+  switch (type) {
+    case 'CASH_IN':
+      return 'Uang Masuk';
+    case 'CASH_OUT':
+      return 'Uang Keluar';
+    case 'ADJUSTMENT':
+      return 'Penyesuaian';
+  }
+}
+
+export function formatIdr(value: number): string {
+  return `Rp ${value.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+export interface Reconciliation {
+  shift_id: string;
+  opening_balance: number;
+  sale_total: number;
+  refund_total: number;
+  cash_in_total: number;
+  cash_out_total: number;
+  adjustment_total: number;
+  expected_cash: number;
+  actual_cash: number | null;
+  variance: number | null;
+}
+
+export function reconciliationExpectedCash(r: Reconciliation): number {
+  return (
+    r.opening_balance +
+    r.sale_total -
+    r.refund_total +
+    r.cash_in_total -
+    r.cash_out_total +
+    r.adjustment_total
+  );
+}
+
+export function reconciliationVariance(r: Reconciliation): number | null {
+  if (r.actual_cash === null) return null;
+  return r.actual_cash - reconciliationExpectedCash(r);
+}

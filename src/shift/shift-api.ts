@@ -123,3 +123,44 @@ export async function fetchLocations(): Promise<LocationOption[]> {
     label: String(row.name ?? row.code ?? row.id),
   }));
 }
+
+export async function addCashMovement(
+  type: 'CASH_IN' | 'CASH_OUT' | 'ADJUSTMENT',
+  amount: number,
+  notes?: string,
+): Promise<string> {
+  const { data, error } = await supabase.rpc('cs05_add_cash_movement', {
+    p_type: type,
+    p_amount: amount,
+    p_notes: notes ?? null,
+  });
+  if (error) fail(error);
+  return String(data);
+}
+
+export async function fetchShiftReconciliation(
+  shiftId: string,
+): Promise<import('../shift/shift-core').Reconciliation> {
+  const { data, error } = await supabase.rpc('cs05_shift_reconciliation', {
+    p_shift: shiftId,
+  });
+  if (error) fail(error);
+  const rows = data as import('../shift/shift-core').Reconciliation[];
+  if (!rows || rows.length === 0) {
+    throw new Error('Reconciliation data not found');
+  }
+  return rows[0];
+}
+
+export async function fetchMyClosedShifts(limit = 50): Promise<Shift[]> {
+  const me = await myProfileId();
+  const { data, error } = await supabase
+    .from('shifts')
+    .select('*')
+    .eq('cashier_profile_id', me)
+    .eq('status', 'CLOSED')
+    .order('closed_at', { ascending: false })
+    .limit(limit);
+  if (error) fail(error);
+  return (data as Shift[]) ?? [];
+}

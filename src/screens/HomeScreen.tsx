@@ -68,6 +68,11 @@ export function HomeScreen() {
             Riwayat Shift
           </Link>
         )}
+        {hasPermission(authority, 'SHIFT_READ_OWN') && (
+          <Link className="nav-card" to="/rekonsiliasi">
+            Rekonsiliasi
+          </Link>
+        )}
       </nav>
 
       <div className="button-row">
