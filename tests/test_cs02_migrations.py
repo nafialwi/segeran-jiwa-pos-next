@@ -38,6 +38,7 @@ EXPECTED_MIGRATIONS = [
     "20260915140000_cs06_p3_purchase_orders.sql",
     "20260915150000_cs06_p4_goods_receipts.sql",
     "20260915210000_cs06_p4r1_grn_hardening.sql",
+    "20260915223000_cs06_p5_bom_foundation.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -61,6 +62,7 @@ EXPECTED_SQL_TESTS = [
     "cs06_p3_purchase_orders_test.sql",
     "cs06_p4_goods_receipts_test.sql",
     "cs06_p4r1_grn_hardening_test.sql",
+    "cs06_p5_bom_foundation_test.sql",
 ]
 
 
