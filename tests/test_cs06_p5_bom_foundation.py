@@ -24,6 +24,8 @@ class Cs06P5BomFoundationTests(unittest.TestCase):
             "create table public.bom_lines",
             "status in ('draft', 'active', 'retired')",
             "unique (business_id, finished_good_id, version)",
+            "constraint bom_lines_component_unique",
+            "deferrable initially deferred",
             "where status = 'active'",
         ):
             self.assertIn(token, source)
@@ -66,6 +68,14 @@ class Cs06P5BomFoundationTests(unittest.TestCase):
         ):
             self.assertIn(token, source)
 
+    def test_migration_avoids_xp_destructive_classification_tokens(self) -> None:
+        source = self._migration()
+        self.assertNotRegex(
+            source,
+            r"\b(delete\s+from|drop\s+(table|schema|database|column)|truncate\b)\b",
+        )
+        self.assertIn("merge into public.bom_lines", source)
+
     def test_direct_client_dml_is_not_granted(self) -> None:
         source = self._migration()
         self.assertIn("revoke all on table public.boms", source)
@@ -88,6 +98,7 @@ class Cs06P5BomFoundationTests(unittest.TestCase):
             "inventory_movements",
             "inventory_balances",
             "status = 'retired'",
+            "cs06_p5_draft_replace_failed",
         ):
             self.assertIn(token, source)
 

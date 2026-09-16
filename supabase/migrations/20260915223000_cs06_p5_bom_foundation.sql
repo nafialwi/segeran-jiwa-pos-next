@@ -38,7 +38,9 @@ create table public.bom_lines (
     base_quantity numeric(18,3) not null,
     created_at timestamptz not null default now(),
     primary key (bom_id, line_no),
-    unique (bom_id, component_stock_item_id),
+    constraint bom_lines_component_unique
+        unique (bom_id, component_stock_item_id)
+        deferrable initially deferred,
     constraint bom_lines_line_no_positive check (line_no > 0),
     constraint bom_lines_base_quantity_positive check (base_quantity > 0)
 );
@@ -354,8 +356,6 @@ begin
         where id = v_bom.id
         returning * into v_bom;
 
-        delete from public.bom_lines
-        where bom_id = v_bom.id;
     else
         insert into public.boms (
             business_id,
@@ -375,25 +375,44 @@ begin
         returning * into v_bom;
     end if;
 
-    for v_line, v_ordinality in
-        select value, ordinality
-        from jsonb_array_elements(p_lines) with ordinality
-    loop
-        v_component := (v_line ->> 'component_stock_item_id')::uuid;
-        v_quantity := (v_line ->> 'base_quantity')::numeric;
+    merge into public.bom_lines as target
+    using (
+        select
+            v_bom.id as bom_id,
+            incoming.ordinality::integer as line_no,
+            (incoming.value ->> 'component_stock_item_id')::uuid as component_stock_item_id,
+            round((incoming.value ->> 'base_quantity')::numeric, 3) as base_quantity,
+            true as keep_line
+        from jsonb_array_elements(p_lines) with ordinality as incoming(value, ordinality)
 
-        insert into public.bom_lines (
-            bom_id,
-            line_no,
-            component_stock_item_id,
-            base_quantity
-        ) values (
-            v_bom.id,
-            v_ordinality::integer,
-            v_component,
-            round(v_quantity, 3)
+        union all
+
+        select
+            existing.bom_id,
+            existing.line_no,
+            existing.component_stock_item_id,
+            existing.base_quantity,
+            false as keep_line
+        from public.bom_lines existing
+        where existing.bom_id = v_bom.id
+          and existing.line_no > jsonb_array_length(p_lines)
+    ) as source
+    on target.bom_id = source.bom_id
+       and target.line_no = source.line_no
+    when matched and source.keep_line then
+        update set
+            component_stock_item_id = source.component_stock_item_id,
+            base_quantity = source.base_quantity
+    when matched and not source.keep_line then
+        delete
+    when not matched and source.keep_line then
+        insert (bom_id, line_no, component_stock_item_id, base_quantity)
+        values (
+            source.bom_id,
+            source.line_no,
+            source.component_stock_item_id,
+            source.base_quantity
         );
-    end loop;
 
     perform private.record_operation_success(
         v_business,

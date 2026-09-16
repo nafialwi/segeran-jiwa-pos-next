@@ -161,6 +161,44 @@ begin
     end if;
 end $$;
 
+-- Re-saving the same DRAFT version with a new idempotency key replaces its lines.
+set local role authenticated;
+select set_config(
+    'request.jwt.claims',
+    '{"sub":"00000000-0000-0000-0000-000000007101","role":"authenticated","session_id":"00000000-0000-0000-0000-000000007201"}',
+    true
+);
+
+do $$
+declare
+    v_result jsonb;
+    v_bom_id uuid;
+    v_count integer;
+    v_quantity numeric;
+begin
+    v_result := public.save_bom_draft(
+        '00000000-0000-0000-0000-000000007501',
+        1,
+        1.000,
+        jsonb_build_array(
+            jsonb_build_object('component_stock_item_id', '00000000-0000-0000-0000-000000007503', 'base_quantity', 2.000)
+        ),
+        'P5:BOM:SAVE:V1:REPLACE'
+    );
+    v_bom_id := (v_result ->> 'bom_id')::uuid;
+
+    select count(*), max(base_quantity)
+    into v_count, v_quantity
+    from public.bom_lines
+    where bom_id = v_bom_id;
+
+    if v_count <> 1 or v_quantity <> 2.000 then
+        raise exception 'CS06_P5_DRAFT_REPLACE_FAILED';
+    end if;
+end $$;
+
+reset role;
+
 -- Validation failures must use stable domain errors.
 set local role authenticated;
 select set_config(
