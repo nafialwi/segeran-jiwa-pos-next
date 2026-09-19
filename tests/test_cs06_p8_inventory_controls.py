@@ -47,12 +47,24 @@ class Cs06P8InventoryControlsTests(unittest.TestCase):
     def test_stock_count_and_adjustment_authorities_exist(self) -> None:
         source = self._migration()
         for token in (
-            "create table public.inventory_counts",
-            "create table public.inventory_count_lines",
-            "create table public.inventory_adjustments",
+            "create table if not exists public.inventory_counts",
+            "create table if not exists public.inventory_count_lines",
+            "create table if not exists public.inventory_adjustments",
             "status in ('draft', 'counted', 'posted')",
             "'inventory_count'",
             "'inventory_adjust'",
+        ):
+            self.assertIn(token, source)
+
+    def test_migration_is_reentrant_for_db_regression_remediation(self) -> None:
+        source = self._migration()
+        for token in (
+            "create table if not exists public.inventory_counts",
+            "create table if not exists public.inventory_count_lines",
+            "create table if not exists public.inventory_adjustments",
+            "create index if not exists inventory_counts_business_location_status_idx",
+            "drop policy if exists \"tenant read isolation for inventory_counts\" on public.inventory_counts",
+            "drop trigger if exists inventory_counts_guard_mutation on public.inventory_counts",
         ):
             self.assertIn(token, source)
 
@@ -191,6 +203,7 @@ class Cs06P8InventoryControlsTests(unittest.TestCase):
             "inventory_adjust_scope_denied",
         ):
             self.assertIn(token, source)
+        self.assertNotIn("update public.inventory_count_lines", source)
 
 
 if __name__ == "__main__":

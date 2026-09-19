@@ -11,7 +11,7 @@ set display_name = excluded.display_name,
     category = excluded.category,
     active = true;
 
-create table public.inventory_counts (
+create table if not exists public.inventory_counts (
     id uuid primary key default gen_random_uuid(),
     business_id uuid not null references public.businesses(id) on delete restrict,
     location_id uuid not null references public.locations(id) on delete restrict,
@@ -59,7 +59,7 @@ create table public.inventory_counts (
     )
 );
 
-create table public.inventory_count_lines (
+create table if not exists public.inventory_count_lines (
     count_id uuid not null references public.inventory_counts(id) on delete restrict,
     line_no integer not null,
     stock_item_id uuid not null references public.stock_items(id) on delete restrict,
@@ -74,7 +74,7 @@ create table public.inventory_count_lines (
     )
 );
 
-create table public.inventory_adjustments (
+create table if not exists public.inventory_adjustments (
     id uuid primary key,
     business_id uuid not null references public.businesses(id) on delete restrict,
     location_id uuid not null references public.locations(id) on delete restrict,
@@ -101,26 +101,30 @@ create table public.inventory_adjustments (
     )
 );
 
-create index inventory_counts_business_location_status_idx
+create index if not exists inventory_counts_business_location_status_idx
 on public.inventory_counts(business_id, location_id, status);
 
-create index inventory_count_lines_stock_item_idx
+create index if not exists inventory_count_lines_stock_item_idx
 on public.inventory_count_lines(stock_item_id);
 
-create index inventory_adjustments_business_location_created_idx
+create index if not exists inventory_adjustments_business_location_created_idx
 on public.inventory_adjustments(business_id, location_id, created_at desc);
 
-create index inventory_adjustments_stock_item_idx
+create index if not exists inventory_adjustments_stock_item_idx
 on public.inventory_adjustments(stock_item_id);
 
 alter table public.inventory_counts enable row level security;
 alter table public.inventory_count_lines enable row level security;
 alter table public.inventory_adjustments enable row level security;
 
+drop policy if exists "Tenant read isolation for inventory_counts" on public.inventory_counts;
+
 create policy "Tenant read isolation for inventory_counts"
 on public.inventory_counts
 for select
 using (business_id = (public.get_my_authority() ->> 'business_id')::uuid);
+
+drop policy if exists "Tenant read isolation for inventory_count_lines" on public.inventory_count_lines;
 
 create policy "Tenant read isolation for inventory_count_lines"
 on public.inventory_count_lines
@@ -133,6 +137,8 @@ using (
           and c.business_id = (public.get_my_authority() ->> 'business_id')::uuid
     )
 );
+
+drop policy if exists "Tenant read isolation for inventory_adjustments" on public.inventory_adjustments;
 
 create policy "Tenant read isolation for inventory_adjustments"
 on public.inventory_adjustments
@@ -251,13 +257,19 @@ begin
 end;
 $$;
 
+drop trigger if exists inventory_counts_guard_mutation on public.inventory_counts;
+
 create trigger inventory_counts_guard_mutation
 before update or delete on public.inventory_counts
 for each row execute function private.guard_inventory_count_mutation();
 
+drop trigger if exists inventory_count_lines_guard_mutation on public.inventory_count_lines;
+
 create trigger inventory_count_lines_guard_mutation
 before update or delete on public.inventory_count_lines
 for each row execute function private.guard_inventory_count_line_mutation();
+
+drop trigger if exists inventory_adjustments_immutable on public.inventory_adjustments;
 
 create trigger inventory_adjustments_immutable
 before update or delete on public.inventory_adjustments

@@ -238,9 +238,15 @@ begin
     end if;
 
     begin
-        update public.inventory_count_lines
-        set physical_quantity = 9.000
-        where count_id = v_count;
+        perform public.record_inventory_count(
+            v_count,
+            jsonb_build_array(
+                jsonb_build_object(
+                    'stock_item_id', '00000000-0000-0000-0000-000000008501',
+                    'physical_quantity', 9.000
+                )
+            )
+        );
         raise exception 'CS06_P8_EXPECTED_COUNT_IMMUTABLE';
     exception when others then
         if sqlerrm <> 'INVENTORY_COUNT_IMMUTABLE' then raise; end if;
