@@ -1069,7 +1069,7 @@ begin
         raise exception using errcode = '55000', message = 'INVENTORY_CONTROL_ALREADY_REVERSED';
     end if;
 
-    select min(iml.location_id), count(distinct iml.location_id)
+    select min(iml.location_id::text)::uuid, count(distinct iml.location_id)
     into v_location, v_location_count
     from public.inventory_movement_lines iml
     where iml.movement_id = v_original.id;

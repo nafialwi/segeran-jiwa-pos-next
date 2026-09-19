@@ -117,6 +117,22 @@ class Cs06P8InventoryControlsTests(unittest.TestCase):
         self.assertIn("v_original.id", reversal)
         self.assertIn("reverses_movement_id", source)
 
+    def test_reversal_location_uuid_aggregation_is_postgres_compatible(self) -> None:
+        source = self._migration()
+        reversal = function_body(
+            source,
+            "create or replace function public.reverse_inventory_control(",
+            "revoke all on function private.guard_inventory_count_mutation",
+        )
+        self.assertIn(
+            "min(iml.location_id::text)::uuid, count(distinct iml.location_id)",
+            reversal,
+        )
+        self.assertNotIn(
+            "min(iml.location_id), count(distinct iml.location_id)",
+            reversal,
+        )
+
     def test_negative_stock_and_writeoff_guards_exist(self) -> None:
         source = self._migration()
         adjust = function_body(
