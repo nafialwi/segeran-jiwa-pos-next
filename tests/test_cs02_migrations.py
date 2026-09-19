@@ -41,6 +41,7 @@ EXPECTED_MIGRATIONS = [
     "20260915223000_cs06_p5_bom_foundation.sql",
     "20260916083000_cs06_p6_production_execution.sql",
     "20260916143000_cs06_p7_restock_transfer.sql",
+    "20260919170000_cs06_p8_inventory_controls.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -67,6 +68,7 @@ EXPECTED_SQL_TESTS = [
     "cs06_p5_bom_foundation_test.sql",
     "cs06_p6_production_execution_test.sql",
     "cs06_p7_restock_transfer_test.sql",
+    "cs06_p8_inventory_controls_test.sql",
 ]
 
 
