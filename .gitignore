@@ -13,3 +13,5 @@ __pycache__/
 
 # Prevent root-level transit packages in canonical source
 /*.zip
+
+.uat/
