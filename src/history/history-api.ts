@@ -36,6 +36,31 @@ export type HistoryRefund = {
   created_at: string;
 };
 
+export type HistoryCorrection = {
+  correction_id: string;
+  original_payment_method: string;
+  sale_total: number;
+  inventory_reversal_movement_id: string | null;
+  money_reversal_movement_id: string;
+  cash_adjustment_transaction_id: string | null;
+  reason: string;
+  created_at: string;
+};
+
+export type CorrectionPreview = {
+  sale_id: string;
+  invoice_number: string;
+  can_execute: boolean;
+  blocker: string | null;
+  payment_method: string;
+  sale_total: number;
+  stock: { tracked_lines: number; action: string };
+  cash_qris_transfer: string;
+  debt: string;
+  hpp: { available: boolean; message: string };
+  finance: string;
+};
+
 export type TransactionHistoryRow = {
   sale_id: string;
   invoice_number: string;
@@ -55,6 +80,7 @@ export type TransactionHistoryRow = {
   items: HistoryItem[];
   customer_debt: HistoryDebt | null;
   refund: HistoryRefund | null;
+  correction: HistoryCorrection | null;
   note: string | null;
 };
 
@@ -102,6 +128,7 @@ export async function searchTransactionHistory(
   return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
     const debt = row.customer_debt as Record<string, unknown> | null;
     const refund = row.refund as Record<string, unknown> | null;
+    const correction = row.correction as Record<string, unknown> | null;
 
     return {
       ...row,
@@ -150,6 +177,28 @@ export async function searchTransactionHistory(
             created_at: String(refund.created_at ?? ''),
           }
         : null,
+      correction: correction
+        ? {
+            correction_id: String(correction.correction_id ?? ''),
+            original_payment_method: String(
+              correction.original_payment_method ?? '',
+            ),
+            sale_total: num(correction.sale_total),
+            inventory_reversal_movement_id:
+              correction.inventory_reversal_movement_id == null
+                ? null
+                : String(correction.inventory_reversal_movement_id),
+            money_reversal_movement_id: String(
+              correction.money_reversal_movement_id ?? '',
+            ),
+            cash_adjustment_transaction_id:
+              correction.cash_adjustment_transaction_id == null
+                ? null
+                : String(correction.cash_adjustment_transaction_id),
+            reason: String(correction.reason ?? ''),
+            created_at: String(correction.created_at ?? ''),
+          }
+        : null,
     } as TransactionHistoryRow;
   });
 }
@@ -177,6 +226,41 @@ export async function refundSale(args: {
     receivable_cancelled_amount: number;
     stock_disposition: RefundStockDisposition;
     refund_method: RefundMethod;
+    already_posted: boolean;
+  };
+}
+
+export async function previewSaleCorrection(
+  saleId: string,
+): Promise<CorrectionPreview> {
+  const { data, error } = await supabase.rpc('sale_correction_preview', {
+    p_sale_id: saleId,
+  });
+  if (error)
+    throw new Error(
+      error.message || error.code || 'SALE_CORRECTION_PREVIEW_FAILED',
+    );
+  const row = data as Record<string, unknown>;
+  return {
+    ...(row as unknown as CorrectionPreview),
+    sale_total: num(row.sale_total),
+  };
+}
+
+export async function correctSale(args: { saleId: string; reason: string }) {
+  const { data, error } = await supabase.rpc('correct_sale', {
+    p_sale_id: args.saleId,
+    p_reason: args.reason.trim(),
+    p_idempotency_key: crypto.randomUUID(),
+  });
+  if (error)
+    throw new Error(error.message || error.code || 'SALE_CORRECTION_FAILED');
+  return data as {
+    correction_id: string;
+    sale_id: string;
+    inventory_reversal_movement_id: string | null;
+    money_reversal_movement_id: string;
+    cash_adjustment_transaction_id: string | null;
     already_posted: boolean;
   };
 }

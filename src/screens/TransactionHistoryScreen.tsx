@@ -3,8 +3,11 @@ import { Link } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import {
+  correctSale,
+  previewSaleCorrection,
   refundSale,
   searchTransactionHistory,
+  type CorrectionPreview,
   type RefundMethod,
   type RefundStockDisposition,
   type TransactionHistoryFilters,
@@ -43,6 +46,7 @@ export function TransactionHistoryScreen() {
   const canRefund =
     Boolean(authority?.owner) ||
     Boolean(authority && hasPermission(authority, 'CORRECTION_LIMITED'));
+  const canCorrect = canRefund;
   const [filters, setFilters] = useState(EMPTY);
   const [rows, setRows] = useState<TransactionHistoryRow[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -53,6 +57,12 @@ export function TransactionHistoryScreen() {
   const [refundMethod, setRefundMethod] = useState<RefundMethod>('CASH');
   const [refundReason, setRefundReason] = useState('');
   const [refundBusy, setRefundBusy] = useState(false);
+  const [correctionTarget, setCorrectionTarget] =
+    useState<TransactionHistoryRow | null>(null);
+  const [correctionPreview, setCorrectionPreview] =
+    useState<CorrectionPreview | null>(null);
+  const [correctionReason, setCorrectionReason] = useState('');
+  const [correctionBusy, setCorrectionBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -152,6 +162,80 @@ export function TransactionHistoryScreen() {
       setError(cause instanceof Error ? cause.message : 'Refund gagal.');
     } finally {
       setRefundBusy(false);
+    }
+  }
+
+  async function openCorrection(row: TransactionHistoryRow) {
+    setError('');
+    setMessage('');
+
+    if (!navigator.onLine) {
+      setError(
+        'Koreksi memerlukan koneksi internet aktif dan tidak diantrikan offline.',
+      );
+      return;
+    }
+
+    try {
+      const preview = await previewSaleCorrection(row.sale_id);
+      if (!preview.can_execute) {
+        setError(
+          'Koreksi belum dapat dilakukan: ' +
+            (preview.blocker || 'aturan koreksi tidak terpenuhi.'),
+        );
+        return;
+      }
+      setCorrectionTarget(row);
+      setCorrectionPreview(preview);
+      setCorrectionReason('');
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'Gagal menyiapkan preview Koreksi.',
+      );
+    }
+  }
+
+  async function submitCorrection(event: FormEvent) {
+    event.preventDefault();
+    if (!correctionTarget || !correctionPreview || correctionBusy) return;
+
+    if (!navigator.onLine) {
+      setError(
+        'Koreksi memerlukan koneksi internet aktif dan tidak diantrikan offline.',
+      );
+      return;
+    }
+
+    if (!correctionReason.trim()) {
+      setError('Alasan koreksi wajib diisi.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Koreksi ' +
+        correctionTarget.invoice_number +
+        ' akan membuat pembalikan pencatatan. Ini bukan refund pelanggan dan transaksi asli tetap utuh. Lanjutkan?',
+    );
+    if (!confirmed) return;
+
+    setCorrectionBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      await correctSale({
+        saleId: correctionTarget.sale_id,
+        reason: correctionReason,
+      });
+      setMessage('Koreksi Transaksi berhasil dicatat.');
+      setCorrectionTarget(null);
+      setCorrectionPreview(null);
+      await search();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Koreksi gagal.');
+    } finally {
+      setCorrectionBusy(false);
     }
   }
 
@@ -296,6 +380,7 @@ export function TransactionHistoryScreen() {
               <option value="COMPLETED">Selesai</option>
               <option value="VOID">Batal</option>
               <option value="REFUNDED">Dikembalikan</option>
+              <option value="CORRECTED">Dikoreksi</option>
             </select>
           </label>
           <div className="button-row">
@@ -363,15 +448,30 @@ export function TransactionHistoryScreen() {
                   >
                     {expanded === row.sale_id ? 'Tutup Detail' : 'Lihat Detail'}
                   </button>
-                  {canRefund && row.status === 'COMPLETED' && !row.refund && (
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={() => openRefund(row)}
-                    >
-                      Refund Transaksi
-                    </button>
-                  )}
+                  {canRefund &&
+                    row.status === 'COMPLETED' &&
+                    !row.refund &&
+                    !row.correction && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => openRefund(row)}
+                      >
+                        Refund Transaksi
+                      </button>
+                    )}
+                  {canCorrect &&
+                    row.status === 'COMPLETED' &&
+                    !row.refund &&
+                    !row.correction && (
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => void openCorrection(row)}
+                      >
+                        Koreksi Transaksi
+                      </button>
+                    )}
                 </div>
                 {expanded === row.sale_id && (
                   <div className="stack-list">
@@ -387,8 +487,8 @@ export function TransactionHistoryScreen() {
                     {row.customer_debt && (
                       <p className="muted">
                         Hutang: dibayar{' '}
-                        {formatIdr(row.customer_debt.paid_amount)} � sisa{' '}
-                        {formatIdr(row.customer_debt.balance)} �{' '}
+                        {formatIdr(row.customer_debt.paid_amount)} · sisa{' '}
+                        {formatIdr(row.customer_debt.balance)} ·{' '}
                         {row.customer_debt.status}
                       </p>
                     )}
@@ -396,15 +496,27 @@ export function TransactionHistoryScreen() {
                       <div className="list-card">
                         <strong>Refund tercatat</strong>
                         <span>
-                          {row.refund.stock_disposition} �{' '}
+                          {row.refund.stock_disposition} ·{' '}
                           {row.refund.refund_method}
                         </span>
                         <span>
-                          Dana {formatIdr(row.refund.payout_amount)} � Piutang
+                          Dana {formatIdr(row.refund.payout_amount)} · Piutang
                           dibatalkan{' '}
                           {formatIdr(row.refund.receivable_cancelled_amount)}
                         </span>
                         <span className="muted">{row.refund.reason}</span>
+                      </div>
+                    )}
+                    {row.correction && (
+                      <div className="list-card">
+                        <strong>Koreksi / Pembalikan tercatat</strong>
+                        <span>
+                          {row.correction.original_payment_method} ·{' '}
+                          {formatIdr(row.correction.sale_total)}
+                        </span>
+                        <span className="muted">
+                          Transaksi asli tetap utuh. {row.correction.reason}
+                        </span>
                       </div>
                     )}
                     {row.note && <p className="muted">Catatan: {row.note}</p>}
@@ -528,6 +640,89 @@ export function TransactionHistoryScreen() {
               disabled={refundBusy}
             >
               {refundBusy ? 'Memproses Refund...' : 'Konfirmasi Refund'}
+            </button>
+          </form>
+        </section>
+      )}
+
+      {correctionTarget && correctionPreview && (
+        <section className="identity-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">KOREKSI / PEMBALIKAN</p>
+              <h2>Koreksi Transaksi</h2>
+              <p className="muted">{correctionTarget.invoice_number}</p>
+            </div>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => {
+                setCorrectionTarget(null);
+                setCorrectionPreview(null);
+              }}
+              disabled={correctionBusy}
+            >
+              Tutup
+            </button>
+          </div>
+
+          <div className="info-banner">
+            Koreksi memperbaiki pencatatan transaksi yang salah. Ini bukan
+            refund pelanggan. Transaksi asli tetap utuh dan ditautkan ke fakta
+            pembalikan.
+          </div>
+
+          <form className="stack-form" onSubmit={submitCorrection}>
+            <label className="field-label">
+              Alasan Koreksi
+              <textarea
+                rows={3}
+                value={correctionReason}
+                onChange={(event) => setCorrectionReason(event.target.value)}
+                placeholder="Contoh: produk/nominal/metode transaksi tersimpan salah"
+                required
+              />
+            </label>
+
+            <div className="stack-list">
+              <article className="list-card">
+                <strong>Dampak Stok</strong>
+                <span>
+                  {correctionPreview.stock.tracked_lines > 0
+                    ? correctionPreview.stock.tracked_lines +
+                      ' baris stok tracked dari transaksi asli akan dibalik melalui pergerakan persediaan.'
+                    : 'Transaksi ini tidak memiliki baris stok tracked yang perlu dibalik.'}
+                </span>
+              </article>
+              <article className="list-card">
+                <strong>Dampak Kas / QRIS / Transfer</strong>
+                <span>{correctionPreview.cash_qris_transfer}</span>
+              </article>
+              <article className="list-card">
+                <strong>Dampak Hutang</strong>
+                <span>{correctionPreview.debt}</span>
+              </article>
+              <article className="list-card">
+                <strong>Dampak HPP / Laba</strong>
+                <span>
+                  {correctionPreview.hpp.message} Nilai HPP tidak diasumsikan
+                  nol.
+                </span>
+              </article>
+              <article className="list-card">
+                <strong>Dampak Keuangan</strong>
+                <span>{correctionPreview.finance}</span>
+              </article>
+            </div>
+
+            <button
+              className="primary-button"
+              type="submit"
+              disabled={correctionBusy}
+            >
+              {correctionBusy
+                ? 'Memproses Koreksi...'
+                : 'Konfirmasi Koreksi / Pembalikan'}
             </button>
           </form>
         </section>

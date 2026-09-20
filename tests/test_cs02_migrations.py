@@ -63,6 +63,7 @@ EXPECTED_MIGRATIONS = [
     "20260920240000_hrr_p1_transaction_history.sql",
     "20260920243000_hrr_p2_sale_refund.sql",
     "20260920250000_hrr_p3_reports_excel.sql",
+    "20260921003000_hrr_p4_sale_correction.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -106,6 +107,7 @@ EXPECTED_SQL_TESTS = [
     "hrr_p1_transaction_history_test.sql",
     "hrr_p2_sale_refund_test.sql",
     "hrr_p3_reports_excel_test.sql",
+    "hrr_p4_sale_correction_test.sql",
     "uat_blocker_core_ui_recovery_test.sql",
     "uat_r1_sale_replay_stock_gate_test.sql",
     "uat_r2_recovery_index_hardening_test.sql",
