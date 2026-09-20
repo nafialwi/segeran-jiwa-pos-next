@@ -57,6 +57,7 @@ EXPECTED_MIGRATIONS = [
     "20260920213000_uat_blocker_core_ui_recovery.sql",
     "20260920214500_uat_r1_sale_replay_stock_gate.sql",
     "20260920215500_uat_r2_recovery_index_hardening.sql",
+    "20260920221000_uat_r3_purchase_front_door.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -98,6 +99,7 @@ EXPECTED_SQL_TESTS = [
     "uat_blocker_core_ui_recovery_test.sql",
     "uat_r1_sale_replay_stock_gate_test.sql",
     "uat_r2_recovery_index_hardening_test.sql",
+    "uat_r3_purchase_front_door_test.sql",
 ]
 
 

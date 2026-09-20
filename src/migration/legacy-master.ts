@@ -57,8 +57,19 @@ export function parseLegacyMaster(value: unknown): LegacyMasterPayload {
   const global = findGlobal(root);
   const menu = normalizeCollection(global.menu);
   const customers = normalizeCollection(global.customers);
-  const inventory = asRecord(global.inventory) ?? {};
+  const inventory = { ...(asRecord(global.inventory) ?? {}) };
   const settings = asRecord(global.settings) ?? {};
+
+  // Legacy stock authority first reads global.inventory[id], then falls back
+  // to product.stok for older snapshots. Preserve that exact migration rule.
+  for (const item of menu) {
+    const id = String(item.id ?? '').trim();
+    if (!id || inventory[id] !== undefined) continue;
+    const legacyStock = Number(item.stok);
+    if (Number.isFinite(legacyStock) && legacyStock >= 0) {
+      inventory[id] = legacyStock;
+    }
+  }
 
   if (menu.length === 0) {
     throw new Error('Master produk Legacy kosong atau tidak ditemukan.');
