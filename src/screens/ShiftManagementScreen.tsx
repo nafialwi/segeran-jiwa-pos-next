@@ -1,23 +1,27 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../auth/AuthProvider';
+import { hasPermission } from '../auth/permission';
 import {
   canCloseShift,
-  formatMovementLabel,
+  formatIdr,
   formatVariance,
   toShiftErrorMessage,
-  type CashMovementType,
   type Shift,
+  type ShiftExpense,
 } from '../shift/shift-core';
 import {
-  addCashMovement,
   closeShift,
+  fetchShiftExpenses,
   fetchLocations,
   fetchMyOpenShift,
   openShift,
+  postShiftExpense,
   type LocationOption,
 } from '../shift/shift-api';
 
 export function ShiftManagementScreen() {
+  const { authority } = useAuth();
   const [shift, setShift] = useState<Shift | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,10 +34,14 @@ export function ShiftManagementScreen() {
   const [actualCash, setActualCash] = useState(0);
   const [closing, setClosing] = useState(false);
 
-  const [movementType, setMovementType] = useState<CashMovementType>('CASH_IN');
-  const [movementAmount, setMovementAmount] = useState(0);
-  const [movementNotes, setMovementNotes] = useState('');
-  const [submittingMovement, setSubmittingMovement] = useState(false);
+  const [expenseCategory, setExpenseCategory] = useState('');
+  const [expenseDescription, setExpenseDescription] = useState('');
+  const [expenseAmount, setExpenseAmount] = useState(0);
+  const [expenses, setExpenses] = useState<ShiftExpense[]>([]);
+  const [submittingExpense, setSubmittingExpense] = useState(false);
+
+  const canCreateShiftExpense =
+    authority !== null && hasPermission(authority, 'EXPENSE_SHIFT_CREATE');
 
   useEffect(() => {
     let cancelled = false;
@@ -57,6 +65,29 @@ export function ShiftManagementScreen() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!shift) {
+      setExpenses([]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void (async () => {
+      try {
+        const rows = await fetchShiftExpenses(shift.id);
+        if (!cancelled) setExpenses(rows);
+      } catch (err) {
+        if (!cancelled) setError(toShiftErrorMessage(err));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [shift]);
 
   const handleOpen = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -89,23 +120,26 @@ export function ShiftManagementScreen() {
     }
   };
 
-  const handleCashMovement = async (event: React.FormEvent) => {
+  const handleShiftExpense = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (!shift) return;
     setError(null);
-    setSubmittingMovement(true);
+    setSubmittingExpense(true);
     try {
-      await addCashMovement(
-        movementType,
-        movementAmount,
-        movementNotes || undefined,
+      await postShiftExpense(
+        expenseCategory,
+        expenseDescription,
+        expenseAmount,
       );
-      alert(`${formatMovementLabel(movementType)} berhasil dicatat.`);
-      setMovementAmount(0);
-      setMovementNotes('');
+      const rows = await fetchShiftExpenses(shift.id);
+      setExpenses(rows);
+      setExpenseCategory('');
+      setExpenseDescription('');
+      setExpenseAmount(0);
     } catch (err) {
       setError(toShiftErrorMessage(err));
     } finally {
-      setSubmittingMovement(false);
+      setSubmittingExpense(false);
     }
   };
 
@@ -165,50 +199,64 @@ export function ShiftManagementScreen() {
             </form>
           </section>
 
-          <section className="identity-card">
-            <h2>Gerakan Kas</h2>
-            <form onSubmit={handleCashMovement} className="stack-form">
-              <label>
-                Tipe
-                <select
-                  value={movementType}
-                  onChange={(e) =>
-                    setMovementType(e.target.value as CashMovementType)
-                  }
+          {canCreateShiftExpense && (
+            <section className="identity-card">
+              <h2>Catat Pengeluaran Shift</h2>
+              <form onSubmit={handleShiftExpense} className="stack-form">
+                <label>
+                  Kategori
+                  <input
+                    type="text"
+                    value={expenseCategory}
+                    onChange={(e) => setExpenseCategory(e.target.value)}
+                    placeholder="Contoh: OPERASIONAL"
+                    required
+                  />
+                </label>
+                <label>
+                  Deskripsi
+                  <input
+                    type="text"
+                    value={expenseDescription}
+                    onChange={(e) => setExpenseDescription(e.target.value)}
+                    placeholder="Keperluan pengeluaran"
+                    required
+                  />
+                </label>
+                <label>
+                  Jumlah (Rp)
+                  <input
+                    type="number"
+                    min="1"
+                    step="1000"
+                    value={expenseAmount}
+                    onChange={(e) => setExpenseAmount(Number(e.target.value))}
+                    required
+                  />
+                </label>
+                <button
+                  className="primary-button"
+                  type="submit"
+                  disabled={submittingExpense}
                 >
-                  <option value="CASH_IN">Uang Masuk</option>
-                  <option value="CASH_OUT">Uang Keluar</option>
-                  <option value="ADJUSTMENT">Penyesuaian</option>
-                </select>
-              </label>
-              <label>
-                Jumlah (Rp)
-                <input
-                  type="number"
-                  step="1000"
-                  value={movementAmount}
-                  onChange={(e) => setMovementAmount(Number(e.target.value))}
-                  required
-                />
-              </label>
-              <label>
-                Catatan
-                <input
-                  type="text"
-                  value={movementNotes}
-                  onChange={(e) => setMovementNotes(e.target.value)}
-                  placeholder="Opsional"
-                />
-              </label>
-              <button
-                className="primary-button"
-                type="submit"
-                disabled={submittingMovement}
-              >
-                {submittingMovement ? 'Mencatat…' : 'Catat Gerakan'}
-              </button>
-            </form>
-          </section>
+                  {submittingExpense ? 'Mencatat&' : 'Catat Pengeluaran Shift'}
+                </button>
+              </form>
+
+              {expenses.length > 0 && (
+                <div className="stack-list">
+                  <h3>Pengeluaran Shift Ini</h3>
+                  {expenses.map((expense) => (
+                    <article key={expense.id} className="list-card">
+                      <strong>{expense.category_code}</strong>
+                      <span>{expense.description}</span>
+                      <span>{formatIdr(expense.amount)}</span>
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
         </>
       ) : (
         <section className="identity-card">

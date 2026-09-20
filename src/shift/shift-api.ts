@@ -2,7 +2,7 @@
 // Wraps Supabase RPC calls to the CS-05-P3-API wrappers.
 
 import { supabase } from '../lib/supabase';
-import type { Handover, Shift } from './shift-core';
+import type { Handover, Shift, ShiftExpense } from './shift-core';
 
 export type LocationOption = {
   id: string;
@@ -28,7 +28,7 @@ async function myProfileId(): Promise<string> {
 }
 
 function fail(error: { code?: string; message: string }): never {
-  throw new Error(`${error.code || 'SJ_UNKNOWN'}: ${error.message}`);
+  throw new Error(error.message || error.code || 'SJ_UNKNOWN');
 }
 
 export async function openShift(
@@ -138,18 +138,31 @@ export async function fetchLocations(): Promise<LocationOption[]> {
   }));
 }
 
-export async function addCashMovement(
-  type: 'CASH_IN' | 'CASH_OUT' | 'ADJUSTMENT',
+export async function postShiftExpense(
+  categoryCode: string,
+  description: string,
   amount: number,
-  notes?: string,
 ): Promise<string> {
-  const { data, error } = await supabase.rpc('cs05_add_cash_movement', {
-    p_type: type,
+  const { data, error } = await supabase.rpc('finance_post_shift_expense', {
+    p_category_code: categoryCode,
+    p_description: description,
     p_amount: amount,
-    p_notes: notes ?? null,
+    p_idempotency_key: crypto.randomUUID(),
   });
   if (error) fail(error);
   return String(data);
+}
+
+export async function fetchShiftExpenses(
+  shiftId: string,
+): Promise<ShiftExpense[]> {
+  const { data, error } = await supabase
+    .from('business_expenses')
+    .select('*')
+    .eq('shift_id', shiftId)
+    .order('created_at', { ascending: false });
+  if (error) fail(error);
+  return (data as ShiftExpense[]) ?? [];
 }
 
 export async function fetchShiftReconciliation(

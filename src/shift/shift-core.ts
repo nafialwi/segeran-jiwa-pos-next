@@ -22,6 +22,22 @@ export type Shift = {
   opening_money_movement_id?: string | null;
 };
 
+export type ShiftExpense = {
+  id: string;
+  business_id: string;
+  location_id: string;
+  shift_id: string;
+  actor_profile_id: string;
+  amount: number;
+  category_code: string;
+  description: string;
+  funding_account_id: string;
+  approval_state: 'NOT_REQUIRED' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  money_movement_id: string;
+  cash_transaction_id: string;
+  created_at: string;
+};
+
 export type Handover = {
   id: string;
   business_id: string;
@@ -40,7 +56,9 @@ export type Handover = {
 export function toShiftErrorMessage(error: unknown): string {
   if (
     error instanceof Error &&
-    (error.message.startsWith('SJ_') || error.message.startsWith('CS05:'))
+    (error.message.startsWith('SJ_') ||
+      error.message.startsWith('FINANCE_') ||
+      error.message.startsWith('CS05:'))
   ) {
     const code = error.message.split(':')[0];
     switch (code) {
@@ -62,6 +80,16 @@ export function toShiftErrorMessage(error: unknown): string {
         return 'Saldo Kas Utama tidak mencukupi untuk saldo awal shift.';
       case 'FINANCE_OPENING_AMOUNT_INVALID':
         return 'Saldo awal dari Kas Utama harus lebih dari nol.';
+      case 'FINANCE_SHIFT_CASH_INSUFFICIENT':
+        return 'Saldo Kas Shift tidak mencukupi untuk pengeluaran ini.';
+      case 'FINANCE_SHIFT_EXPENSE_AMOUNT_INVALID':
+        return 'Jumlah pengeluaran harus lebih dari nol.';
+      case 'FINANCE_SHIFT_EXPENSE_CATEGORY_REQUIRED':
+        return 'Kategori pengeluaran wajib diisi.';
+      case 'FINANCE_SHIFT_EXPENSE_DESCRIPTION_REQUIRED':
+        return 'Deskripsi pengeluaran wajib diisi.';
+      case 'FINANCE_CASH_MOVEMENT_SOURCE_REQUIRED':
+        return 'Gerakan kas manual lama dinonaktifkan. Gunakan transaksi dengan sumber dana yang jelas.';
       default:
         return `Operasi gagal (${code}).`;
     }
