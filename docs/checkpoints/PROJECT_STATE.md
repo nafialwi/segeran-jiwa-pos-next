@@ -1,14 +1,15 @@
-# PROJECT STATE - FIN-P2A LOCKED_REMOTE
+# PROJECT STATE - FIN-P2B LOCKED_REMOTE
 
 ## Canonical identity
 
 - Workspace: Segeran Jiwa Next Vol. 1
 - Product: Segeran Jiwa POS Next
 - Blueprint: v1.0 FINAL LOCK
-- Current milestone: FIN-P2A - Shift Funding Bridge - LOCKED_REMOTE
+- Current milestone: FIN-P2B - Shift Expense Fact - LOCKED_REMOTE
 - Current branch: work/cs06743-patch3-hardening
-- Technical source: 97fb82afa34f09936955df2bf65a3c91d9b2be62
-- Managed hosted migration: fin_p2a_shift_funding_bridge
+- FIN-P2B technical source: 21d9ef36cc3e03e52ef71dbbed95138fab988a29
+- FIN-P2B index hardening: 5a4ab5a5a7379cdd392075849b5ab0ca0291e18f
+- Managed hosted migrations: fin_p2b_shift_expense; fin_p2b1_expense_index_hardening
 - Release guard: PROCESS-GUARD
 - Production automatic deployment: DISABLED
 
@@ -21,7 +22,7 @@
 - CS-04: 100%
 - CS-05: 100%
 - CS-06: 100%
-- Finance milestone: IN PROGRESS; FIN-P1 and FIN-P2A locked
+- Finance milestone: IN PROGRESS; FIN-P1, FIN-P2A, and FIN-P2B locked
 - Whole-project weighted progress: 78.0%
 
 The finance roadmap bucket remains unearned until the complete finance milestone acceptance gate is locked.
@@ -32,12 +33,14 @@ The finance roadmap bucket remains unearned until the complete finance milestone
 - KAS_SHIFT exists as a canonical finance account.
 - Business-wide finance reads are Owner-only.
 - Owner transfer/capital/personal-withdrawal commands are hosted and verified.
-- FIN-P2A now prevents positive shift opening cash from appearing without source.
-- Positive opening from Kas Utama creates one canonical Kas Utama -> Kas Shift transfer.
-- Funded opening is idempotent and records immutable source provenance on the shift.
-- Legacy positive opening fails closed; legacy zero opening remains supported.
-- Hosted FIN-P2A behavior regression passed and rolled back.
-- Final canonical verify after hosted FIN-P2A apply: PASS.
+- FIN-P2A shift funding bridge is locked and positive shift opening cannot appear without an explicit source.
+- FIN-P2B Shift Expense is now a typed immutable business fact linked to one canonical EXPENSE movement and one actual-shift CASH_OUT.
+- CASH sale finance posting is aligned to KAS_SHIFT.
+- Generic untyped cash mutation fails closed.
+- Kasir expense visibility is own-shift scoped; Owner receives consolidated visibility.
+- Hosted FIN-P2B behavior regression passed and rolled back.
+- FIN-P2B1 covering-index hardening cleared the two new unindexed-FK advisor findings.
+- Final canonical verify before checkpoint: PASS (73 JS / 123 Python).
 - Production automatic deployment remains disabled.
 
 ## Historical provenance note
@@ -52,13 +55,14 @@ The original Blueprint v1.0 FINAL LOCK path referenced by older state files is n
 2. Decision / Change Control records
 3. docs/checkpoints/PROJECT_STATE.md
 4. docs/checkpoints/ROADMAP_PROGRESS.md
-5. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-6. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-7. docs/superpowers/specs/2026-09-20-fin-p2a-shift-funding-bridge-design.md
-8. docs/checkpoints/RELEASE_MANIFEST.json
+5. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+6. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+7. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
+8. docs/superpowers/specs/2026-09-20-fin-p2b-shift-expense-design.md
+9. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-FIN-P2B  Shift Expense Fact.
+FIN-P3 - Customer Debt Foundation.
 
-Do not implement unresolved Kasbon repayment/deduction semantics or month-close/reopen rules until their authority is explicitly locked.
+Do not implement unresolved employee Kasbon repayment/deduction semantics or month-close/reopen rules until their authority is explicitly locked.
