@@ -121,6 +121,8 @@ declare
     v_paid numeric(18,2) := 0;
     v_blocker text;
     v_tracked_lines integer := 0;
+    v_original_money uuid;
+    v_original_account uuid;
 begin
     v_authority := public.get_my_authority();
     v_business := (v_authority ->> 'business_id')::uuid;
@@ -161,6 +163,13 @@ begin
         v_blocker := 'SALE_ALREADY_CORRECTED';
     elsif v_payment_count <> 1 or v_payment_amount <> v_sale.total_amount then
         v_blocker := 'SALE_CORRECTION_PAYMENT_SHAPE_UNSUPPORTED';
+    elsif v_sale.shift_id is null or not exists (
+        select 1 from public.shifts sh
+        where sh.id=v_sale.shift_id
+          and sh.business_id=v_business
+          and sh.status='OPEN'
+    ) then
+        v_blocker := 'SALE_CORRECTION_SHIFT_CLOSED_UNSUPPORTED';
     end if;
 
     if v_blocker is null and v_payment_method='CREDIT' then
@@ -179,6 +188,24 @@ begin
             if v_paid > 0 then
                 v_blocker := 'SALE_CORRECTION_PAID_DEBT_UNSUPPORTED';
             end if;
+        end if;
+    end if;
+
+    if v_blocker is null and v_payment_method in ('CASH','QRIS','TRANSFER') then
+        select mm.id, mm.to_account_id
+        into v_original_money, v_original_account
+        from public.money_movements mm
+        where mm.business_id=v_business
+          and mm.source_type='SALE'
+          and mm.source_ref=v_sale.invoice_number
+          and mm.reason_code='SALE_PAYMENT'
+        order by mm.created_at
+        limit 1;
+
+        if v_original_money is null or v_original_account is null then
+            v_blocker := 'SALE_CORRECTION_MONEY_MOVEMENT_MISSING';
+        elsif private.finance_account_balance(v_business,v_original_account) < v_sale.total_amount then
+            v_blocker := 'SALE_CORRECTION_ACCOUNT_BALANCE_INSUFFICIENT';
         end if;
     end if;
 
@@ -285,6 +312,15 @@ begin
 
     if v_sale.status <> 'COMPLETED' then
         raise exception using errcode='23514', message='SALE_NOT_CORRECTABLE';
+    end if;
+
+    if v_sale.shift_id is null or not exists (
+        select 1 from public.shifts sh
+        where sh.id=v_sale.shift_id
+          and sh.business_id=v_business
+          and sh.status='OPEN'
+    ) then
+        raise exception using errcode='23514', message='SALE_CORRECTION_SHIFT_CLOSED_UNSUPPORTED';
     end if;
 
     select count(*), min(method), coalesce(sum(amount),0)::numeric(18,2)
@@ -425,6 +461,11 @@ begin
 
     if v_original_account is null then
         raise exception using errcode='23503', message='SALE_CORRECTION_MONEY_ACCOUNT_MISSING';
+    end if;
+
+    if v_payment_method <> 'CREDIT'
+       and private.finance_account_balance(v_business,v_original_account) < v_sale.total_amount then
+        raise exception using errcode='23514', message='SALE_CORRECTION_ACCOUNT_BALANCE_INSUFFICIENT';
     end if;
 
     v_money_reversal := private.record_money_movement(

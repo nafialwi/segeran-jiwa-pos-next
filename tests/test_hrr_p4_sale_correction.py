@@ -68,6 +68,12 @@ class HrrP4SaleCorrectionTests(unittest.TestCase):
         self.assertIn("customer_debt_payments", s)
         self.assertIn("sale_correction_paid_debt_unsupported", s)
 
+    def test_closed_shift_and_insufficient_balance_fail_closed(self):
+        s = self.source()
+        self.assertIn("sale_correction_shift_closed_unsupported", s)
+        self.assertIn("private.finance_account_balance", s)
+        self.assertIn("sale_correction_account_balance_insufficient", s)
+
     def test_history_and_debt_projection_distinguish_corrected(self):
         s = self.source()
         self.assertIn("'corrected'", s)
