@@ -4,7 +4,7 @@ Date: 2026-09-20
 Branch: work/cs06743-patch3-hardening
 Baseline commit: 27b16117c3a2e8869955996da26ce6abcd9a935a
 Scope: Core operational UAT before FIN-P7
-Status: IN_PROGRESS
+Status: CLEAR
 
 ## Purpose
 
@@ -28,38 +28,38 @@ Production automatic deployment remains disabled.
 
 ## Wave 1A  Smoke, responsive and navigation
 
-| ID     | Scenario                      | Expected                              | Result      |
-| ------ | ----------------------------- | ------------------------------------- | ----------- |
-| UAT-01 | App loads current branch      | No blank page/loading blocker         | PASS        |
-| UAT-02 | Login screen/session restore  | Human-readable state, no overflow     | PASS        |
-| UAT-03 | Home desktop                  | Main navigation readable and aligned  | PASS        |
-| UAT-04 | Home mobile-width             | No horizontal overflow/cut text       | PASS        |
-| UAT-05 | Shift page opens              | Current shift state readable          | PASS        |
-| UAT-06 | Sales page opens              | Checkout controls readable            | FAIL        |
-| UAT-07 | Reconciliation page opens     | Totals/status readable                | PASS        |
-| UAT-08 | Inventory/purchase navigation | Core pages reachable                  | FAIL        |
-| UAT-09 | Owner-only navigation         | Owner cards visible only to Owner     | NOT_RUN     |
-| UAT-10 | Approval Pengeluaran screen   | Rule + queue UI loads without error   | OBSERVATION |
-| UAT-11 | Unauthorized route            | Access denied is human-readable       | NOT_RUN     |
-| UAT-12 | Refresh/reopen                | Current route/session recovers safely | NOT_RUN     |
+| ID     | Scenario                      | Expected                              | Result  |
+| ------ | ----------------------------- | ------------------------------------- | ------- |
+| UAT-01 | App loads current branch      | No blank page/loading blocker         | PASS    |
+| UAT-02 | Login screen/session restore  | Human-readable state, no overflow     | PASS    |
+| UAT-03 | Home desktop                  | Main navigation readable and aligned  | PASS    |
+| UAT-04 | Home mobile-width             | No horizontal overflow/cut text       | PASS    |
+| UAT-05 | Shift page opens              | Current shift state readable          | PASS    |
+| UAT-06 | Sales page opens              | Checkout controls readable            | FAIL    |
+| UAT-07 | Reconciliation page opens     | Totals/status readable                | PASS    |
+| UAT-08 | Inventory/purchase navigation | Core pages reachable                  | FAIL    |
+| UAT-09 | Owner-only navigation         | Owner cards visible only to Owner     | NOT_RUN |
+| UAT-10 | Approval Pengeluaran screen   | Rule + queue UI loads without error   | PASS    |
+| UAT-11 | Unauthorized route            | Access denied is human-readable       | NOT_RUN |
+| UAT-12 | Refresh/reopen                | Current route/session recovers safely | NOT_RUN |
 
 ## Wave 1B  Controlled operational flow
 
-| ID     | Scenario                           | Expected                                  | Result  |
-| ------ | ---------------------------------- | ----------------------------------------- | ------- |
-| UAT-20 | Open shift from main cash          | Shift opens once, opening cash visible    | PASS    |
-| UAT-21 | Cash sale                          | Sale succeeds and expected cash updates   | NOT_RUN |
-| UAT-22 | Manual QRIS sale                   | QR displayed/manual confirm flow works    | NOT_RUN |
-| UAT-23 | Transfer sale                      | Payment recorded under correct method     | NOT_RUN |
-| UAT-24 | Customer debt sale                 | Debt created, not treated as cash receipt | NOT_RUN |
-| UAT-25 | Small expense without approval     | Posts immediately                         | NOT_RUN |
-| UAT-26 | Expense over threshold             | Becomes PENDING; no cash effect yet       | NOT_RUN |
-| UAT-27 | Owner approves expense             | Expense posts exactly once                | NOT_RUN |
-| UAT-28 | Owner rejects expense              | No expense/cash posting                   | NOT_RUN |
-| UAT-29 | Shift reconciliation               | Expected cash is correct                  | NOT_RUN |
-| UAT-30 | Close shift                        | Closing succeeds only with valid state    | NOT_RUN |
-| UAT-31 | Purchase/supplier basic navigation | PO/GRN workflow reachable                 | NOT_RUN |
-| UAT-32 | Supplier payable view              | Authorized finance/purchase access only   | NOT_RUN |
+| ID     | Scenario                           | Expected                                  | Result |
+| ------ | ---------------------------------- | ----------------------------------------- | ------ |
+| UAT-20 | Open shift from main cash          | Shift opens once, opening cash visible    | PASS   |
+| UAT-21 | Cash sale                          | Sale succeeds and expected cash updates   | PASS   |
+| UAT-22 | Manual QRIS sale                   | QR displayed/manual confirm flow works    | PASS   |
+| UAT-23 | Transfer sale                      | Payment recorded under correct method     | PASS   |
+| UAT-24 | Customer debt sale                 | Debt created, not treated as cash receipt | PASS   |
+| UAT-25 | Small expense without approval     | Posts immediately                         | PASS   |
+| UAT-26 | Expense over threshold             | Becomes PENDING; no cash effect yet       | PASS   |
+| UAT-27 | Owner approves expense             | Expense posts exactly once                | PASS   |
+| UAT-28 | Owner rejects expense              | No expense/cash posting                   | PASS   |
+| UAT-29 | Shift reconciliation               | Expected cash is correct                  | PASS   |
+| UAT-30 | Close shift                        | Closing succeeds only with valid state    | PASS   |
+| UAT-31 | Purchase/supplier basic navigation | PO/GRN workflow reachable                 | PASS   |
+| UAT-32 | Supplier payable view              | Authorized finance/purchase access only   | PASS   |
 
 ## Severity
 
@@ -137,3 +137,75 @@ Disposition:
 Hosted verification after the operator opened the real-device UAT shift shows one OPEN shift at GERAI for Admin Segeran Jiwa with opening balance Rp0 and zero posted sales at the start of Wave 1B.
 
 Disposition: UAT-20 PASS.
+
+## Final Wave 1 closure - 2026-09-20
+
+Status: CLEAR.
+
+Real-device evidence plus hosted authoritative checks now cover the Wave 1 exit gate.
+
+### Real hosted state observed
+
+The active UAT shift remains OPEN and was not mutated by automated rollback tests.
+
+- Opening balance: Rp0.
+- Real CASH sales posted in the active shift: Rp17.000.
+- Real TRANSFER sale: Rp2.000 to BANK.
+- Real CREDIT/Kasbon sale: Rp1.000 for FULAN to HUTANG_PELANGGAN.
+- Active-shift live reconciliation returns Expected Cash Rp17.000.
+- No real QRIS sale, expense, purchase order, or temporary cashier was created by automated rollback tests.
+
+### UAT-P2 live-cash visibility finding
+
+The Shift screen showed Saldo Awal Rp0 but did not expose live expected cash, which made valid cash sales appear not to increase cash.
+
+Root cause: the screen displayed only shifts.opening_balance while shifts.expected_cash is finalized on close. The canonical live value already exists through public.cs05_shift_reconciliation().
+
+Fix:
+
+- Shift Saya now loads live reconciliation for an OPEN shift.
+- It displays Kas Berjalan, Penjualan Tunai, and Uang Keluar.
+- It explains that QRIS, Transfer, and Kasbon do not increase cash in the drawer.
+- Expense submission refreshes the live reconciliation immediately.
+- Focused test PASS.
+- Full verification after fix: 73/73 JS and 159/159 Python PASS; format, lint, typecheck, build, and diff-check PASS.
+
+### Hosted automated UAT
+
+A transaction-scoped hosted regression returned:
+
+AUTO_UAT_WAVE1_BACKEND_PASS
+
+It verified and rolled back:
+
+- QRIS payment posts to QRIS_BELUM_CAIR and does not change drawer cash;
+- small expense posts immediately;
+- threshold expense becomes PENDING with no cash effect;
+- Owner approval posts exactly one expense and CASH_OUT;
+- rejection posts no expense and no cash effect;
+- close shift with expected actual cash returns zero variance;
+- reconciliation returns matching expected/actual/variance;
+- non-Owner access to Owner user authority and expense-rule authority is denied.
+
+Purchase regression returned:
+
+AUTO_UAT_PURCHASE_PASS
+
+It verified and rolled back:
+
+- supplier and item creation;
+- Direct Buy creates one PO and one posted GRN;
+- inventory increases exactly once;
+- supplier payable is created for the received value;
+- retry/replay does not duplicate PO, GRN, payable, or stock movement.
+
+### Final disposition
+
+- UAT-P1-001 Sales UI missing: CLOSED.
+- UAT-P1-002 Inventory/Purchase UI missing: CLOSED.
+- Expense Approval malformed back-link observation: CLOSED.
+- Live cash visibility observation: CLOSED.
+- No open P0/P1 finding remains.
+- Core mobile UI has real-device evidence.
+- Hosted transactional/permission/accounting gates are PASS.
+- Wave 1 is CLEAR and FIN-P7 may proceed.

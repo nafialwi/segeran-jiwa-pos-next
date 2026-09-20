@@ -7,6 +7,7 @@ import {
   formatIdr,
   formatVariance,
   toShiftErrorMessage,
+  type Reconciliation,
   type Shift,
   type ShiftExpense,
 } from '../shift/shift-core';
@@ -14,6 +15,7 @@ import {
   closeShift,
   fetchShiftExpenseApprovals,
   fetchShiftExpenses,
+  fetchShiftReconciliation,
   fetchLocations,
   fetchMyOpenShift,
   openShift,
@@ -25,6 +27,8 @@ import {
 export function ShiftManagementScreen() {
   const { authority } = useAuth();
   const [shift, setShift] = useState<Shift | null>(null);
+  const [runningReconciliation, setRunningReconciliation] =
+    useState<Reconciliation | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +81,7 @@ export function ShiftManagementScreen() {
     if (!shift) {
       setExpenses([]);
       setExpenseApprovals([]);
+      setRunningReconciliation(null);
       return () => {
         cancelled = true;
       };
@@ -84,13 +89,15 @@ export function ShiftManagementScreen() {
 
     void (async () => {
       try {
-        const [rows, approvals] = await Promise.all([
+        const [rows, approvals, reconciliation] = await Promise.all([
           fetchShiftExpenses(shift.id),
           fetchShiftExpenseApprovals(shift.id),
+          fetchShiftReconciliation(shift.id),
         ]);
         if (!cancelled) {
           setExpenses(rows);
           setExpenseApprovals(approvals);
+          setRunningReconciliation(reconciliation);
         }
       } catch (err) {
         if (!cancelled) setError(toShiftErrorMessage(err));
@@ -149,12 +156,14 @@ export function ShiftManagementScreen() {
           ? 'Menunggu persetujuan Owner.'
           : 'Pengeluaran berhasil dicatat.',
       );
-      const [rows, approvals] = await Promise.all([
+      const [rows, approvals, reconciliation] = await Promise.all([
         fetchShiftExpenses(shift.id),
         fetchShiftExpenseApprovals(shift.id),
+        fetchShiftReconciliation(shift.id),
       ]);
       setExpenses(rows);
       setExpenseApprovals(approvals);
+      setRunningReconciliation(reconciliation);
       setExpenseCategory('');
       setExpenseDescription('');
       setExpenseAmount(0);
@@ -197,9 +206,38 @@ export function ShiftManagementScreen() {
               </div>
               <div>
                 <dt>Saldo Awal</dt>
-                <dd>Rp {shift.opening_balance.toLocaleString('id-ID')}</dd>
+                <dd>{formatIdr(shift.opening_balance)}</dd>
+              </div>
+              <div>
+                <dt>Kas Berjalan</dt>
+                <dd>
+                  {runningReconciliation
+                    ? formatIdr(runningReconciliation.expected_cash)
+                    : 'Memuat...'}
+                </dd>
+              </div>
+              <div>
+                <dt>Penjualan Tunai</dt>
+                <dd>
+                  {runningReconciliation
+                    ? formatIdr(runningReconciliation.sale_total)
+                    : 'Memuat...'}
+                </dd>
+              </div>
+              <div>
+                <dt>Uang Keluar</dt>
+                <dd>
+                  {runningReconciliation
+                    ? formatIdr(runningReconciliation.cash_out_total)
+                    : 'Memuat...'}
+                </dd>
               </div>
             </dl>
+            <p className="muted">
+              Kas Berjalan dihitung dari saldo awal + transaksi tunai + uang
+              masuk - refund - uang keluar + penyesuaian. QRIS, transfer, dan
+              kasbon tidak menambah kas laci.
+            </p>
             <form onSubmit={handleClose} className="stack-form">
               <label>
                 Uang Aktual di Laci
@@ -261,7 +299,9 @@ export function ShiftManagementScreen() {
                   type="submit"
                   disabled={submittingExpense}
                 >
-                  {submittingExpense ? 'Mencatat&' : 'Catat Pengeluaran Shift'}
+                  {submittingExpense
+                    ? 'Mencatat...'
+                    : 'Catat Pengeluaran Shift'}
                 </button>
               </form>
 
