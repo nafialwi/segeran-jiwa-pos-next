@@ -28,20 +28,20 @@ Production automatic deployment remains disabled.
 
 ## Wave 1A  Smoke, responsive and navigation
 
-| ID     | Scenario                      | Expected                              | Result  |
-| ------ | ----------------------------- | ------------------------------------- | ------- |
-| UAT-01 | App loads current branch      | No blank page/loading blocker         | NOT_RUN |
-| UAT-02 | Login screen/session restore  | Human-readable state, no overflow     | NOT_RUN |
-| UAT-03 | Home desktop                  | Main navigation readable and aligned  | NOT_RUN |
-| UAT-04 | Home mobile-width             | No horizontal overflow/cut text       | NOT_RUN |
-| UAT-05 | Shift page opens              | Current shift state readable          | NOT_RUN |
-| UAT-06 | Sales page opens              | Checkout controls readable            | NOT_RUN |
-| UAT-07 | Reconciliation page opens     | Totals/status readable                | NOT_RUN |
-| UAT-08 | Inventory/purchase navigation | Core pages reachable                  | NOT_RUN |
-| UAT-09 | Owner-only navigation         | Owner cards visible only to Owner     | NOT_RUN |
-| UAT-10 | Approval Pengeluaran screen   | Rule + queue UI loads without error   | NOT_RUN |
-| UAT-11 | Unauthorized route            | Access denied is human-readable       | NOT_RUN |
-| UAT-12 | Refresh/reopen                | Current route/session recovers safely | NOT_RUN |
+| ID     | Scenario                      | Expected                              | Result      |
+| ------ | ----------------------------- | ------------------------------------- | ----------- |
+| UAT-01 | App loads current branch      | No blank page/loading blocker         | PASS        |
+| UAT-02 | Login screen/session restore  | Human-readable state, no overflow     | PASS        |
+| UAT-03 | Home desktop                  | Main navigation readable and aligned  | PASS        |
+| UAT-04 | Home mobile-width             | No horizontal overflow/cut text       | PASS        |
+| UAT-05 | Shift page opens              | Current shift state readable          | PASS        |
+| UAT-06 | Sales page opens              | Checkout controls readable            | FAIL        |
+| UAT-07 | Reconciliation page opens     | Totals/status readable                | PASS        |
+| UAT-08 | Inventory/purchase navigation | Core pages reachable                  | FAIL        |
+| UAT-09 | Owner-only navigation         | Owner cards visible only to Owner     | NOT_RUN     |
+| UAT-10 | Approval Pengeluaran screen   | Rule + queue UI loads without error   | OBSERVATION |
+| UAT-11 | Unauthorized route            | Access denied is human-readable       | NOT_RUN     |
+| UAT-12 | Refresh/reopen                | Current route/session recovers safely | NOT_RUN     |
 
 ## Wave 1B  Controlled operational flow
 
@@ -88,3 +88,28 @@ Operator-provided screenshots on 2026-09-20 show:
 - A separate highly magnified Chrome screenshot clips the right side because the browser content is zoomed. It is recorded as a browser-zoom observation, not a baseline responsive defect, because the normal mobile viewport screenshot renders the full grid without horizontal clipping.
 
 Current Wave 1A result: UAT-01..04 PASS. No P0/P1 finding.
+
+## Evidence  UAT-05 through UAT-10
+
+Operator-provided mobile screenshots on 2026-09-20 show:
+
+- UAT-05 PASS  Shift Saya opens, location/opening-balance controls are readable and the open-shift state is human-readable.
+- UAT-06 FAIL / P1  /jual renders only the Sales foundation placeholder: `Fondasi akses Penjualan aktif. Modul Penjualan dibangun pada milestone berikutnya.` Checkout controls are absent, so the core sale flow is unusable from the Next UI.
+- UAT-07 PASS  Reconciliation opens and renders a real closed-shift breakdown with Opening Balance, Cash Sales, Refund, Cash In, Cash Out, Adjustment, Expected Cash, Actual Cash and Variance.
+- UAT-08 FAIL / P1  Home/router has no Inventory/Purchase operational navigation even though CS-06 backend/domain work is locked. Core inventory/purchase screens are not reachable from the Next UI.
+- UAT-10 OBSERVATION / P2  Expense Approval loads and shows rule + request sections, but the Back-to-Home arrow is rendered as a replacement/malformed character in the supplied screenshot. Function is usable; visual encoding needs correction.
+
+### P1 findings opened
+
+1. `UAT-P1-001 Sales UI missing`  backend checkout authority exists, but /jual is a hard-coded placeholder.
+2. `UAT-P1-002 Inventory/Purchase UI missing`  CS-06 backend/domain exists without corresponding reachable operational UI.
+
+### P2 findings opened
+
+1. `UAT-P2-001 Expense Approval back-link encoding`  malformed arrow glyph on real Android Chrome.
+
+### UAT disposition
+
+Wave 1 transactional section is PAUSED at the P1 gate. Do not proceed to FIN-P7 or transactional UAT until P1 findings are fixed and UAT-06/UAT-08 are rerun.
+
+Hosted data check during triage also found zero active rows in both `products` and `stock_items`. This is a separate UAT-data prerequisite for real sales/inventory transactions and must be resolved explicitly before Wave 1B; no production/UAT master data is being invented silently.
