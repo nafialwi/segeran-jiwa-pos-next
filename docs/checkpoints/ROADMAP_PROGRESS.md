@@ -58,8 +58,9 @@
 ### Expense, Debt, Kasbon & Finance Engine
 
 - Weight: 10%
-- Completion: 0%
+- Completion: In progress
 - Earned: 0.0%
+- Note: FIN-P1 Finance Foundation LOCKED_REMOTE on 2026-09-20. Full bucket remains unearned until the finance milestone acceptance gate is locked.
 
 ### History, Reversal/Refund, Reports & Excel
 
@@ -82,7 +83,7 @@
 
 1. Report milestone progress separately from whole-project progress.
 2. Full bucket weight is earned only after its acceptance gate is locked.
-3. Partial milestone progress must use the approved bucket weight.
+3. Partial milestone progress must use an approved bucket weight; absent an approved phase weighting, do not invent earned percentage.
 4. Resolved historical failures are evidence, not current blockers.
 5. Mockups alone do not earn implementation progress.
 6. Final 100% requires cutover-hardening acceptance.
@@ -92,3 +93,4 @@
 - 2026-09-11: CS-04 locked; whole-project progress moved from 20.0% to 32.0%.
 - 2026-09-13: CS-02 & CS-03 retroactive closure; progress moved from 32.0% to 54.0%.
 - 2026-09-20: CS-05 & CS-06 final closure; progress moved from 54.0% to 78.0%.
+- 2026-09-20: FIN-P1 foundation locked; finance milestone is in progress, earned total remains 78.0%.
