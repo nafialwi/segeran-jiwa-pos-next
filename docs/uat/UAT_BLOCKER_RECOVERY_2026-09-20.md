@@ -3,7 +3,7 @@
 Date: 2026-09-20
 Branch: work/cs06743-patch3-hardening
 Trigger: UAT Wave 1 real-device screenshots
-Status: ACTIVE
+Status: P1_CLEAR - TRANSACTIONAL_UAT_RESUMED
 
 ## Findings
 
@@ -94,3 +94,11 @@ UAT Wave 1 may resume transactional testing only when:
 Do not start FIN-P7 while these UAT P1 findings are open.
 
 The existing 78% figure remains the weighted implementation-roadmap score; it must not be described as 78% end-user/cutover readiness.
+
+## Closure evidence
+
+- Sales UI blocker closed by real-device rerun: PASS.
+- Inventory/Purchase UI blocker closed by real-device rerun: PASS.
+- Legacy master prerequisite cleared and verified on hosted.
+- Hosted Sales and Purchase regressions pass.
+- Remaining visual P2 findings do not block Wave 1B.

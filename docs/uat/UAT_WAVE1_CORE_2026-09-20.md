@@ -113,3 +113,21 @@ Operator-provided mobile screenshots on 2026-09-20 show:
 Wave 1 transactional section is PAUSED at the P1 gate. Do not proceed to FIN-P7 or transactional UAT until P1 findings are fixed and UAT-06/UAT-08 are rerun.
 
 Hosted data check during triage also found zero active rows in both `products` and `stock_items`. This is a separate UAT-data prerequisite for real sales/inventory transactions and must be resolved explicitly before Wave 1B; no production/UAT master data is being invented silently.
+
+## Real-device rerun evidence - UAT-06 / UAT-08
+
+Operator screenshot on 2026-09-20 after master import and blocker recovery shows:
+
+- Home exposes Jual, Stok, Pembelian, Migrasi Master Legacy, Shift, Reconciliation, Owner controls and other expected navigation.
+- Jual renders a real 30-product active catalog with search, category, server-imported price, and stock visibility. Zero-stock tracked items are visibly disabled.
+- Stok renders imported Legacy rows at Gerai with quantity, unit, price and sale status.
+- Pembelian is reachable and exposes operational front-door controls including Tambah Pemasok and Tambah Barang.
+- The active Owner shift is OPEN at GERAI with opening balance Rp0 and no sale posted yet at the time of rerun.
+
+Disposition:
+
+- UAT-P1-001 Sales UI missing: CLOSED.
+- UAT-P1-002 Inventory/Purchase UI missing: CLOSED.
+- UAT-06: PASS.
+- UAT-08: PASS.
+- Wave 1 transactional testing may resume.
