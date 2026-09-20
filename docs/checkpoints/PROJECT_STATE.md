@@ -1,15 +1,17 @@
-# PROJECT STATE - FIN-P4 LOCKED_REMOTE
+# PROJECT STATE - FIN-P5 LOCKED_REMOTE
 
 ## Canonical identity
 
 - Workspace: Segeran Jiwa Next Vol. 1
 - Product: Segeran Jiwa POS Next
 - Blueprint: v1.0 FINAL LOCK
-- Current milestone: FIN-P4 - QRIS Settlement & Daily Finance Reconciliation - LOCKED_REMOTE
+- Current milestone: FIN-P5 - Supplier Payable Foundation - LOCKED_REMOTE
 - Current branch: work/cs06743-patch3-hardening
-- FIN-P4 planning source: bea7a63cfeab8d07ef6545ec72037ad59901e9f0
-- FIN-P4 technical source: 516c896fb4eaf9311e5cb3c6de52267cbfd393e3
-- Managed hosted migration: fin_p4_qris_settlement_reconciliation
+- FIN-P5 planning source: 81172900d60079db556f3bff928b83b0f3c66d83
+- FIN-P5 foundation source: 83027b4748dc8f35b7eae59d4102e561e97c3c41
+- FIN-P5A source: c6f3041ca2c498a07833eb19dd7f06845fba676f
+- FIN-P5B source: b77c1d1f3a4a28c5b220a66b93f03e524e8784c9
+- Managed hosted migrations: FIN-P5, FIN-P5A, FIN-P5B
 - Release guard: PROCESS-GUARD
 - Production automatic deployment: DISABLED
 
@@ -22,48 +24,48 @@
 - CS-04: 100%
 - CS-05: 100%
 - CS-06: 100%
-- Finance milestone: IN PROGRESS; FIN-P1, FIN-P2A, FIN-P2B, FIN-P3, and FIN-P4 locked
+- Finance milestone: IN PROGRESS; FIN-P1 through FIN-P5 locked
 - Whole-project weighted progress: 78.0%
 
 The Finance roadmap bucket remains unearned until its complete acceptance gate is locked.
 
 ## Current verified state
 
-- FIN-P1 finance foundation is locked.
-- FIN-P2A explicit Shift funding bridge is locked.
-- FIN-P2B typed Shift Expense is locked.
+- FIN-P1 Finance Foundation is locked.
+- FIN-P2A Shift Funding Bridge is locked.
+- FIN-P2B Shift Expense Fact is locked.
 - FIN-P3 Customer Debt Foundation is locked.
 - FIN-P4 QRIS Settlement & Daily Finance Reconciliation is locked.
-- QRIS settlement preserves sale revenue and posts provider fee separately.
-- QRIS Belum Cair -> QRIS Sudah Cair -> Bank is represented through canonical money movements.
-- Daily finance reconciliation produces immutable SESUAI / PERLU_DIPERIKSA evidence.
-- Global finance/reconciliation reads and commands remain Owner-only.
-- Hosted FIN-P4 regression: PASS and rolled back.
-- Final technical verify before checkpoint docs: PASS (73 JS / 132 Python).
+- FIN-P5 Supplier Payable Foundation is locked.
+- Supplier payable supports append-only partial payments through the canonical money ledger.
+- Payment API uses CASH/TRANSFER semantics and resolves canonical accounts server-side.
+- Supplier read access is restricted to Owner/PURCHASE_MANAGE.
+- Hosted FIN-P5 regression: PASS and rolled back.
+- Final technical verify before checkpoint docs: PASS (73 JS / 139 Python).
 - Production automatic deployment remains disabled.
 
 ## Historical provenance note
 
-Historical CS-04 through CS-06 managed migration rows remain incomplete, although hosted objects are verified. Current Finance migrations are recorded normally.
+Historical CS-04 through CS-06 managed migration rows remain incomplete although hosted objects are verified. Current Finance migrations are recorded normally.
 
-The original Blueprint v1.0 FINAL LOCK file path referenced by older state files is not present in the working tree. Finance work is reconciled against the authoritative one-file handoff snapshot and no unresolved business rule is silently invented.
+The original Blueprint v1.0 FINAL LOCK file path referenced by older state files is not present in the working tree. Finance work is reconciled against the authoritative Library/handoff copy; unresolved business rules are not silently invented.
 
 ## Source of truth order
 
-1. Blueprint v1.0 FINAL LOCK / authoritative handoff snapshot
+1. Blueprint v1.0 FINAL LOCK / authoritative handoff copy
 2. Decision / Change Control records
 3. docs/checkpoints/PROJECT_STATE.md
 4. docs/checkpoints/ROADMAP_PROGRESS.md
-5. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
-6. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
-7. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-8. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-9. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-10. docs/superpowers/specs/2026-09-20-fin-p4-qris-settlement-reconciliation-design.md
+5. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
+6. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
+7. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
+8. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+9. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+10. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
 11. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-Bounded Finance closure audit.
+FIN-P6 Expense Approval.
 
-Only remaining finance scope already fixed by Blueprint authority may be implemented automatically. Unresolved employee-Kasbon and month-close/reopen semantics remain blocked from invention.
+Implement the locked Owner-configurable approval rule by amount/category. Do not invent month-close/reopen or employee-Kasbon repayment/deduction semantics.

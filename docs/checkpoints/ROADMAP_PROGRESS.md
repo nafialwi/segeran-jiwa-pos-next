@@ -60,7 +60,7 @@
 - Weight: 10%
 - Completion: In progress
 - Earned: 0.0%
-- Note: FIN-P1 Finance Foundation, FIN-P2A Shift Funding Bridge, FIN-P2B Shift Expense Fact, FIN-P3 Customer Debt Foundation, and FIN-P4 QRIS Settlement & Daily Finance Reconciliation LOCKED_REMOTE on 2026-09-20. Full bucket remains unearned until the finance milestone acceptance gate is locked.
+- Note: FIN-P1 Finance Foundation, FIN-P2A Shift Funding Bridge, FIN-P2B Shift Expense Fact, FIN-P3 Customer Debt Foundation, FIN-P4 QRIS Settlement & Daily Finance Reconciliation, and FIN-P5 Supplier Payable Foundation are LOCKED_REMOTE. Full bucket remains unearned until the finance milestone acceptance gate is locked.
 
 ### History, Reversal/Refund, Reports & Excel
 
@@ -98,3 +98,4 @@
 - 2026-09-20: FIN-P2B Shift Expense Fact locked with P2B1 index hardening; earned total remains 78.0%.
 - 2026-09-20: FIN-P3 Customer Debt Foundation locked with P3A RLS hardening; earned total remains 78.0%.
 - 2026-09-20: FIN-P4 QRIS Settlement & Daily Finance Reconciliation locked; earned total remains 78.0%.
+- 2026-09-20: FIN-P5 Supplier Payable Foundation locked with P5A/P5B API and read-authority hardening; earned total remains 78.0%.
