@@ -1126,3 +1126,32 @@ textarea {
     font-size: 0.7rem;
   }
 }
+
+.report-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.report-summary-card {
+  display: grid;
+  gap: 5px;
+  padding: 14px;
+  border: 1px solid #e1e7e3;
+  border-radius: 14px;
+  background: #f8faf9;
+}
+
+.report-summary-card strong {
+  font-size: 1.05rem;
+}
+
+.report-warning {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid #e4d7aa;
+  border-radius: 12px;
+  background: #fffaf0;
+  line-height: 1.45;
+}

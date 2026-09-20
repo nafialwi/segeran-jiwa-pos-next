@@ -16,6 +16,7 @@ import { PurchaseScreen } from './screens/PurchaseScreen';
 import { LegacyImportScreen } from './screens/LegacyImportScreen';
 import { FinanceScreen } from './screens/FinanceScreen';
 import { TransactionHistoryScreen } from './screens/TransactionHistoryScreen';
+import { ReportsScreen } from './screens/ReportsScreen';
 
 function RootRoute() {
   const { state } = useAuth();
@@ -36,6 +37,20 @@ export function App() {
     <Routes>
       <Route path="/login" element={<LoginScreen />} />
       <Route path="/" element={<RootRoute />} />
+      <Route
+        path="/laporan"
+        element={
+          <RequireAccess
+            anyPermissions={[
+              'REPORT_SALES_LIMITED',
+              'REPORT_INVENTORY',
+              'REPORT_PURCHASE',
+            ]}
+          >
+            <ReportsScreen />
+          </RequireAccess>
+        }
+      />
       <Route
         path="/riwayat"
         element={

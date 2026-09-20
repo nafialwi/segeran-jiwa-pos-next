@@ -57,6 +57,15 @@ export function HomeScreen() {
             Riwayat
           </Link>
         )}
+        {hasAnyPermission(authority, [
+          'REPORT_SALES_LIMITED',
+          'REPORT_INVENTORY',
+          'REPORT_PURCHASE',
+        ]) && (
+          <Link className="nav-card" to="/laporan">
+            Laporan
+          </Link>
+        )}
         {hasPermission(authority, 'INVENTORY_READ') && (
           <Link className="nav-card" to="/stok">
             Stok

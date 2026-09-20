@@ -31,6 +31,13 @@ export function canAccessRoute(
   if (route === '/riwayat') {
     return hasAnyPermission(authority, ['HISTORY_OWN', 'HISTORY_ALL']);
   }
+  if (route === '/laporan') {
+    return hasAnyPermission(authority, [
+      'REPORT_SALES_LIMITED',
+      'REPORT_INVENTORY',
+      'REPORT_PURCHASE',
+    ]);
+  }
   if (route === '/jual') return hasPermission(authority, 'SALE_EXECUTE');
   return authority.status === 'ACTIVE';
 }
