@@ -1,14 +1,14 @@
-# PROJECT STATE - HRR-P2 LOCKED_REMOTE
+# PROJECT STATE - HRR-P3 LOCKED_REMOTE
 
 ## Canonical identity
 
 - Workspace: Segeran Jiwa Next Vol. 1
 - Product: Segeran Jiwa POS Next
 - Blueprint: v1.0 FINAL LOCK
-- Current milestone: HRR-P2 - Sale Refund / Reversal Authority - LOCKED_REMOTE
+- Current milestone: HRR-P3 - Reports & Excel Foundation - LOCKED_REMOTE
 - Current branch: work/cs06743-patch3-hardening
-- HRR-P2 technical source: dd997dd63f54e41f844f20b6cd5ed7fbf6854e35
-- Latest managed hosted migration: hrr_p2_sale_refund
+- HRR-P3 canonical source: 9b02545efb37378cefe7e99c8ca6f56ed4dbf237
+- Latest managed hosted migration: hrr_p3_reports_excel
 - Release guard: PROCESS-GUARD
 - Production automatic deployment: DISABLED
 
@@ -22,10 +22,12 @@
 - CS-05: 100%
 - CS-06: 100%
 - Finance milestone: 100% / LOCKED_REMOTE
-- History/Reversal/Reports milestone: IN PROGRESS; HRR-P1 and HRR-P2 locked
-- Whole-project weighted progress: 88.0%
+- History/Reversal/Reports milestone: 100% / LOCKED_REMOTE
+- Whole-project weighted progress: 95.0%
 
 The Finance roadmap bucket is accepted and earns its full 10.0% roadmap weight.
+
+The History, Reversal/Refund, Reports & Excel roadmap bucket is accepted and earns its full 7.0% roadmap weight.
 
 ## Current verified state
 
@@ -53,6 +55,13 @@ The Finance roadmap bucket is accepted and earns its full 10.0% roadmap weight.
 - Hosted HRR-P2 regression: HRR_P2_HOSTED_REGRESSION_PASS.
 - HRR-P2 final verify: PASS (73 JS / 181 Python).
 - HRR-P2 hosted rollback left 0 test refunds/users/receipts and preserved the real OPEN shift expected cash at Rp17.000.
+- HRR-P3 Reports & Excel Foundation: LOCKED_REMOTE.
+- Hosted HRR-P3 regression: HRR_P3_HOSTED_REGRESSION_PASS.
+- HRR-P3 final verify: PASS (74 JS / 187 Python).
+- Excel exporter executable contract: PASS; multi-sheet/sticky headers/column widths/.xlsx filename verified.
+- npm audit after Excel dependency selection: 0 vulnerabilities.
+- HRR-P3 hosted rollback left 0 temporary users/sales/refunds/receipts and preserved the real OPEN shift expected cash at Rp17.000.
+- History/Reversal/Reports bucket acceptance: CLEAR; earned 7.0%.
 - Production automatic deployment remains disabled.
 
 ## Historical provenance note
@@ -67,21 +76,22 @@ The original Blueprint v1.0 FINAL LOCK file path referenced by older state files
 2. Decision / Change Control records
 3. docs/checkpoints/PROJECT_STATE.md
 4. docs/checkpoints/ROADMAP_PROGRESS.md
-5. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
-6. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
-7. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
-8. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
-9. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
-10. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
-11. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
-12. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
-13. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-14. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-15. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-16. docs/checkpoints/RELEASE_MANIFEST.json
+5. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
+6. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
+7. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
+8. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
+9. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
+10. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
+11. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
+12. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
+13. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
+14. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+15. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+16. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
+17. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-HRR-P3 Reports & Excel Foundation.
+Attention, Offline, Backup, Health & Cutover Hardening.
 
-Build reports only from canonical facts/projections. Implement the Blueprint minimum Owner reports and presentation-ready Excel export without creating a second ledger or raw-dump UX.
+Close the final 5% only after the Blueprint offline action matrix, attention/health behavior, backup/restore verification, and cutover acceptance are proven.
