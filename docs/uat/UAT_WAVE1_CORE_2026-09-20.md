@@ -77,3 +77,14 @@ Wave 1 is CLEAR when:
 3. login/permission/shift/sales/expense approval paths have real-device evidence;
 4. transactional UAT reconciles money/shift outcomes;
 5. findings and fixes are committed/pushed to the working branch.
+
+## Evidence  UAT-01 through UAT-04
+
+Operator-provided screenshots on 2026-09-20 show:
+
+- Termux X11 desktop/browser: Home renders without blank/loading blocker; Owner session is active; navigation cards align in a two-column layout.
+- Android Chrome normal portrait viewport: Home remains readable, both navigation columns are visible, labels are not cut, and the Owner badge/session card remain within the viewport.
+- Existing authenticated session restores directly to Home as OWNER (Admin Segeran Jiwa, @admin, Perangkat Pribadi).
+- A separate highly magnified Chrome screenshot clips the right side because the browser content is zoomed. It is recorded as a browser-zoom observation, not a baseline responsive defect, because the normal mobile viewport screenshot renders the full grid without horizontal clipping.
+
+Current Wave 1A result: UAT-01..04 PASS. No P0/P1 finding.
