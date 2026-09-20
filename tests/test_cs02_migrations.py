@@ -59,6 +59,7 @@ EXPECTED_MIGRATIONS = [
     "20260920215500_uat_r2_recovery_index_hardening.sql",
     "20260920221000_uat_r3_purchase_front_door.sql",
     "20260920230000_fin_p7_employee_kasbon_foundation.sql",
+    "20260920233000_fin_closure_owner_equity_personal_accounts.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -86,6 +87,7 @@ EXPECTED_SQL_TESTS = [
     "cs06_p6_production_execution_test.sql",
     "cs06_p7_restock_transfer_test.sql",
     "cs06_p8_inventory_controls_test.sql",
+    "fin_closure_owner_equity_personal_accounts_test.sql",
     "fin_p1_finance_foundation_test.sql",
     "fin_p2a_shift_funding_bridge_test.sql",
     "fin_p2b1_expense_index_hardening_test.sql",
