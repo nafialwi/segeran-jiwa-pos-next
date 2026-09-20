@@ -46,6 +46,7 @@ EXPECTED_MIGRATIONS = [
     "20260920140000_fin_p1_finance_foundation.sql",
     "20260920150000_fin_p2a_shift_funding_bridge.sql",
     "20260920160000_fin_p2b_shift_expense.sql",
+    "20260920163000_fin_p2b1_expense_index_hardening.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -75,6 +76,7 @@ EXPECTED_SQL_TESTS = [
     "cs06_p8_inventory_controls_test.sql",
     "fin_p1_finance_foundation_test.sql",
     "fin_p2a_shift_funding_bridge_test.sql",
+    "fin_p2b1_expense_index_hardening_test.sql",
     "fin_p2b_shift_expense_test.sql",
 ]
 
