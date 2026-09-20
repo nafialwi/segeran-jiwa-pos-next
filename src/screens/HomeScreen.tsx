@@ -60,6 +60,9 @@ export function HomeScreen() {
         )}
         {canAccessOwnerArea(authority) && (
           <>
+            <Link className="nav-card" to="/keuangan">
+              Keuangan
+            </Link>
             <Link className="nav-card" to="/pengguna">
               Pengguna
             </Link>

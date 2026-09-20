@@ -14,6 +14,7 @@ import { SalesScreen } from './screens/SalesScreen';
 import { InventoryScreen } from './screens/InventoryScreen';
 import { PurchaseScreen } from './screens/PurchaseScreen';
 import { LegacyImportScreen } from './screens/LegacyImportScreen';
+import { FinanceScreen } from './screens/FinanceScreen';
 
 function RootRoute() {
   const { state } = useAuth();
@@ -63,6 +64,14 @@ export function App() {
         element={
           <RequireAccess ownerOnly>
             <LegacyImportScreen />
+          </RequireAccess>
+        }
+      />
+      <Route
+        path="/keuangan"
+        element={
+          <RequireAccess ownerOnly>
+            <FinanceScreen />
           </RequireAccess>
         }
       />
