@@ -9,6 +9,7 @@ import { ShiftManagementScreen } from './screens/ShiftManagementScreen';
 import { HandoverScreen } from './screens/HandoverScreen';
 import { ShiftHistoryScreen } from './screens/ShiftHistoryScreen';
 import { ReconciliationScreen } from './screens/ReconciliationScreen';
+import { ExpenseApprovalScreen } from './screens/ExpenseApprovalScreen';
 
 function RootRoute() {
   const { state } = useAuth();
@@ -84,6 +85,14 @@ export function App() {
         element={
           <RequireAccess permission="SHIFT_READ_OWN">
             <ReconciliationScreen />
+          </RequireAccess>
+        }
+      />
+      <Route
+        path="/expense-approval"
+        element={
+          <RequireAccess ownerOnly>
+            <ExpenseApprovalScreen />
           </RequireAccess>
         }
       />

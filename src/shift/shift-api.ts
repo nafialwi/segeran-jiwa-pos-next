@@ -138,19 +138,50 @@ export async function fetchLocations(): Promise<LocationOption[]> {
   }));
 }
 
+export type ShiftExpenseSubmission = {
+  status: 'POSTED' | 'PENDING' | 'APPROVED' | 'REJECTED';
+  expense_id: string | null;
+  request_id: string | null;
+};
+
+export type ShiftExpenseApproval = {
+  request_id: string;
+  shift_id: string;
+  category_code: string;
+  description: string;
+  amount: number;
+  requested_at: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  decision_reason: string | null;
+};
+
 export async function postShiftExpense(
   categoryCode: string,
   description: string,
   amount: number,
-): Promise<string> {
-  const { data, error } = await supabase.rpc('finance_post_shift_expense', {
+): Promise<ShiftExpenseSubmission> {
+  const { data, error } = await supabase.rpc('finance_submit_shift_expense', {
     p_category_code: categoryCode,
     p_description: description,
     p_amount: amount,
     p_idempotency_key: crypto.randomUUID(),
   });
   if (error) fail(error);
-  return String(data);
+  return data as ShiftExpenseSubmission;
+}
+
+export async function fetchShiftExpenseApprovals(
+  shiftId: string,
+): Promise<ShiftExpenseApproval[]> {
+  const { data, error } = await supabase
+    .from('expense_approval_queue')
+    .select(
+      'request_id,shift_id,category_code,description,amount,requested_at,status,decision_reason',
+    )
+    .eq('shift_id', shiftId)
+    .order('requested_at', { ascending: false });
+  if (error) fail(error);
+  return (data ?? []) as ShiftExpenseApproval[];
 }
 
 export async function fetchShiftExpenses(

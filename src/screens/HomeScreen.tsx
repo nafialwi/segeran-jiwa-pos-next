@@ -49,9 +49,14 @@ export function HomeScreen() {
           </Link>
         )}
         {canAccessOwnerArea(authority) && (
-          <Link className="nav-card" to="/pengguna">
-            Pengguna
-          </Link>
+          <>
+            <Link className="nav-card" to="/pengguna">
+              Pengguna
+            </Link>
+            <Link className="nav-card" to="/expense-approval">
+              Approval Pengeluaran
+            </Link>
+          </>
         )}
         {hasPermission(authority, 'SHIFT_OPEN_CLOSE') && (
           <Link className="nav-card" to="/shift">

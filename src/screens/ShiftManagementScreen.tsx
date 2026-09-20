@@ -12,12 +12,14 @@ import {
 } from '../shift/shift-core';
 import {
   closeShift,
+  fetchShiftExpenseApprovals,
   fetchShiftExpenses,
   fetchLocations,
   fetchMyOpenShift,
   openShift,
   postShiftExpense,
   type LocationOption,
+  type ShiftExpenseApproval,
 } from '../shift/shift-api';
 
 export function ShiftManagementScreen() {
@@ -38,6 +40,10 @@ export function ShiftManagementScreen() {
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseAmount, setExpenseAmount] = useState(0);
   const [expenses, setExpenses] = useState<ShiftExpense[]>([]);
+  const [expenseApprovals, setExpenseApprovals] = useState<
+    ShiftExpenseApproval[]
+  >([]);
+  const [expenseMessage, setExpenseMessage] = useState('');
   const [submittingExpense, setSubmittingExpense] = useState(false);
 
   const canCreateShiftExpense =
@@ -70,6 +76,7 @@ export function ShiftManagementScreen() {
     let cancelled = false;
     if (!shift) {
       setExpenses([]);
+      setExpenseApprovals([]);
       return () => {
         cancelled = true;
       };
@@ -77,8 +84,14 @@ export function ShiftManagementScreen() {
 
     void (async () => {
       try {
-        const rows = await fetchShiftExpenses(shift.id);
-        if (!cancelled) setExpenses(rows);
+        const [rows, approvals] = await Promise.all([
+          fetchShiftExpenses(shift.id),
+          fetchShiftExpenseApprovals(shift.id),
+        ]);
+        if (!cancelled) {
+          setExpenses(rows);
+          setExpenseApprovals(approvals);
+        }
       } catch (err) {
         if (!cancelled) setError(toShiftErrorMessage(err));
       }
@@ -126,13 +139,22 @@ export function ShiftManagementScreen() {
     setError(null);
     setSubmittingExpense(true);
     try {
-      await postShiftExpense(
+      const result = await postShiftExpense(
         expenseCategory,
         expenseDescription,
         expenseAmount,
       );
-      const rows = await fetchShiftExpenses(shift.id);
+      setExpenseMessage(
+        result.status === 'PENDING'
+          ? 'Menunggu persetujuan Owner.'
+          : 'Pengeluaran berhasil dicatat.',
+      );
+      const [rows, approvals] = await Promise.all([
+        fetchShiftExpenses(shift.id),
+        fetchShiftExpenseApprovals(shift.id),
+      ]);
       setExpenses(rows);
+      setExpenseApprovals(approvals);
       setExpenseCategory('');
       setExpenseDescription('');
       setExpenseAmount(0);
@@ -242,6 +264,22 @@ export function ShiftManagementScreen() {
                   {submittingExpense ? 'Mencatat&' : 'Catat Pengeluaran Shift'}
                 </button>
               </form>
+
+              {expenseMessage && <p className="muted">{expenseMessage}</p>}
+
+              {expenseApprovals.length > 0 && (
+                <div className="stack-list">
+                  <h3>Status Approval</h3>
+                  {expenseApprovals.map((request) => (
+                    <article key={request.request_id} className="list-card">
+                      <strong>{request.category_code}</strong>
+                      <span>{request.description}</span>
+                      <span>{formatIdr(request.amount)}</span>
+                      <span>Status: {request.status}</span>
+                    </article>
+                  ))}
+                </div>
+              )}
 
               {expenses.length > 0 && (
                 <div className="stack-list">

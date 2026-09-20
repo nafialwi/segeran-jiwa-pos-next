@@ -32,7 +32,7 @@ class FinP2BShiftExpenseTests(unittest.TestCase):
     def test_ui_replaces_generic_cash_movement_with_permission_gated_expense(self) -> None:
         api = SHIFT_API.read_text(encoding="utf-8")
         ui = SHIFT_UI.read_text(encoding="utf-8")
-        self.assertIn("finance_post_shift_expense", api)
+        self.assertIn("finance_submit_shift_expense", api)
         self.assertIn("business_expenses", api)
         self.assertIn("Catat Pengeluaran Shift", ui)
         self.assertIn("EXPENSE_SHIFT_CREATE", ui)
