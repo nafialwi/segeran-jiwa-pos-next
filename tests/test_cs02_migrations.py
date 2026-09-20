@@ -61,6 +61,7 @@ EXPECTED_MIGRATIONS = [
     "20260920230000_fin_p7_employee_kasbon_foundation.sql",
     "20260920233000_fin_closure_owner_equity_personal_accounts.sql",
     "20260920240000_hrr_p1_transaction_history.sql",
+    "20260920243000_hrr_p2_sale_refund.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -102,6 +103,7 @@ EXPECTED_SQL_TESTS = [
     "fin_p6_expense_approval_test.sql",
     "fin_p7_employee_kasbon_foundation_test.sql",
     "hrr_p1_transaction_history_test.sql",
+    "hrr_p2_sale_refund_test.sql",
     "uat_blocker_core_ui_recovery_test.sql",
     "uat_r1_sale_replay_stock_gate_test.sql",
     "uat_r2_recovery_index_hardening_test.sql",

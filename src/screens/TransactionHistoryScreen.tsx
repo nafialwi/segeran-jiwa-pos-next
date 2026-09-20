@@ -1,7 +1,12 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { hasPermission } from '../auth/permission';
+import { useAuth } from '../auth/AuthProvider';
 import {
+  refundSale,
   searchTransactionHistory,
+  type RefundMethod,
+  type RefundStockDisposition,
   type TransactionHistoryFilters,
   type TransactionHistoryRow,
 } from '../history/history-api';
@@ -34,11 +39,23 @@ const EMPTY = {
 };
 
 export function TransactionHistoryScreen() {
+  const { authority } = useAuth();
+  const canRefund =
+    Boolean(authority?.owner) ||
+    Boolean(authority && hasPermission(authority, 'CORRECTION_LIMITED'));
   const [filters, setFilters] = useState(EMPTY);
   const [rows, setRows] = useState<TransactionHistoryRow[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [refundTarget, setRefundTarget] =
+    useState<TransactionHistoryRow | null>(null);
+  const [stockDisposition, setStockDisposition] =
+    useState<RefundStockDisposition>('RETURN_TO_STOCK');
+  const [refundMethod, setRefundMethod] = useState<RefundMethod>('CASH');
+  const [refundReason, setRefundReason] = useState('');
+  const [refundBusy, setRefundBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
 
   async function search(next = filters) {
     setLoading(true);
@@ -70,6 +87,18 @@ export function TransactionHistoryScreen() {
     void search(EMPTY);
   }, []);
 
+  const refundImpact = useMemo(() => {
+    if (!refundTarget) return null;
+    const debt = refundTarget.customer_debt;
+    const payout =
+      refundTarget.payment_method === 'CREDIT'
+        ? (debt?.paid_amount ?? 0)
+        : refundTarget.total_amount;
+    const debtCancel =
+      refundTarget.payment_method === 'CREDIT' ? (debt?.balance ?? 0) : 0;
+    return { payout, debtCancel };
+  }, [refundTarget]);
+
   function submit(event: FormEvent) {
     event.preventDefault();
     void search();
@@ -80,6 +109,52 @@ export function TransactionHistoryScreen() {
     void search(EMPTY);
   }
 
+  function openRefund(row: TransactionHistoryRow) {
+    setRefundTarget(row);
+    setStockDisposition('RETURN_TO_STOCK');
+    setRefundReason('');
+    const paid =
+      row.payment_method === 'CREDIT'
+        ? (row.customer_debt?.paid_amount ?? 0)
+        : row.total_amount;
+    setRefundMethod(paid > 0 ? 'CASH' : 'NONE');
+  }
+
+  async function submitRefund(event: FormEvent) {
+    event.preventDefault();
+    if (!refundTarget || !refundImpact || refundBusy) return;
+    if (!refundReason.trim()) {
+      setError('Alasan refund wajib diisi.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      'Refund ' +
+        refundTarget.invoice_number +
+        ' akan membuat fakta reversal baru. Transaksi asli tidak diubah. Lanjutkan?',
+    );
+    if (!confirmed) return;
+
+    setRefundBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      await refundSale({
+        saleId: refundTarget.sale_id,
+        stockDisposition,
+        refundMethod,
+        reason: refundReason,
+      });
+      setMessage('Refund Transaksi berhasil dicatat.');
+      setRefundTarget(null);
+      await search();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Refund gagal.');
+    } finally {
+      setRefundBusy(false);
+    }
+  }
+
   return (
     <main className="shell">
       <header className="topbar">
@@ -88,12 +163,13 @@ export function TransactionHistoryScreen() {
           <p className="eyebrow">TRANSAKSI</p>
           <h1>Riwayat</h1>
           <p className="muted">
-            Pencarian transaksi individual, bukan laporan agregat.
+            Pencarian transaksi individual, refund, dan koreksi terkontrol.
           </p>
         </div>
       </header>
 
       {error && <div className="error-banner">{error}</div>}
+      {message && <div className="success-banner">{message}</div>}
 
       <section className="identity-card">
         <form className="compact-grid-form" onSubmit={submit}>
@@ -275,17 +351,28 @@ export function TransactionHistoryScreen() {
                   - {row.location_name}
                   {row.customer_name ? ' - ' + row.customer_name : ''}
                 </p>
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() =>
-                    setExpanded((value) =>
-                      value === row.sale_id ? null : row.sale_id,
-                    )
-                  }
-                >
-                  {expanded === row.sale_id ? 'Tutup Detail' : 'Lihat Detail'}
-                </button>
+                <div className="button-row">
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() =>
+                      setExpanded((value) =>
+                        value === row.sale_id ? null : row.sale_id,
+                      )
+                    }
+                  >
+                    {expanded === row.sale_id ? 'Tutup Detail' : 'Lihat Detail'}
+                  </button>
+                  {canRefund && row.status === 'COMPLETED' && !row.refund && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => openRefund(row)}
+                    >
+                      Refund Transaksi
+                    </button>
+                  )}
+                </div>
                 {expanded === row.sale_id && (
                   <div className="stack-list">
                     {row.items.map((item) => (
@@ -297,6 +384,29 @@ export function TransactionHistoryScreen() {
                         <span>{formatIdr(item.subtotal)}</span>
                       </div>
                     ))}
+                    {row.customer_debt && (
+                      <p className="muted">
+                        Hutang: dibayar{' '}
+                        {formatIdr(row.customer_debt.paid_amount)} � sisa{' '}
+                        {formatIdr(row.customer_debt.balance)} �{' '}
+                        {row.customer_debt.status}
+                      </p>
+                    )}
+                    {row.refund && (
+                      <div className="list-card">
+                        <strong>Refund tercatat</strong>
+                        <span>
+                          {row.refund.stock_disposition} �{' '}
+                          {row.refund.refund_method}
+                        </span>
+                        <span>
+                          Dana {formatIdr(row.refund.payout_amount)} � Piutang
+                          dibatalkan{' '}
+                          {formatIdr(row.refund.receivable_cancelled_amount)}
+                        </span>
+                        <span className="muted">{row.refund.reason}</span>
+                      </div>
+                    )}
                     {row.note && <p className="muted">Catatan: {row.note}</p>}
                   </div>
                 )}
@@ -305,6 +415,123 @@ export function TransactionHistoryScreen() {
           </div>
         )}
       </section>
+
+      {refundTarget && refundImpact && (
+        <section className="identity-card">
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">REFUND / REVERSAL</p>
+              <h2>Refund Transaksi</h2>
+              <p className="muted">{refundTarget.invoice_number}</p>
+            </div>
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={() => setRefundTarget(null)}
+              disabled={refundBusy}
+            >
+              Tutup
+            </button>
+          </div>
+
+          <form className="stack-form" onSubmit={submitRefund}>
+            <label className="field-label">
+              Dampak Stok
+              <select
+                value={stockDisposition}
+                onChange={(event) =>
+                  setStockDisposition(
+                    event.target.value as RefundStockDisposition,
+                  )
+                }
+              >
+                <option value="RETURN_TO_STOCK">Kembali ke stok</option>
+                <option value="DAMAGED_UNFIT">Rusak / tidak layak</option>
+                <option value="NO_GOODS_RETURNED">Barang tidak kembali</option>
+              </select>
+            </label>
+
+            <label className="field-label">
+              Pengembalian dana
+              <select
+                value={refundMethod}
+                onChange={(event) =>
+                  setRefundMethod(event.target.value as RefundMethod)
+                }
+              >
+                <option value="CASH">Tunai dari Kas Shift</option>
+                <option value="TRANSFER">Transfer dari Bank</option>
+                {refundImpact.payout === 0 && (
+                  <option value="NONE">Tidak ada dana yang dikembalikan</option>
+                )}
+              </select>
+            </label>
+
+            <label className="field-label">
+              Alasan
+              <textarea
+                rows={3}
+                value={refundReason}
+                onChange={(event) => setRefundReason(event.target.value)}
+                placeholder="Wajib diisi"
+                required
+              />
+            </label>
+
+            <div className="stack-list">
+              <article className="list-card">
+                <strong>Dampak Stok</strong>
+                <span>
+                  {stockDisposition === 'RETURN_TO_STOCK'
+                    ? 'Stok tracked dikembalikan ke lokasi penjualan.'
+                    : stockDisposition === 'DAMAGED_UNFIT'
+                      ? 'Barang rusak/tidak layak tidak menambah stok jual.'
+                      : 'Barang tidak kembali; stok jual tidak bertambah.'}
+                </span>
+              </article>
+              <article className="list-card">
+                <strong>Dampak Dana</strong>
+                <span>
+                  {formatIdr(refundImpact.payout)} dikembalikan sekarang.
+                </span>
+              </article>
+              <article className="list-card">
+                <strong>Dampak Hutang</strong>
+                <span>
+                  {refundImpact.debtCancel > 0
+                    ? formatIdr(refundImpact.debtCancel) +
+                      ' sisa piutang dibatalkan.'
+                    : 'Tidak ada sisa piutang yang dibatalkan.'}
+                </span>
+              </article>
+              <article className="list-card">
+                <strong>Dampak HPP / Laba</strong>
+                <span>
+                  Disposisi barang disimpan untuk reporting; transaksi asli
+                  tidak ditulis ulang.
+                </span>
+              </article>
+              <article className="list-card">
+                <strong>Dampak Keuangan</strong>
+                <span>
+                  Refund dicatat sebagai REVERSAL, bukan biaya usaha baru.
+                  {refundTarget.payment_method === 'QRIS'
+                    ? ' QRIS provider tidak dibatalkan otomatis; pengembalian dilakukan melalui metode yang dipilih.'
+                    : ''}
+                </span>
+              </article>
+            </div>
+
+            <button
+              className="primary-button"
+              type="submit"
+              disabled={refundBusy}
+            >
+              {refundBusy ? 'Memproses Refund...' : 'Konfirmasi Refund'}
+            </button>
+          </form>
+        </section>
+      )}
     </main>
   );
 }

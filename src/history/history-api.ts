@@ -17,6 +17,25 @@ export type HistoryItem = {
   subtotal: number;
 };
 
+export type HistoryDebt = {
+  debt_id: string;
+  original_amount: number;
+  paid_amount: number;
+  balance: number;
+  status: string;
+};
+
+export type HistoryRefund = {
+  refund_id: string;
+  stock_disposition: string;
+  refund_method: string;
+  sale_total: number;
+  payout_amount: number;
+  receivable_cancelled_amount: number;
+  reason: string;
+  created_at: string;
+};
+
 export type TransactionHistoryRow = {
   sale_id: string;
   invoice_number: string;
@@ -34,6 +53,8 @@ export type TransactionHistoryRow = {
   payment_method: string | null;
   payments: HistoryPayment[];
   items: HistoryItem[];
+  customer_debt: HistoryDebt | null;
+  refund: HistoryRefund | null;
   note: string | null;
 };
 
@@ -49,6 +70,10 @@ export type TransactionHistoryFilters = {
   status?: string;
   limit?: number;
 };
+
+export type RefundStockDisposition =
+  'RETURN_TO_STOCK' | 'DAMAGED_UNFIT' | 'NO_GOODS_RETURNED';
+export type RefundMethod = 'CASH' | 'TRANSFER' | 'NONE';
 
 function num(value: unknown): number {
   const parsed = Number(value ?? 0);
@@ -74,29 +99,84 @@ export async function searchTransactionHistory(
   if (error)
     throw new Error(error.message || error.code || 'HISTORY_SEARCH_FAILED');
 
-  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
-    ...row,
-    subtotal: num(row.subtotal),
-    discount_amount: num(row.discount_amount),
-    total_amount: num(row.total_amount),
-    payments: ((row.payments ?? []) as Array<Record<string, unknown>>).map(
-      (payment) => ({
-        method: String(payment.method ?? ''),
-        amount: num(payment.amount),
-        status: String(payment.status ?? ''),
-        created_at: String(payment.created_at ?? ''),
-      }),
-    ),
-    items: ((row.items ?? []) as Array<Record<string, unknown>>).map(
-      (item) => ({
-        line_no: Number(item.line_no ?? 0),
-        stock_item_id: String(item.stock_item_id ?? ''),
-        code: String(item.code ?? ''),
-        display_name: String(item.display_name ?? ''),
-        quantity: num(item.quantity),
-        unit_price: num(item.unit_price),
-        subtotal: num(item.subtotal),
-      }),
-    ),
-  })) as TransactionHistoryRow[];
+  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
+    const debt = row.customer_debt as Record<string, unknown> | null;
+    const refund = row.refund as Record<string, unknown> | null;
+
+    return {
+      ...row,
+      subtotal: num(row.subtotal),
+      discount_amount: num(row.discount_amount),
+      total_amount: num(row.total_amount),
+      payments: ((row.payments ?? []) as Array<Record<string, unknown>>).map(
+        (payment) => ({
+          method: String(payment.method ?? ''),
+          amount: num(payment.amount),
+          status: String(payment.status ?? ''),
+          created_at: String(payment.created_at ?? ''),
+        }),
+      ),
+      items: ((row.items ?? []) as Array<Record<string, unknown>>).map(
+        (item) => ({
+          line_no: Number(item.line_no ?? 0),
+          stock_item_id: String(item.stock_item_id ?? ''),
+          code: String(item.code ?? ''),
+          display_name: String(item.display_name ?? ''),
+          quantity: num(item.quantity),
+          unit_price: num(item.unit_price),
+          subtotal: num(item.subtotal),
+        }),
+      ),
+      customer_debt: debt
+        ? {
+            debt_id: String(debt.debt_id ?? ''),
+            original_amount: num(debt.original_amount),
+            paid_amount: num(debt.paid_amount),
+            balance: num(debt.balance),
+            status: String(debt.status ?? ''),
+          }
+        : null,
+      refund: refund
+        ? {
+            refund_id: String(refund.refund_id ?? ''),
+            stock_disposition: String(refund.stock_disposition ?? ''),
+            refund_method: String(refund.refund_method ?? ''),
+            sale_total: num(refund.sale_total),
+            payout_amount: num(refund.payout_amount),
+            receivable_cancelled_amount: num(
+              refund.receivable_cancelled_amount,
+            ),
+            reason: String(refund.reason ?? ''),
+            created_at: String(refund.created_at ?? ''),
+          }
+        : null,
+    } as TransactionHistoryRow;
+  });
+}
+
+export async function refundSale(args: {
+  saleId: string;
+  stockDisposition: RefundStockDisposition;
+  refundMethod: RefundMethod;
+  reason: string;
+}) {
+  const { data, error } = await supabase.rpc('refund_sale', {
+    p_sale_id: args.saleId,
+    p_stock_disposition: args.stockDisposition,
+    p_refund_method: args.refundMethod,
+    p_reason: args.reason.trim(),
+    p_idempotency_key: crypto.randomUUID(),
+  });
+
+  if (error)
+    throw new Error(error.message || error.code || 'SALE_REFUND_FAILED');
+  return data as {
+    refund_id: string;
+    sale_id: string;
+    payout_amount: number;
+    receivable_cancelled_amount: number;
+    stock_disposition: RefundStockDisposition;
+    refund_method: RefundMethod;
+    already_posted: boolean;
+  };
 }
