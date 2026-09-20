@@ -228,6 +228,10 @@ export function ShiftManagementScreen() {
                 ))}
               </select>
             </label>
+            <p className="muted">
+              Sumber saldo awal:{' '}
+              {openingBalance > 0 ? 'Kas Utama' : 'Tanpa saldo awal'}
+            </p>
             <label>
               Saldo Awal (Rp)
               <input

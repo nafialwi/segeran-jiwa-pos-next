@@ -36,9 +36,23 @@ export async function openShift(
   openingBalance: number,
   config: Record<string, unknown> = {},
 ): Promise<string> {
+  if (openingBalance > 0) {
+    const { data, error } = await supabase.rpc(
+      'finance_open_shift_from_main_cash',
+      {
+        p_location: locationId,
+        p_opening: openingBalance,
+        p_config: config,
+        p_idempotency_key: crypto.randomUUID(),
+      },
+    );
+    if (error) fail(error);
+    return data as string;
+  }
+
   const { data, error } = await supabase.rpc('cs05_open_my_shift', {
     p_location: locationId,
-    p_opening: openingBalance,
+    p_opening: 0,
     p_config: config,
   });
   if (error) fail(error);

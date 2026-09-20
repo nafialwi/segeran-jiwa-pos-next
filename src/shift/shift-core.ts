@@ -17,6 +17,9 @@ export type Shift = {
   expected_cash: number | null;
   actual_cash: number | null;
   variance: number | null;
+  opening_source_type?: string | null;
+  opening_source_ref?: string | null;
+  opening_money_movement_id?: string | null;
 };
 
 export type Handover = {
@@ -53,6 +56,12 @@ export function toShiftErrorMessage(error: unknown): string {
         return 'Serah-terima ini sudah diproses sebelumnya.';
       case 'SJ_SHIFT_NOT_OPEN':
         return 'Shift belum dibuka. Buka shift terlebih dahulu untuk transaksi tunai.';
+      case 'FINANCE_OPENING_SOURCE_REQUIRED':
+        return 'Saldo awal positif wajib memiliki sumber dana yang tercatat.';
+      case 'FINANCE_INSUFFICIENT_BALANCE':
+        return 'Saldo Kas Utama tidak mencukupi untuk saldo awal shift.';
+      case 'FINANCE_OPENING_AMOUNT_INVALID':
+        return 'Saldo awal dari Kas Utama harus lebih dari nol.';
       default:
         return `Operasi gagal (${code}).`;
     }
