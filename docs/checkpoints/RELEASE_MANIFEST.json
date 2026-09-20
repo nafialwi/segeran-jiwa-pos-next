@@ -20,9 +20,9 @@
   "pending_financial_inertness": "PASS",
   "approval_anti_bypass": "PASS",
   "closed_shift_fail_closed": "PASS",
-  "whole_project_weighted_progress_percent": 95.0,
+  "whole_project_weighted_progress_percent": 88.0,
   "closeout_package_id": "SJPOSNEXT-HRR-P3-20260921",
-  "next_action": "Attention, Offline, Backup, Health & Cutover Hardening",
+  "next_action": "HRR-P4 Correction/Reversal Closure Audit",
   "employee_kasbon_separate_from_customer_debt": "PASS",
   "employee_only_target_gate": "PASS",
   "employee_kasbon_single_money_engine": "PASS",
@@ -54,5 +54,15 @@
   "hpp_coverage_transparency": "PASS",
   "excel_presentation_contract": "PASS",
   "excel_dependency_audit": "PASS_0_VULNERABILITIES",
-  "hrr_bucket_acceptance": "CLEAR"
+  "hrr_bucket_acceptance": "PENDING_CORRECTION_REVERSAL_AUDIT",
+  "report_minimum_owner_set": "PASS",
+  "report_permission_boundaries": "PASS",
+  "report_inventory_location_scope": "PASS",
+  "report_read_only_projection": "PASS",
+  "report_hpp_coverage_warning": "PASS",
+  "report_exact_profit_when_hpp_missing": "BLOCKED_BY_DESIGN",
+  "excel_structured_workbook": "PASS",
+  "hrr_bucket_closure": "PENDING_CORRECTION_REVERSAL_AUDIT",
+  "correction_reversal_distinct_blueprint_concept": "OPEN",
+  "hrr_p3_reports_excel_checkpoint": "LOCKED_REMOTE"
 }

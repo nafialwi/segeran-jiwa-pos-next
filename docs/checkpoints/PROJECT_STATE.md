@@ -22,12 +22,12 @@
 - CS-05: 100%
 - CS-06: 100%
 - Finance milestone: 100% / LOCKED_REMOTE
-- History/Reversal/Reports milestone: 100% / LOCKED_REMOTE
-- Whole-project weighted progress: 95.0%
+- History/Reversal/Reports milestone: IN PROGRESS; HRR-P1, HRR-P2 and HRR-P3 locked
+- Whole-project weighted progress: 88.0%
 
 The Finance roadmap bucket is accepted and earns its full 10.0% roadmap weight.
 
-The History, Reversal/Refund, Reports & Excel roadmap bucket is accepted and earns its full 7.0% roadmap weight.
+The History, Reversal/Refund, Reports & Excel roadmap bucket remains unearned pending explicit Koreksi/Pembalikan closure acceptance.
 
 ## Current verified state
 
@@ -61,7 +61,7 @@ The History, Reversal/Refund, Reports & Excel roadmap bucket is accepted and ear
 - Excel exporter executable contract: PASS; multi-sheet/sticky headers/column widths/.xlsx filename verified.
 - npm audit after Excel dependency selection: 0 vulnerabilities.
 - HRR-P3 hosted rollback left 0 temporary users/sales/refunds/receipts and preserved the real OPEN shift expected cash at Rp17.000.
-- History/Reversal/Reports bucket acceptance: CLEAR; earned 7.0%.
+- History/Reversal/Reports bucket acceptance: PENDING HRR-P4 Koreksi/Pembalikan closure audit; earned 0.0% until the complete acceptance gate is satisfied.
 - Production automatic deployment remains disabled.
 
 ## Historical provenance note
@@ -92,6 +92,6 @@ The original Blueprint v1.0 FINAL LOCK file path referenced by older state files
 
 ## NEXT ACTION
 
-Attention, Offline, Backup, Health & Cutover Hardening.
+HRR-P4 Correction/Reversal Closure Audit.
 
-Close the final 5% only after the Blueprint offline action matrix, attention/health behavior, backup/restore verification, and cutover acceptance are proven.
+Blueprint section 14 distinguishes Refund/Pengembalian from Koreksi/Pembalikan. Audit and, if required, implement a distinct completed-transaction correction/replacement authority that preserves the original fact and links its reversal/replacement before crediting the HRR 7% bucket.

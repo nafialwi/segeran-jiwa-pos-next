@@ -8,7 +8,7 @@ Status: LOCKED_REMOTE after final safepoint push
 
 ## Blueprint authority
 
-HRR-P3 completes the Blueprint minimum report surface:
+HRR-P3 implements the minimum Owner reports required by Blueprint v1.0 FINAL LOCK:
 
 - Laporan Penjualan
 - Laporan Produk
@@ -17,63 +17,48 @@ HRR-P3 completes the Blueprint minimum report surface:
 - Laporan Pembelian
 - Laporan Keuangan
 
-Reports are read models over canonical facts/projections. They do not create a second ledger.
+Reports are projections/read-models over canonical facts. They do not create a second ledger or mutate business facts.
 
-Excel output is presentation-ready: business/report title, period, export timestamp, summary, structured tables, totals where applicable, Rupiah/number formatting, sticky header rows, sensible widths, and multiple sheets.
+Kasir does not receive business Finance reporting. Other operational report access remains permission-based.
+
+Excel export is presentation-ready rather than a raw dump and carries title, period, export timestamp, summary, structured tables, totals where relevant, number/Rupiah formatting, sticky/frozen headers, practical column widths and multiple worksheets.
+
+HPP is not silently treated as zero. Where canonical HPP authority is unavailable, the report exposes the coverage gap and does not publish exact Net Profit.
 
 ## Source safepoint
 
-- Technical implementation: f76cde572ed2fe60857e52ca28967e0bdc1d3c78
-- Excel executable test follow-up: 9b02545efb37378cefe7e99c8ca6f56ed4dbf237
+- Reports implementation: f76cde5
+- Excel workbook contract test: 9b02545efb37378cefe7e99c8ca6f56ed4dbf237
 - Managed migration: hrr_p3_reports_excel
 
-## Permission contract
+## Implemented contract
 
-- Owner: all six reports.
-- REPORT_SALES_LIMITED: Sales + Product.
-- REPORT_INVENTORY: Inventory with canonical location scope.
-- REPORT_PURCHASE: Purchase.
-- Shift centralized report: Owner-only.
-- Finance report: Owner-only.
+HRR-P3 adds:
 
-A non-owner cannot obtain Shift or Finance report data by navigating directly to the RPC.
+- single /laporan report front door;
+- public.report_run(report_code, date_from, date_to) read-only report authority;
+- six Blueprint minimum reports;
+- Owner access to all six reports;
+- REPORT_SALES_LIMITED access to Sales + Product;
+- REPORT_INVENTORY access to Inventory with inventory location scope enforced;
+- REPORT_PURCHASE access to Purchase;
+- Shift and Finance centralized reports remain Owner-only;
+- Sales report with transaction, product and payment-method projections;
+- full-sale refund events remain separate reversal events in period reporting;
+- Product performance report;
+- Inventory current balance snapshot plus period movement detail;
+- Shift report based on canonical shift/cash facts;
+- Purchase report based on purchase orders, goods receipts and supplier-payable projection;
+- Finance report based on canonical money movements, business expenses, customer debt, supplier payable and employee kasbon projections;
+- explicit HPP coverage warning and null exact-profit value while canonical HPP is incomplete;
+- .xlsx export using write-excel-file/browser loaded dynamically;
+- multi-sheet workbook generated from the exact report envelope shown in UI.
 
-## Report semantics
+## Dependency verification
 
-- Sales are counted on original business date.
-- Refunds are separate reversal events counted on refund date.
-- Period net sales = period gross sales - period refund events.
-- Original completed sales are not rewritten.
-- Inventory exposes current scoped balance plus movement detail.
-- Purchase reports canonical PO / receipt / payable projections.
-- Finance reads canonical account balances, money movements, expenses, customer debt, supplier payable and employee kasbon projections.
-
-## HPP / profit safety
-
-Canonical HPP authority is not yet complete for all active products.
-
-HRR-P3 therefore:
-
-- explicitly reports HPP coverage as unavailable;
-- emits a visible warning;
-- leaves exact Estimasi Laba null;
-- never assumes HPP = 0.
-
-This prevents a false net-profit claim.
-
-## Excel implementation
-
-Dependency: write-excel-file 4.1.1.
-
-- dynamically imported in the browser;
-- npm audit: 0 vulnerabilities;
-- summary sheet plus one sheet per report section;
-- sticky header rows;
-- explicit column widths;
-- numeric / Rupiah formatting;
-- deterministic .xlsx filename.
-
-Executable exporter test verifies the multi-sheet workbook contract rather than relying only on static source checks.
+- npm audit --omit=dev: 0 vulnerabilities
+- Excel dependency: write-excel-file 4.1.1
+- exporter is dynamically loaded into a separate browser chunk.
 
 ## Verification
 
@@ -86,63 +71,55 @@ Final canonical verification:
 - typecheck: PASS
 - build: PASS
 - git diff --check: PASS
-- npm audit: 0 vulnerabilities
+- local HEAD = remote HEAD before checkpoint lock
 
 ## Hosted verification
 
-Managed migration applied successfully:
+Managed migration is present:
 
 - hrr_p3_reports_excel
 
-Owner runtime smoke executed all six report branches successfully.
-
-Transaction-scoped hosted rollback regression returned:
+Hosted transactional regression returned:
 
 HRR_P3_HOSTED_REGRESSION_PASS
 
-Verified and rolled back:
+Verified:
 
-- sale event increases Sales gross/count;
-- refund event increases refund total without changing period net after sale+full refund;
-- Product report tracks sold/refunded/net quantity coherently;
-- Finance report exposes HPP coverage warning and no fabricated profit value;
-- explicit REPORT_SALES_LIMITED can access Sales/Product;
-- explicit REPORT_PURCHASE can access Purchase;
-- explicit REPORT_INVENTORY can access Inventory;
-- Inventory rows obey GERAI-only location scope;
-- non-owner Shift is denied;
-- non-owner Finance is denied;
-- temporary fixture sale/refund/user/receipts do not persist.
+- Owner can execute SALES, PRODUCT, INVENTORY, SHIFT, PURCHASE and FINANCE;
+- every report returns the canonical report envelope with summary and sections;
+- Finance emits an HPP coverage warning;
+- Estimasi Laba remains null rather than assuming HPP = 0;
+- REPORT_SALES_LIMITED unlocks Sales + Product only;
+- REPORT_INVENTORY respects explicit location scope and does not leak Gudang when only Gerai is granted;
+- Purchase is denied without REPORT_PURCHASE;
+- REPORT_PURCHASE unlocks Purchase only;
+- Shift and Finance remain Owner-only for the centralized report authority.
 
-Post-regression cleanliness:
+The temporary Kasir fixture was fully rolled back:
 
-- temporary users: 0
-- temporary sales: 0
-- temporary refunds: 0
-- temporary operation receipts: 0
-- real Owner shift remains OPEN
-- real expected cash remains Rp17.000
+- temporary profile/user: 0
+- temporary auth user: 0
+- temporary permission override: 0
+- temporary inventory scope: 0
 
 ## Advisor disposition
 
-Supabase advisor reports authenticated access to SECURITY DEFINER report_run. This is intentional. The function pins search_path='', resolves current authority server-side, is STABLE/read-only, and enforces per-report permissions or Owner-only boundaries. Hosted negative tests verify the boundary.
+No new HRR-P3 table or RLS surface was created.
 
-No report fact table or second ledger was introduced.
+report_run is intentionally an authenticated SECURITY DEFINER read RPC. It pins search_path='', resolves the current authority server-side, enforces report permissions and inventory location scope, and creates no ledger/fact writes. Permission-negative hosted behavior was explicitly tested.
 
-## Bucket acceptance
+Existing RLS-no-policy informational findings and existing SECURITY DEFINER warnings belong to the established command/read boundary pattern. Existing unused-index notices are not introduced by HRR-P3.
 
-HRR-P1 Transaction History: LOCKED_REMOTE.
-HRR-P2 Sale Refund / Reversal Authority: LOCKED_REMOTE.
-HRR-P3 Reports & Excel Foundation: LOCKED_REMOTE.
+## Verdict
 
-The complete History, Reversal/Refund, Reports & Excel bucket acceptance gate is CLEAR.
+CLEAR. HRR-P3 Reports & Excel Foundation is locked.
 
-Roadmap weight earned: 7.0%.
+The History, Reversal/Refund, Reports & Excel 7% roadmap bucket is not yet credited. Blueprint distinguishes Refund/Pengembalian from Koreksi/Pembalikan, so the remaining correction/reversal acceptance must be audited before the complete bucket can be declared closed.
 
-Whole-project weighted progress moves from 88.0% to 95.0%.
+Whole-project earned progress remains 88.0%.
 
 ## Next action
 
-Attention, Offline, Backup, Health & Cutover Hardening.
+HRR-P4 Correction/Reversal Closure Audit.
 
-Final 5.0% remains unearned until cutover-hardening acceptance is locked.
+Audit the implemented HRR-P1/HRR-P2/HRR-P3 surface against Blueprint section 14. If a distinct completed-transaction correction/replacement authority is still missing, implement it without mutating the original fact; otherwise document evidence that the acceptance contract is already satisfied. Only after that audit may the 7% HRR bucket be considered for closure.
