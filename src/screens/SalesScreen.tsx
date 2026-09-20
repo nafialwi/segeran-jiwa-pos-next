@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
@@ -27,6 +27,29 @@ function formatIdr(value: number): string {
   }).format(value);
 }
 
+function paymentLabel(method: SalePaymentMethod): string {
+  if (method === 'CASH') return 'Tunai';
+  if (method === 'CREDIT') return 'Kasbon';
+  if (method === 'TRANSFER') return 'Transfer';
+  return 'QRIS';
+}
+
+function nextCashOptions(total: number): number[] {
+  if (total <= 0) return [];
+  const values = [
+    total,
+    Math.ceil(total / 5000) * 5000,
+    Math.ceil(total / 10000) * 10000,
+    20000,
+    50000,
+    100000,
+  ];
+  return Array.from(new Set(values.filter((value) => value >= total))).slice(
+    0,
+    5,
+  );
+}
+
 export function SalesScreen() {
   const { authority } = useAuth();
   const [shift, setShift] = useState<Shift | null>(null);
@@ -35,6 +58,7 @@ export function SalesScreen() {
   const [qrisImage, setQrisImage] = useState<string | null>(null);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('SEMUA');
   const [method, setMethod] = useState<SalePaymentMethod>('CASH');
   const [cashReceived, setCashReceived] = useState(0);
   const [customerId, setCustomerId] = useState('');
@@ -45,6 +69,10 @@ export function SalesScreen() {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const submitGuardRef = useRef(false);
+  const pendingOperationIdRef = useRef<string | null>(null);
 
   async function load() {
     setLoading(true);
@@ -80,27 +108,55 @@ export function SalesScreen() {
     void load();
   }, []);
 
+  useEffect(() => {
+    if (!cartOpen) return;
+    const original = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = original;
+    };
+  }, [cartOpen]);
+
+  const categories = useMemo(
+    () =>
+      Array.from(new Set(catalog.map((item) => item.category_code))).sort(
+        (a, b) => a.localeCompare(b, 'id'),
+      ),
+    [catalog],
+  );
+
   const visibleItems = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) return catalog;
-    return catalog.filter(
-      (item) =>
+    return catalog.filter((item) => {
+      const matchesCategory =
+        category === 'SEMUA' || item.category_code === category;
+      const matchesQuery =
+        !query ||
         item.display_name.toLowerCase().includes(query) ||
         item.code.toLowerCase().includes(query) ||
-        item.category_code.toLowerCase().includes(query),
-    );
-  }, [catalog, search]);
+        item.category_code.toLowerCase().includes(query);
+      return matchesCategory && matchesQuery;
+    });
+  }, [catalog, search, category]);
 
   const total = cart.reduce(
     (sum, line) => sum + line.item.unit_price * line.quantity,
     0,
   );
-
+  const cartQuantity = cart.reduce((sum, line) => sum + line.quantity, 0);
   const change = Math.max(0, cashReceived - total);
+  const cashOptions = useMemo(() => nextCashOptions(total), [total]);
+
+  function invalidatePendingOperation() {
+    if (!submitGuardRef.current) {
+      pendingOperationIdRef.current = null;
+    }
+  }
 
   function add(item: SalesCatalogItem) {
     setMessage('');
     setError('');
+    invalidatePendingOperation();
     setCart((current) => {
       const existing = current.find(
         (line) => line.item.stock_item_id === item.stock_item_id,
@@ -129,6 +185,7 @@ export function SalesScreen() {
   }
 
   function adjust(stockItemId: string, delta: number) {
+    invalidatePendingOperation();
     setCart((current) =>
       current.flatMap((line) => {
         if (line.item.stock_item_id !== stockItemId) return [line];
@@ -145,6 +202,15 @@ export function SalesScreen() {
         return [{ ...line, quantity }];
       }),
     );
+  }
+
+  function chooseMethod(value: SalePaymentMethod) {
+    invalidatePendingOperation();
+    setMethod(value);
+    setQrisConfirmed(false);
+    setTransferConfirmed(false);
+    if (value !== 'CREDIT') setCustomerId('');
+    if (value !== 'CASH') setCashReceived(0);
   }
 
   const allowedMethods: SalePaymentMethod[] = ['CASH'];
@@ -167,13 +233,19 @@ export function SalesScreen() {
       (method === 'CREDIT' && Boolean(customerId)));
 
   async function submit() {
-    if (!shift || !canPay) return;
+    if (!shift || !canPay || submitGuardRef.current) return;
+
+    submitGuardRef.current = true;
     setBusy(true);
     setError('');
     setMessage('');
 
+    const operationId = pendingOperationIdRef.current ?? crypto.randomUUID();
+    pendingOperationIdRef.current = operationId;
+
     try {
       const result = await checkoutSale({
+        operationId,
         locationId: shift.location_id,
         items: cart.map((line) => ({
           stock_item_id: line.item.stock_item_id,
@@ -185,6 +257,7 @@ export function SalesScreen() {
         note,
       });
 
+      pendingOperationIdRef.current = null;
       setMessage(
         'Penjualan berhasil. Invoice: ' + String(result.invoice_number ?? '-'),
       );
@@ -194,30 +267,35 @@ export function SalesScreen() {
       setQrisConfirmed(false);
       setTransferConfirmed(false);
       setNote('');
+      setCartOpen(false);
       await load();
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : 'Penjualan gagal diproses.',
       );
     } finally {
+      submitGuardRef.current = false;
       setBusy(false);
     }
   }
 
   return (
-    <main className="shell sales-shell">
-      <header className="topbar">
+    <main className="shell sales-shell sales-v2-shell">
+      <header className="sales-v2-header">
         <div>
-          <Link className="muted" to="/">
-            Kembali ke Beranda
+          <Link className="sales-v2-back" to="/">
+            Beranda
           </Link>
-          <p className="eyebrow">PENJUALAN</p>
           <h1>Jual</h1>
+        </div>
+        <div className="sales-v2-header-meta">
+          <span className="sales-v2-shift-dot" aria-hidden="true" />
+          Shift aktif
         </div>
       </header>
 
-      {error && <p className="error-banner">{error}</p>}
-      {message && <p className="success-banner">{message}</p>}
+      {error && <p className="error-banner sales-v2-banner">{error}</p>}
+      {message && <p className="success-banner sales-v2-banner">{message}</p>}
 
       {loading ? (
         <section className="identity-card">
@@ -235,235 +313,331 @@ export function SalesScreen() {
         </section>
       ) : (
         <>
-          <section className="identity-card">
-            <div className="section-heading">
-              <div>
-                <h2>Produk</h2>
-                <p className="muted">
-                  Pilih produk untuk ditambahkan ke keranjang.
-                </p>
-              </div>
-              <span className="role-badge">{catalog.length} produk</span>
+          <section className="sales-v2-toolbar">
+            <label className="sales-v2-search">
+              <span className="sr-only">Cari produk</span>
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Cari produk..."
+              />
+            </label>
+            <div
+              className="sales-v2-category-strip"
+              aria-label="Kategori produk"
+            >
+              <button
+                type="button"
+                className={category === 'SEMUA' ? 'active' : ''}
+                onClick={() => setCategory('SEMUA')}
+              >
+                Semua
+              </button>
+              {categories.map((value) => (
+                <button
+                  type="button"
+                  key={value}
+                  className={category === value ? 'active' : ''}
+                  onClick={() => setCategory(value)}
+                >
+                  {value}
+                </button>
+              ))}
             </div>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari nama, kode, atau kategori"
-            />
+          </section>
 
-            {catalog.length === 0 ? (
+          {catalog.length === 0 ? (
+            <section className="identity-card">
               <div className="empty-state">
                 <strong>Master produk Next belum tersedia.</strong>
-                <p>
-                  Import backup Legacy terlebih dahulu. Harga tidak akan dibuat
-                  atau ditebak oleh sistem.
-                </p>
+                <p>Import backup Legacy terlebih dahulu.</p>
                 {authority?.owner && (
                   <Link className="primary-link" to="/legacy-import">
                     Migrasi Master Legacy
                   </Link>
                 )}
               </div>
-            ) : (
-              <div className="product-grid">
+            </section>
+          ) : (
+            <section className="sales-v2-products" aria-label="Daftar produk">
+              <div className="sales-v2-product-summary">
+                <strong>{visibleItems.length}</strong>
+                <span>dari {catalog.length} produk</span>
+              </div>
+              <div className="sales-v2-product-grid">
                 {visibleItems.map((item) => {
                   const unavailable =
                     item.inventory_tracked && (item.quantity ?? 0) <= 0;
+                  const inCart =
+                    cart.find(
+                      (line) => line.item.stock_item_id === item.stock_item_id,
+                    )?.quantity ?? 0;
+
                   return (
                     <button
-                      className="product-card"
+                      className="sales-v2-product-card"
                       key={item.stock_item_id}
                       type="button"
                       disabled={unavailable}
                       onClick={() => add(item)}
                     >
-                      <span className="product-category">
-                        {item.category_code}
+                      <span className="sales-v2-product-name">
+                        {item.display_name}
                       </span>
-                      <strong>{item.display_name}</strong>
-                      <span>{formatIdr(item.unit_price)}</span>
-                      <small>
+                      <strong>{formatIdr(item.unit_price)}</strong>
+                      <span
+                        className={
+                          unavailable
+                            ? 'sales-v2-stock-badge empty'
+                            : 'sales-v2-stock-badge'
+                        }
+                      >
                         {item.inventory_tracked
-                          ? 'Stok: ' + String(item.quantity ?? 0)
-                          : 'Dibuat saat dijual'}
-                      </small>
+                          ? 'Stok ' + String(item.quantity ?? 0)
+                          : 'Siap dibuat'}
+                      </span>
+                      {inCart > 0 && (
+                        <span className="sales-v2-in-cart">{inCart}</span>
+                      )}
                     </button>
                   );
                 })}
               </div>
-            )}
-          </section>
+            </section>
+          )}
 
-          <section className="identity-card">
-            <h2>Keranjang</h2>
-            {cart.length === 0 ? (
-              <p className="muted">Keranjang masih kosong.</p>
-            ) : (
-              <div className="stack-list">
-                {cart.map((line) => (
-                  <article className="cart-row" key={line.item.stock_item_id}>
-                    <div>
-                      <strong>{line.item.display_name}</strong>
-                      <span className="muted">
-                        {formatIdr(line.item.unit_price)} x {line.quantity}
-                      </span>
-                    </div>
-                    <div className="qty-control">
-                      <button
-                        type="button"
-                        onClick={() => adjust(line.item.stock_item_id, -1)}
-                      >
-                        -
-                      </button>
-                      <strong>{line.quantity}</strong>
-                      <button
-                        type="button"
-                        onClick={() => adjust(line.item.stock_item_id, 1)}
-                      >
-                        +
-                      </button>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-
-            <div className="checkout-total">
-              <span>Total</span>
+          <button
+            className="sales-v2-cart-bar"
+            type="button"
+            disabled={cart.length === 0}
+            onClick={() => setCartOpen(true)}
+          >
+            <span className="sales-v2-cart-count">{cartQuantity}</span>
+            <span className="sales-v2-cart-total">
+              <small>Keranjang</small>
               <strong>{formatIdr(total)}</strong>
-            </div>
+            </span>
+            <span className="sales-v2-cart-action">
+              {cart.length > 0 ? 'Lihat & Bayar' : 'Keranjang kosong'}
+            </span>
+          </button>
 
-            <h3>Metode Pembayaran</h3>
-            <div className="payment-methods">
-              {allowedMethods.map((value) => (
-                <button
-                  type="button"
-                  key={value}
-                  className={
-                    method === value ? 'method-card active' : 'method-card'
-                  }
-                  onClick={() => setMethod(value)}
-                >
-                  {value === 'CASH'
-                    ? 'Tunai'
-                    : value === 'CREDIT'
-                      ? 'Kasbon'
-                      : value === 'TRANSFER'
-                        ? 'Transfer'
-                        : 'QRIS'}
-                </button>
-              ))}
-            </div>
+          {cartOpen && (
+            <div
+              className="sales-v2-sheet-backdrop"
+              onMouseDown={(event) => {
+                if (event.currentTarget === event.target && !busy) {
+                  setCartOpen(false);
+                }
+              }}
+            >
+              <section
+                className="sales-v2-sheet"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Keranjang dan pembayaran"
+              >
+                <div className="sales-v2-sheet-handle" />
+                <header className="sales-v2-sheet-header">
+                  <div>
+                    <h2>Keranjang</h2>
+                    <span>{cartQuantity} item</span>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => setCartOpen(false)}
+                  >
+                    Tutup
+                  </button>
+                </header>
 
-            {method === 'CASH' && (
-              <div className="payment-panel">
-                <label>
-                  Uang diterima (Rp)
-                  <input
-                    type="number"
-                    min="0"
-                    step="1000"
-                    value={cashReceived}
-                    onChange={(event) =>
-                      setCashReceived(Number(event.target.value))
-                    }
-                  />
-                </label>
-                <div className="checkout-total">
-                  <span>Kembalian</span>
-                  <strong>{formatIdr(change)}</strong>
+                <div className="sales-v2-cart-lines">
+                  {cart.map((line) => (
+                    <article
+                      className="sales-v2-cart-line"
+                      key={line.item.stock_item_id}
+                    >
+                      <div>
+                        <strong>{line.item.display_name}</strong>
+                        <span>
+                          {formatIdr(line.item.unit_price)} x {line.quantity}
+                        </span>
+                      </div>
+                      <div className="sales-v2-qty">
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => adjust(line.item.stock_item_id, -1)}
+                        >
+                          -
+                        </button>
+                        <strong>{line.quantity}</strong>
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => adjust(line.item.stock_item_id, 1)}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-              </div>
-            )}
 
-            {method === 'QRIS' && (
-              <div className="payment-panel">
-                {qrisImage ? (
-                  <>
-                    <img
-                      className="qris-image"
-                      src={qrisImage}
-                      alt="QRIS Segeran Jiwa"
-                    />
-                    <label className="radio-row">
+                <div className="sales-v2-total-row">
+                  <span>Total</span>
+                  <strong>{formatIdr(total)}</strong>
+                </div>
+
+                <div className="sales-v2-payment-methods">
+                  {allowedMethods.map((value) => (
+                    <button
+                      type="button"
+                      key={value}
+                      disabled={busy}
+                      className={method === value ? 'active' : ''}
+                      onClick={() => chooseMethod(value)}
+                    >
+                      {paymentLabel(value)}
+                    </button>
+                  ))}
+                </div>
+
+                {method === 'CASH' && (
+                  <div className="sales-v2-payment-panel">
+                    <div className="sales-v2-quick-cash">
+                      {cashOptions.map((value) => (
+                        <button
+                          type="button"
+                          key={value}
+                          disabled={busy}
+                          onClick={() => {
+                            invalidatePendingOperation();
+                            setCashReceived(value);
+                          }}
+                        >
+                          {value === total ? 'Uang Pas' : formatIdr(value)}
+                        </button>
+                      ))}
+                    </div>
+                    <label>
+                      <span>Uang diterima</span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="1000"
+                        value={cashReceived}
+                        disabled={busy}
+                        onChange={(event) => {
+                          invalidatePendingOperation();
+                          setCashReceived(Number(event.target.value));
+                        }}
+                      />
+                    </label>
+                    <div className="sales-v2-change">
+                      <span>Kembalian</span>
+                      <strong>{formatIdr(change)}</strong>
+                    </div>
+                  </div>
+                )}
+
+                {method === 'QRIS' && (
+                  <div className="sales-v2-payment-panel">
+                    {qrisImage ? (
+                      <>
+                        <img
+                          className="sales-v2-qris"
+                          src={qrisImage}
+                          alt="QRIS Segeran Jiwa"
+                        />
+                        <label className="sales-v2-confirm-row">
+                          <input
+                            type="checkbox"
+                            checked={qrisConfirmed}
+                            disabled={busy}
+                            onChange={(event) => {
+                              invalidatePendingOperation();
+                              setQrisConfirmed(event.target.checked);
+                            }}
+                          />
+                          <span>Pembayaran QRIS sudah diverifikasi manual</span>
+                        </label>
+                      </>
+                    ) : (
+                      <p className="form-error">QRIS belum tersedia.</p>
+                    )}
+                  </div>
+                )}
+
+                {method === 'TRANSFER' && (
+                  <div className="sales-v2-payment-panel">
+                    <label className="sales-v2-confirm-row">
                       <input
                         type="checkbox"
-                        checked={qrisConfirmed}
-                        onChange={(event) =>
-                          setQrisConfirmed(event.target.checked)
-                        }
+                        checked={transferConfirmed}
+                        disabled={busy}
+                        onChange={(event) => {
+                          invalidatePendingOperation();
+                          setTransferConfirmed(event.target.checked);
+                        }}
                       />
-                      Pembayaran QRIS sudah diverifikasi manual
+                      <span>Dana transfer sudah diverifikasi masuk</span>
                     </label>
-                  </>
-                ) : (
-                  <p className="form-error">
-                    QRIS belum tersedia di Next. Import setting QRIS dari backup
-                    Legacy terlebih dahulu.
-                  </p>
+                  </div>
                 )}
-              </div>
-            )}
 
-            {method === 'TRANSFER' && (
-              <div className="payment-panel">
-                <label className="radio-row">
-                  <input
-                    type="checkbox"
-                    checked={transferConfirmed}
-                    onChange={(event) =>
-                      setTransferConfirmed(event.target.checked)
-                    }
+                {method === 'CREDIT' && (
+                  <div className="sales-v2-payment-panel">
+                    <label>
+                      <span>Pelanggan Kasbon</span>
+                      <select
+                        value={customerId}
+                        disabled={busy}
+                        onChange={(event) => {
+                          invalidatePendingOperation();
+                          setCustomerId(event.target.value);
+                        }}
+                      >
+                        <option value="">Pilih pelanggan</option>
+                        {customers.map((customer) => (
+                          <option value={customer.id} key={customer.id}>
+                            {customer.display_name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
+                )}
+
+                <details className="sales-v2-note">
+                  <summary>Catatan transaksi</summary>
+                  <textarea
+                    value={note}
+                    disabled={busy}
+                    onChange={(event) => {
+                      invalidatePendingOperation();
+                      setNote(event.target.value);
+                    }}
+                    rows={2}
+                    placeholder="Opsional"
                   />
-                  Dana transfer sudah diverifikasi masuk
-                </label>
-              </div>
-            )}
+                </details>
 
-            {method === 'CREDIT' && (
-              <div className="payment-panel">
-                <label>
-                  Pelanggan Kasbon
-                  <select
-                    value={customerId}
-                    onChange={(event) => setCustomerId(event.target.value)}
-                  >
-                    <option value="">Pilih pelanggan</option>
-                    {customers.map((customer) => (
-                      <option value={customer.id} key={customer.id}>
-                        {customer.display_name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                {customers.length === 0 && (
-                  <p className="form-error">
-                    Belum ada pelanggan aktif. Import master Legacy terlebih
-                    dahulu.
-                  </p>
-                )}
-              </div>
-            )}
-
-            <label>
-              Catatan transaksi (opsional)
-              <textarea
-                value={note}
-                onChange={(event) => setNote(event.target.value)}
-                rows={2}
-              />
-            </label>
-
-            <button
-              className="primary-button checkout-button"
-              type="button"
-              disabled={!canPay}
-              onClick={() => void submit()}
-            >
-              {busy ? 'Memproses...' : 'Proses Pembayaran'}
-            </button>
-          </section>
+                <button
+                  className="sales-v2-pay-button"
+                  type="button"
+                  disabled={!canPay}
+                  onClick={() => void submit()}
+                >
+                  {busy
+                    ? 'Memproses satu transaksi...'
+                    : 'Bayar ' + formatIdr(total)}
+                </button>
+              </section>
+            </div>
+          )}
         </>
       )}
     </main>

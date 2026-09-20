@@ -73,6 +73,7 @@ export async function fetchManualQrisImage(): Promise<string | null> {
 }
 
 export async function checkoutSale(args: {
+  operationId: string;
   locationId: string;
   items: Array<{ stock_item_id: string; quantity: number }>;
   method: SalePaymentMethod;
@@ -90,7 +91,7 @@ export async function checkoutSale(args: {
   }
 
   const { data, error } = await supabase.rpc('checkout_sale', {
-    p_operation_id: crypto.randomUUID(),
+    p_operation_id: args.operationId,
     p_location_id: args.locationId,
     p_items: args.items,
     p_payment: payment,
