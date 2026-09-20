@@ -58,9 +58,9 @@
 ### Expense, Debt, Kasbon & Finance Engine
 
 - Weight: 10%
-- Completion: In progress
-- Earned: 0.0%
-- Note: FIN-P1 through FIN-P7 are LOCKED_REMOTE. Full bucket remains unearned until the Finance milestone acceptance/closure gate is locked.
+- Completion: 100%
+- Earned: 10.0%
+- Note: FIN-P1 through FIN-P7 plus final Modal/Prive hardening and Owner Finance Front Door; bounded Finance acceptance gate CLEAR on 2026-09-20.
 
 ### History, Reversal/Refund, Reports & Excel
 
@@ -77,7 +77,7 @@
 ## Current total
 
 - Total roadmap weight: 100%
-- Whole-project earned progress: 78.0%
+- Whole-project earned progress: 88.0%
 
 ## Reporting rules
 
@@ -93,4 +93,4 @@
 - 2026-09-11: CS-04 locked; whole-project progress moved from 20.0% to 32.0%.
 - 2026-09-13: CS-02 & CS-03 retroactive closure; progress moved from 32.0% to 54.0%.
 - 2026-09-20: CS-05 & CS-06 final closure; progress moved from 54.0% to 78.0%.
-- 2026-09-20: FIN-P1 through FIN-P6 locked sequentially; Finance milestone remains in progress and whole-project earned progress remains 78.0%.
+- 2026-09-20: FIN-P1 through FIN-P7 plus Finance closure hardening/front door accepted; Finance bucket earned 10.0% and whole-project progress moved from 78.0% to 88.0%.
