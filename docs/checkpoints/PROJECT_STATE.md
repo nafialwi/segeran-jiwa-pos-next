@@ -1,15 +1,16 @@
-# PROJECT STATE - FIN-P2B LOCKED_REMOTE
+# PROJECT STATE - FIN-P3 LOCKED_REMOTE
 
 ## Canonical identity
 
 - Workspace: Segeran Jiwa Next Vol. 1
 - Product: Segeran Jiwa POS Next
 - Blueprint: v1.0 FINAL LOCK
-- Current milestone: FIN-P2B - Shift Expense Fact - LOCKED_REMOTE
+- Current milestone: FIN-P3 - Customer Debt Foundation - LOCKED_REMOTE
 - Current branch: work/cs06743-patch3-hardening
-- FIN-P2B technical source: 21d9ef36cc3e03e52ef71dbbed95138fab988a29
-- FIN-P2B index hardening: 5a4ab5a5a7379cdd392075849b5ab0ca0291e18f
-- Managed hosted migrations: fin_p2b_shift_expense; fin_p2b1_expense_index_hardening
+- FIN-P3 planning source: c0c1a61e0beec8c1310599d2b250cb19666fd9a3
+- FIN-P3 technical source: cefe441c8ff4a2f78fe05ed02b92b6f73d975fac
+- FIN-P3 RLS hardening: 2345d529e702d83a2ebeaa5ddf25651ca5df40a1
+- Managed hosted migrations: fin_p3_customer_debt_foundation; fin_p3a_rls_authority_bridge
 - Release guard: PROCESS-GUARD
 - Production automatic deployment: DISABLED
 
@@ -22,7 +23,7 @@
 - CS-04: 100%
 - CS-05: 100%
 - CS-06: 100%
-- Finance milestone: IN PROGRESS; FIN-P1, FIN-P2A, and FIN-P2B locked
+- Finance milestone: IN PROGRESS; FIN-P1, FIN-P2A, FIN-P2B, and FIN-P3 locked
 - Whole-project weighted progress: 78.0%
 
 The finance roadmap bucket remains unearned until the complete finance milestone acceptance gate is locked.
@@ -30,24 +31,28 @@ The finance roadmap bucket remains unearned until the complete finance milestone
 ## Current verified state
 
 - FIN-P1 finance foundation is locked.
-- KAS_SHIFT exists as a canonical finance account.
-- Business-wide finance reads are Owner-only.
-- Owner transfer/capital/personal-withdrawal commands are hosted and verified.
-- FIN-P2A shift funding bridge is locked and positive shift opening cannot appear without an explicit source.
-- FIN-P2B Shift Expense is now a typed immutable business fact linked to one canonical EXPENSE movement and one actual-shift CASH_OUT.
-- CASH sale finance posting is aligned to KAS_SHIFT.
-- Generic untyped cash mutation fails closed.
-- Kasir expense visibility is own-shift scoped; Owner receives consolidated visibility.
-- Hosted FIN-P2B behavior regression passed and rolled back.
-- FIN-P2B1 covering-index hardening cleared the two new unindexed-FK advisor findings.
-- Final canonical verify before checkpoint: PASS (73 JS / 123 Python).
+- FIN-P2A explicit Shift funding bridge is locked.
+- FIN-P2B typed Shift Expense is locked.
+- FIN-P3 Customer Debt Foundation is locked.
+- Hutang Pelanggan is a canonical receivable account and immutable debt fact, not a parallel money ledger.
+- CREDIT sale is bound to customer, correct profile actor, and actual open shift.
+- Sale subtotal is computed before persistence.
+- Customer debt repayments support partial CASH/TRANSFER payments.
+- Debt repayment transfers receivable into KAS_SHIFT or BANK and never creates a new sale.
+- CASH debt repayment is reflected in the actor's actual shift cash reconciliation.
+- Debt history/status is derived from immutable origin/payment facts.
+- Unauthorized Kasir debt reads fail closed; Owner can read consolidated debt and money linkage.
+- Historical private sale helpers are no longer executable by authenticated clients.
+- FIN-P3A RLS uses the public authority boundary rather than exposing internal permission helpers.
+- Hosted end-to-end regression: PASS and rolled back.
+- Final technical canonical verify: PASS (73 JS / 128 Python).
 - Production automatic deployment remains disabled.
 
 ## Historical provenance note
 
 The hosted Supabase migration-history table does not list every historical CS-04 through CS-06 source migration although their hosted objects are present. Current finance migrations are recorded normally in managed migration history.
 
-The original Blueprint v1.0 FINAL LOCK path referenced by older state files is not present in the current working tree. Finance implementation has been reconciled against the authoritative one-file handoff snapshot; no Blueprint rule was silently invented.
+The original Blueprint v1.0 FINAL LOCK path referenced by older state files is not present in the current working tree. Finance implementation is reconciled against the authoritative one-file handoff snapshot; no unresolved Blueprint rule is silently invented.
 
 ## Source of truth order
 
@@ -55,14 +60,15 @@ The original Blueprint v1.0 FINAL LOCK path referenced by older state files is n
 2. Decision / Change Control records
 3. docs/checkpoints/PROJECT_STATE.md
 4. docs/checkpoints/ROADMAP_PROGRESS.md
-5. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-6. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-7. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-8. docs/superpowers/specs/2026-09-20-fin-p2b-shift-expense-design.md
-9. docs/checkpoints/RELEASE_MANIFEST.json
+5. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
+6. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+7. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+8. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
+9. docs/superpowers/specs/2026-09-20-fin-p3-customer-debt-foundation-design.md
+10. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-FIN-P3 - Customer Debt Foundation.
+FIN-P4 - QRIS Settlement & Daily Finance Reconciliation.
 
-Do not implement unresolved employee Kasbon repayment/deduction semantics or month-close/reopen rules until their authority is explicitly locked.
+Do not implement unresolved employee-Kasbon repayment/deduction or month-close/reopen semantics until their authority is explicitly locked.

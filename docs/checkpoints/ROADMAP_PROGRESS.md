@@ -60,7 +60,7 @@
 - Weight: 10%
 - Completion: In progress
 - Earned: 0.0%
-- Note: FIN-P1 Finance Foundation, FIN-P2A Shift Funding Bridge, and FIN-P2B Shift Expense Fact LOCKED_REMOTE on 2026-09-20. Full bucket remains unearned until the finance milestone acceptance gate is locked.
+- Note: FIN-P1 Finance Foundation, FIN-P2A Shift Funding Bridge, FIN-P2B Shift Expense Fact, and FIN-P3 Customer Debt Foundation LOCKED_REMOTE on 2026-09-20. Full bucket remains unearned until the finance milestone acceptance gate is locked.
 
 ### History, Reversal/Refund, Reports & Excel
 
@@ -96,3 +96,4 @@
 - 2026-09-20: FIN-P1 foundation locked; finance milestone in progress, earned total remains 78.0%.
 - 2026-09-20: FIN-P2A shift funding bridge locked; earned total remains 78.0%.
 - 2026-09-20: FIN-P2B Shift Expense Fact locked with P2B1 index hardening; earned total remains 78.0%.
+- 2026-09-20: FIN-P3 Customer Debt Foundation locked with P3A RLS hardening; earned total remains 78.0%.
