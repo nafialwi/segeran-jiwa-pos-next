@@ -60,7 +60,7 @@
 - Weight: 10%
 - Completion: In progress
 - Earned: 0.0%
-- Note: FIN-P1 through FIN-P6 are LOCKED_REMOTE. Full bucket remains unearned until the Finance milestone acceptance gate is locked.
+- Note: FIN-P1 through FIN-P7 are LOCKED_REMOTE. Full bucket remains unearned until the Finance milestone acceptance/closure gate is locked.
 
 ### History, Reversal/Refund, Reports & Excel
 
