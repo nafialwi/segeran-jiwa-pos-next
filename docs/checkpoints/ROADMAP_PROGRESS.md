@@ -60,7 +60,7 @@
 - Weight: 10%
 - Completion: In progress
 - Earned: 0.0%
-- Note: FIN-P1 Finance Foundation, FIN-P2A Shift Funding Bridge, FIN-P2B Shift Expense Fact, FIN-P3 Customer Debt Foundation, FIN-P4 QRIS Settlement & Daily Finance Reconciliation, and FIN-P5 Supplier Payable Foundation are LOCKED_REMOTE. Full bucket remains unearned until the finance milestone acceptance gate is locked.
+- Note: FIN-P1 through FIN-P6 are LOCKED_REMOTE. Full bucket remains unearned until the Finance milestone acceptance gate is locked.
 
 ### History, Reversal/Refund, Reports & Excel
 
@@ -93,9 +93,4 @@
 - 2026-09-11: CS-04 locked; whole-project progress moved from 20.0% to 32.0%.
 - 2026-09-13: CS-02 & CS-03 retroactive closure; progress moved from 32.0% to 54.0%.
 - 2026-09-20: CS-05 & CS-06 final closure; progress moved from 54.0% to 78.0%.
-- 2026-09-20: FIN-P1 foundation locked; finance milestone in progress, earned total remains 78.0%.
-- 2026-09-20: FIN-P2A shift funding bridge locked; earned total remains 78.0%.
-- 2026-09-20: FIN-P2B Shift Expense Fact locked with P2B1 index hardening; earned total remains 78.0%.
-- 2026-09-20: FIN-P3 Customer Debt Foundation locked with P3A RLS hardening; earned total remains 78.0%.
-- 2026-09-20: FIN-P4 QRIS Settlement & Daily Finance Reconciliation locked; earned total remains 78.0%.
-- 2026-09-20: FIN-P5 Supplier Payable Foundation locked with P5A/P5B API and read-authority hardening; earned total remains 78.0%.
+- 2026-09-20: FIN-P1 through FIN-P6 locked sequentially; Finance milestone remains in progress and whole-project earned progress remains 78.0%.
