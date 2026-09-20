@@ -47,7 +47,7 @@ Production automatic deployment remains disabled.
 
 | ID     | Scenario                           | Expected                                  | Result  |
 | ------ | ---------------------------------- | ----------------------------------------- | ------- |
-| UAT-20 | Open shift from main cash          | Shift opens once, opening cash visible    | NOT_RUN |
+| UAT-20 | Open shift from main cash          | Shift opens once, opening cash visible    | PASS    |
 | UAT-21 | Cash sale                          | Sale succeeds and expected cash updates   | NOT_RUN |
 | UAT-22 | Manual QRIS sale                   | QR displayed/manual confirm flow works    | NOT_RUN |
 | UAT-23 | Transfer sale                      | Payment recorded under correct method     | NOT_RUN |
@@ -131,3 +131,9 @@ Disposition:
 - UAT-06: PASS.
 - UAT-08: PASS.
 - Wave 1 transactional testing may resume.
+
+## Wave 1B evidence - UAT-20
+
+Hosted verification after the operator opened the real-device UAT shift shows one OPEN shift at GERAI for Admin Segeran Jiwa with opening balance Rp0 and zero posted sales at the start of Wave 1B.
+
+Disposition: UAT-20 PASS.
