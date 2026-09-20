@@ -10,6 +10,13 @@ export function hasPermission(
   );
 }
 
+export function hasAnyPermission(
+  authority: AuthoritySnapshot,
+  codes: PermissionCode[],
+): boolean {
+  return codes.some((code) => hasPermission(authority, code));
+}
+
 export function canAccessOwnerArea(authority: AuthoritySnapshot): boolean {
   return authority.status === 'ACTIVE' && authority.owner;
 }
@@ -20,6 +27,9 @@ export function canAccessRoute(
 ): boolean {
   if (route === '/pengguna' || route === '/keuangan') {
     return canAccessOwnerArea(authority);
+  }
+  if (route === '/riwayat') {
+    return hasAnyPermission(authority, ['HISTORY_OWN', 'HISTORY_ALL']);
   }
   if (route === '/jual') return hasPermission(authority, 'SALE_EXECUTE');
   return authority.status === 'ACTIVE';

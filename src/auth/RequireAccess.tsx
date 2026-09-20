@@ -14,6 +14,13 @@ type RequireAccessProps =
       children: ReactNode;
       ownerOnly?: false;
       permission: PermissionCode;
+      anyPermissions?: never;
+    }
+  | {
+      children: ReactNode;
+      ownerOnly?: false;
+      permission?: never;
+      anyPermissions: PermissionCode[];
     };
 
 export function RequireAccess(props: RequireAccessProps) {
@@ -29,7 +36,11 @@ export function RequireAccess(props: RequireAccessProps) {
 
   const allowed = props.ownerOnly
     ? canAccessOwnerArea(authority)
-    : hasPermission(authority, props.permission);
+    : 'anyPermissions' in props && props.anyPermissions
+      ? props.anyPermissions.some((permission) =>
+          hasPermission(authority, permission),
+        )
+      : hasPermission(authority, props.permission);
 
   if (!allowed) {
     return <Navigate to="/akses-ditolak" replace />;

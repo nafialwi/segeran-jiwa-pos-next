@@ -62,6 +62,8 @@ const OPERATIONAL_PERMISSIONS: Array<{
   { code: 'CUSTOMER_MANAGE', label: 'Kelola Pelanggan' },
   { code: 'EMPLOYEE_MANAGE', label: 'Kelola Karyawan' },
   { code: 'CORRECTION_LIMITED', label: 'Koreksi Terbatas' },
+  { code: 'HISTORY_OWN', label: 'Riwayat Sendiri' },
+  { code: 'HISTORY_ALL', label: 'Riwayat Semua' },
   { code: 'REPORT_SALES_LIMITED', label: 'Laporan Penjualan Terbatas' },
   { code: 'REPORT_INVENTORY', label: 'Laporan Persediaan' },
   { code: 'REPORT_PURCHASE', label: 'Laporan Pembelian' },

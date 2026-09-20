@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
-import { canAccessOwnerArea, hasPermission } from '../auth/permission';
+import {
+  canAccessOwnerArea,
+  hasAnyPermission,
+  hasPermission,
+} from '../auth/permission';
 
 export function HomeScreen() {
   const { authority, switchUser, logout } = useAuth();
@@ -46,6 +50,11 @@ export function HomeScreen() {
         {hasPermission(authority, 'SALE_EXECUTE') && (
           <Link className="nav-card" to="/jual">
             Jual
+          </Link>
+        )}
+        {hasAnyPermission(authority, ['HISTORY_OWN', 'HISTORY_ALL']) && (
+          <Link className="nav-card" to="/riwayat">
+            Riwayat
           </Link>
         )}
         {hasPermission(authority, 'INVENTORY_READ') && (
