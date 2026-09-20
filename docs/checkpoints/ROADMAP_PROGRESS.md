@@ -65,8 +65,9 @@
 ### History, Reversal/Refund, Reports & Excel
 
 - Weight: 7%
-- Completion: 0%
+- Completion: In progress
 - Earned: 0.0%
+- Note: HRR-P1 Transaction History Foundation LOCKED_REMOTE; full bucket remains unearned until History + Refund/Koreksi + Reports/Excel acceptance is locked.
 
 ### Attention, Offline, Backup, Health & Cutover Hardening
 

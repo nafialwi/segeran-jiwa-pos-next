@@ -1,15 +1,14 @@
-# PROJECT STATE - FINANCE CLOSURE LOCKED_REMOTE
+# PROJECT STATE - HRR-P1 LOCKED_REMOTE
 
 ## Canonical identity
 
 - Workspace: Segeran Jiwa Next Vol. 1
 - Product: Segeran Jiwa POS Next
 - Blueprint: v1.0 FINAL LOCK
-- Current milestone: Finance milestone closure - LOCKED_REMOTE
+- Current milestone: HRR-P1 - Transaction History Foundation - LOCKED_REMOTE
 - Current branch: work/cs06743-patch3-hardening
-- Finance closure app source: 29d4bff82c40888157f201433f0185d644cc5b96
-- Finance closure hardening source: feb71bcb3ab3f0bbbc02c955b96f7f0edaa4b6aa
-- Latest managed hosted migration: fin_closure_owner_equity_personal_accounts
+- HRR-P1 technical source: 9bfb503d5c804e76bca0834350a88bd92b627757
+- Latest managed hosted migration: hrr_p1_transaction_history
 - Release guard: PROCESS-GUARD
 - Production automatic deployment: DISABLED
 
@@ -23,6 +22,7 @@
 - CS-05: 100%
 - CS-06: 100%
 - Finance milestone: 100% / LOCKED_REMOTE
+- History/Reversal/Reports milestone: IN PROGRESS; HRR-P1 locked
 - Whole-project weighted progress: 88.0%
 
 The Finance roadmap bucket is accepted and earns its full 10.0% roadmap weight.
@@ -46,6 +46,9 @@ The Finance roadmap bucket is accepted and earns its full 10.0% roadmap weight.
 - Employee Kasbon repayment/payroll semantics remain intentionally deferred by Blueprint.
 - Month close/reopen semantics remain intentionally deferred by Blueprint.
 - Final technical verify: PASS (73 JS / 172 Python).
+- HRR-P1 Transaction History: LOCKED_REMOTE.
+- Hosted HRR-P1 regression: HRR_P1_HOSTED_REGRESSION_PASS.
+- HRR-P1 final verify: PASS (73 JS / 176 Python).
 - Production automatic deployment remains disabled.
 
 ## Historical provenance note
@@ -60,19 +63,20 @@ The original Blueprint v1.0 FINAL LOCK file path referenced by older state files
 2. Decision / Change Control records
 3. docs/checkpoints/PROJECT_STATE.md
 4. docs/checkpoints/ROADMAP_PROGRESS.md
-5. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
-6. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
-7. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
-8. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
-9. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
-10. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
-11. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-12. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-13. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-14. docs/checkpoints/RELEASE_MANIFEST.json
+5. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
+6. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
+7. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
+8. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
+9. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
+10. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
+11. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
+12. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+13. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+14. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
+15. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-History, Reversal/Refund, Reports & Excel.
+HRR-P2 Refund authority and implementation design.
 
-Perform a bounded Blueprint authority audit first. Do not invent reversal/refund, reporting, HPP, or Excel semantics outside the locked Blueprint.
+Preserve the original sale. Model the three Blueprint stock-impact choices explicitly. Reuse the canonical inventory, money, debt, and shift authorities; do not invent hidden mutation of completed facts.
