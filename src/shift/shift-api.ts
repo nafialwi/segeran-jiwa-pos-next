@@ -134,7 +134,7 @@ export async function fetchLocations(): Promise<LocationOption[]> {
   const rows = (data ?? []) as Record<string, unknown>[];
   return rows.map((row) => ({
     id: String(row.id),
-    label: String(row.name ?? row.code ?? row.id),
+    label: String(row.display_name ?? row.name ?? row.code ?? row.id),
   }));
 }
 

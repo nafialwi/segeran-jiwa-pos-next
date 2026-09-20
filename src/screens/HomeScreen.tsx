@@ -48,6 +48,16 @@ export function HomeScreen() {
             Jual
           </Link>
         )}
+        {hasPermission(authority, 'INVENTORY_READ') && (
+          <Link className="nav-card" to="/stok">
+            Stok
+          </Link>
+        )}
+        {hasPermission(authority, 'PURCHASE_MANAGE') && (
+          <Link className="nav-card" to="/pembelian">
+            Pembelian
+          </Link>
+        )}
         {canAccessOwnerArea(authority) && (
           <>
             <Link className="nav-card" to="/pengguna">
@@ -55,6 +65,9 @@ export function HomeScreen() {
             </Link>
             <Link className="nav-card" to="/expense-approval">
               Approval Pengeluaran
+            </Link>
+            <Link className="nav-card" to="/legacy-import">
+              Migrasi Master Legacy
             </Link>
           </>
         )}

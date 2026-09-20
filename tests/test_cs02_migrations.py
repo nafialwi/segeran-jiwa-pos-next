@@ -54,6 +54,7 @@ EXPECTED_MIGRATIONS = [
     "20260920191500_fin_p5a_supplier_payment_method_api.sql",
     "20260920193000_fin_p5b_supplier_read_authority.sql",
     "20260920200000_fin_p6_expense_approval.sql",
+    "20260920213000_uat_blocker_core_ui_recovery.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -92,6 +93,7 @@ EXPECTED_SQL_TESTS = [
     "fin_p5a_supplier_payment_method_api_test.sql",
     "fin_p5b_supplier_read_authority_test.sql",
     "fin_p6_expense_approval_test.sql",
+    "uat_blocker_core_ui_recovery_test.sql",
 ]
 
 

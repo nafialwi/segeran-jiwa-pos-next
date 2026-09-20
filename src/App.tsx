@@ -10,6 +10,10 @@ import { HandoverScreen } from './screens/HandoverScreen';
 import { ShiftHistoryScreen } from './screens/ShiftHistoryScreen';
 import { ReconciliationScreen } from './screens/ReconciliationScreen';
 import { ExpenseApprovalScreen } from './screens/ExpenseApprovalScreen';
+import { SalesScreen } from './screens/SalesScreen';
+import { InventoryScreen } from './screens/InventoryScreen';
+import { PurchaseScreen } from './screens/PurchaseScreen';
+import { LegacyImportScreen } from './screens/LegacyImportScreen';
 
 function RootRoute() {
   const { state } = useAuth();
@@ -25,16 +29,6 @@ function RootRoute() {
   return <HomeScreen />;
 }
 
-function SalesFoundationScreen() {
-  return (
-    <main className="center-card">
-      <p className="eyebrow">PENJUALAN</p>
-      <h1>Fondasi akses Penjualan aktif.</h1>
-      <p>Modul Penjualan dibangun pada milestone berikutnya.</p>
-    </main>
-  );
-}
-
 export function App() {
   return (
     <Routes>
@@ -44,7 +38,31 @@ export function App() {
         path="/jual"
         element={
           <RequireAccess permission="SALE_EXECUTE">
-            <SalesFoundationScreen />
+            <SalesScreen />
+          </RequireAccess>
+        }
+      />
+      <Route
+        path="/stok"
+        element={
+          <RequireAccess permission="INVENTORY_READ">
+            <InventoryScreen />
+          </RequireAccess>
+        }
+      />
+      <Route
+        path="/pembelian"
+        element={
+          <RequireAccess permission="PURCHASE_MANAGE">
+            <PurchaseScreen />
+          </RequireAccess>
+        }
+      />
+      <Route
+        path="/legacy-import"
+        element={
+          <RequireAccess ownerOnly>
+            <LegacyImportScreen />
           </RequireAccess>
         }
       />

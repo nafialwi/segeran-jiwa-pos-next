@@ -128,7 +128,7 @@ export function ExpenseApprovalScreen() {
       <header className="topbar">
         <div>
           <Link className="muted" to="/">
-            � Beranda
+            Kembali ke Beranda
           </Link>
           <h1>Approval Pengeluaran</h1>
         </div>
@@ -171,7 +171,7 @@ export function ExpenseApprovalScreen() {
             Rule aktif
           </label>
           <button className="primary-button" type="submit" disabled={busy}>
-            {busy ? 'Menyimpan&' : 'Simpan Rule'}
+            {busy ? 'Menyimpan...' : 'Simpan Rule'}
           </button>
         </form>
 
@@ -197,7 +197,7 @@ export function ExpenseApprovalScreen() {
             {requests.map((request) => (
               <article className="list-card" key={request.request_id}>
                 <strong>
-                  {request.category_code} � {formatIdr(request.amount)}
+                  {request.category_code} - {formatIdr(request.amount)}
                 </strong>
                 <span>{request.description}</span>
                 <span>Status: {request.status}</span>
