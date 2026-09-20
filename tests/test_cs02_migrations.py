@@ -51,6 +51,7 @@ EXPECTED_MIGRATIONS = [
     "20260920171500_fin_p3a_rls_authority_bridge.sql",
     "20260920180000_fin_p4_qris_settlement_reconciliation.sql",
     "20260920190000_fin_p5_supplier_payable_foundation.sql",
+    "20260920191500_fin_p5a_supplier_payment_method_api.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -86,6 +87,7 @@ EXPECTED_SQL_TESTS = [
     "fin_p3a_rls_authority_bridge_test.sql",
     "fin_p4_qris_settlement_reconciliation_test.sql",
     "fin_p5_supplier_payable_foundation_test.sql",
+    "fin_p5a_supplier_payment_method_api_test.sql",
 ]
 
 
