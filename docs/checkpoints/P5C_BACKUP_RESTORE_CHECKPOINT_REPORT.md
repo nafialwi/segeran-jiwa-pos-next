@@ -35,6 +35,20 @@ The temporary read path used for export is now disabled and has no pg_read_all_d
 
 No Production deployment, application migration, application table mutation, or business-row mutation was performed.
 
+## Verification
+
+Feature commit: bdf1f51f248016a562ce0f042d1e691780ad143b
+
+Pre-UAT canonical regression:
+
+- JavaScript: 91/91 PASS;
+- Python: 205/205 PASS;
+- format check: PASS;
+- lint: PASS;
+- typecheck: PASS;
+- production build: PASS;
+- git diff --check: PASS.
+
 ## Next action
 
 Run full pre-UAT regression and create the immutable UAT release candidate.

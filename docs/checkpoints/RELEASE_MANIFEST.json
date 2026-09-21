@@ -5,7 +5,7 @@
   "checkpoint": "P5C LOCKED_REMOTE",
   "milestone": "Attention, Offline, Backup, Health & Cutover Hardening",
   "plan_revision": "P5C-CLOSED",
-  "app_source_commit": "c551d702bdfbe640eb68ff91a50336fe6fe754ce",
+  "app_source_commit": "bdf1f51f248016a562ce0f042d1e691780ad143b",
   "schema_version": 6,
   "managed_migrations": [
     "hrr_p1_transaction_history",
@@ -22,7 +22,7 @@
   "approval_anti_bypass": "PASS",
   "closed_shift_fail_closed": "PASS",
   "whole_project_weighted_progress_percent": 95,
-  "closeout_package_id": "SJPOSNEXT-P5D2-20260921",
+  "closeout_package_id": "SJPOSNEXT-P5C-20260921",
   "next_action": "Pre-UAT full regression and immutable UAT candidate",
   "employee_kasbon_separate_from_customer_debt": "PASS",
   "employee_only_target_gate": "PASS",
