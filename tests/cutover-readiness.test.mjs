@@ -7,6 +7,9 @@ function goodManifest() {
     p5b_offline_business_mutations: 'FAIL_CLOSED_ONLINE_ONLY',
     p5c_backup_health: 'HEALTHY',
     p5c_restore_verification: 'PASS',
+    uat_release_candidate: 'PASS',
+    uat_official_status: 'PASS',
+    final_regression_status: 'PASS',
     production_automatic_deployment: false,
   };
 }
@@ -58,6 +61,20 @@ describe('P5D cutover readiness gate', () => {
     const result = evaluateCutoverReadiness(goodManifest(), security);
     expect(result.ready).toBe(false);
     expect(result.blockers.join('\n')).toContain('Connector V2');
+  });
+
+  it('fails closed until UAT and final regression are complete', () => {
+    const manifest = goodManifest();
+    manifest.uat_release_candidate = 'NOT_CREATED';
+    manifest.uat_official_status = 'NOT_STARTED';
+    manifest.final_regression_status = 'NOT_RUN';
+
+    const result = evaluateCutoverReadiness(manifest, goodSecurity());
+
+    expect(result.ready).toBe(false);
+    expect(result.blockers.join('\n')).toContain('UAT release candidate');
+    expect(result.blockers.join('\n')).toContain('Official UAT');
+    expect(result.blockers.join('\n')).toContain('Final post-UAT regression');
   });
 
   it('requires automatic Production deployment to stay disabled', () => {

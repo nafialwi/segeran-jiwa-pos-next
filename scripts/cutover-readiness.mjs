@@ -46,6 +46,18 @@ export function evaluateCutoverReadiness(manifest, securityEvidence) {
   ) {
     blockers.push('Direct grants pada tabel RLS-without-policy masih ada.');
   }
+  if (manifest.uat_release_candidate !== 'PASS') {
+    blockers.push('UAT release candidate belum dikunci.');
+  }
+
+  if (manifest.uat_official_status !== 'PASS') {
+    blockers.push('Official UAT belum PASS.');
+  }
+
+  if (manifest.final_regression_status !== 'PASS') {
+    blockers.push('Final post-UAT regression belum PASS.');
+  }
+
   if (manifest.production_automatic_deployment !== false) {
     blockers.push('Automatic Production deployment harus tetap disabled.');
   }

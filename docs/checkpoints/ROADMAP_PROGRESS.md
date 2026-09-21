@@ -74,7 +74,7 @@
 - Weight: 5%
 - Completion: 0%
 - Earned: 0.0%
-- Note: P5A Operational Health and P5B Offline Action Boundaries are LOCKED_REMOTE. P5D authenticated SECURITY DEFINER review is CLEAR_OR_ACCEPTED; the Pro-only leaked-password protection setting is recorded as an explicit Free-plan limitation rather than falsely marked enabled. The final gate now remains blocked on P5C real backup/restore evidence; the bucket stays unearned until final cutover acceptance is clear.
+- Note: P5A Operational Health, P5B Offline Action Boundaries, P5C real backup/restore evidence, and the P5D security review are closed at safe checkpoints. The final 5% bucket remains unearned until pre-UAT regression, immutable UAT candidate, official UAT, final regression, and cutover acceptance are all clear.
 
 ## Current total
 

@@ -86,25 +86,26 @@ The original Blueprint v1.0 FINAL LOCK file path referenced by older state files
 5. docs/checkpoints/P5A_OPERATIONAL_HEALTH_CHECKPOINT_REPORT.md
 6. docs/checkpoints/P5B_OFFLINE_ACTION_BOUNDARIES_CHECKPOINT_REPORT.md
 7. docs/checkpoints/P5C_BACKUP_HEALTH_GATE_SAFEPOINT.md
-8. docs/checkpoints/P5D_SECURITY_CUTOVER_GATE_SAFEPOINT.md
-9. docs/checkpoints/P5D2_AUTHENTICATED_SECURITY_DEFINER_REVIEW_CHECKPOINT.md
-10. docs/checkpoints/HRR-P4_CHECKPOINT_REPORT.md
-11. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
-12. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
-13. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
-14. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
-15. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
-16. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
-17. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
-18. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
-19. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
-20. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-21. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-22. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-23. docs/checkpoints/RELEASE_MANIFEST.json
+8. docs/checkpoints/P5C_BACKUP_RESTORE_CHECKPOINT_REPORT.md
+9. docs/checkpoints/P5D_SECURITY_CUTOVER_GATE_SAFEPOINT.md
+10. docs/checkpoints/P5D2_AUTHENTICATED_SECURITY_DEFINER_REVIEW_CHECKPOINT.md
+11. docs/checkpoints/HRR-P4_CHECKPOINT_REPORT.md
+12. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
+13. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
+14. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
+15. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
+16. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
+17. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
+18. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
+19. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
+20. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
+21. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+22. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+23. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
+24. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-P5C — execute the real logical backup, retained copy, checksum manifest, and isolated restore verification.
+Run the full pre-UAT regression, then create the immutable UAT release candidate.
 
-P5A and P5B are LOCKED_REMOTE. P5D security review is CLEAR_OR_ACCEPTED with the Free-plan credential-protection limitation explicitly recorded. The final cutover gate now fails closed only on P5C backup health and restore evidence.
+P5A, P5B, P5C, and the P5D security review are closed at safe checkpoints. Final cutover remains fail-closed until the UAT candidate exists, official UAT passes, and the final post-UAT regression passes.
