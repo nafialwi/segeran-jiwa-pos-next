@@ -74,7 +74,7 @@
 - Weight: 5%
 - Completion: 0%
 - Earned: 0.0%
-- Note: P5A Operational Health and P5B Offline Action Boundaries are LOCKED_REMOTE. The bucket remains unearned because no approved internal phase weighting exists; backup/restore evidence, global security follow-up, and cutover acceptance are still open.
+- Note: P5A Operational Health and P5B Offline Action Boundaries are LOCKED_REMOTE. P5C Backup Health has a PREPARED_SAFE fail-closed gate but is not complete until a real logical export, retained copy, checksum manifest, and isolated restore verification PASS. The bucket remains unearned; global security follow-up and cutover acceptance are also still open.
 
 ## Current total
 

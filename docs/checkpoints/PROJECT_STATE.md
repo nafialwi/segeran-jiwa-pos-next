@@ -85,23 +85,24 @@ The original Blueprint v1.0 FINAL LOCK file path referenced by older state files
 4. docs/checkpoints/ROADMAP_PROGRESS.md
 5. docs/checkpoints/P5A_OPERATIONAL_HEALTH_CHECKPOINT_REPORT.md
 6. docs/checkpoints/P5B_OFFLINE_ACTION_BOUNDARIES_CHECKPOINT_REPORT.md
-7. docs/checkpoints/HRR-P4_CHECKPOINT_REPORT.md
-8. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
-9. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
-10. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
-11. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
-12. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
-13. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
-14. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
-15. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
-16. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
-17. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-18. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-19. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-20. docs/checkpoints/RELEASE_MANIFEST.json
+7. docs/checkpoints/P5C_BACKUP_HEALTH_GATE_SAFEPOINT.md
+8. docs/checkpoints/HRR-P4_CHECKPOINT_REPORT.md
+9. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
+10. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
+11. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
+12. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
+13. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
+14. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
+15. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
+16. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
+17. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
+18. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+19. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+20. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
+21. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-P5C — Backup Health & Restore Evidence.
+P5C — Execute Logical Backup & Restore Evidence.
 
-P5A Operational Health and P5B Offline Action Boundaries are LOCKED_REMOTE. The final 5% remains unearned until backup/restore evidence, global security follow-ups, and cutover acceptance are proven.
+P5A and P5B are LOCKED_REMOTE. The P5C backup-health gate is PREPARED_SAFE but deliberately remains UNHEALTHY until a real logical export, retained copy, checksum manifest, and isolated restore verification PASS exist. Global security follow-up and cutover acceptance remain open.

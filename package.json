@@ -12,7 +12,8 @@
     "test:py": "python3 -m unittest discover -s tests -p 'test_*.py' -v",
     "test": "npm run test:js && npm run test:py",
     "build": "vite build",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "backup:health": "node scripts/backup-health.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",

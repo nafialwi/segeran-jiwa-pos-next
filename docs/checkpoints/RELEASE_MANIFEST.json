@@ -2,9 +2,9 @@
   "workspace": "Segeran Jiwa Next Vol. 1",
   "product": "Segeran Jiwa POS Next",
   "blueprint_baseline": "1.0 FINAL LOCK",
-  "checkpoint": "P5B LOCKED_REMOTE",
+  "checkpoint": "P5C GATE PREPARED_SAFE",
   "milestone": "Attention, Offline, Backup, Health & Cutover Hardening",
-  "plan_revision": "P5B",
+  "plan_revision": "P5C-GATE",
   "app_source_commit": "f5251ed9537c049f17b174ca1fe1a0c6d78157c0",
   "schema_version": 6,
   "managed_migrations": [
@@ -23,7 +23,7 @@
   "closed_shift_fail_closed": "PASS",
   "whole_project_weighted_progress_percent": 95.0,
   "closeout_package_id": "SJPOSNEXT-P5B-20260921",
-  "next_action": "P5C Backup Health & Restore Evidence",
+  "next_action": "P5C Execute Logical Backup & Restore Evidence",
   "employee_kasbon_separate_from_customer_debt": "PASS",
   "employee_only_target_gate": "PASS",
   "employee_kasbon_single_money_engine": "PASS",
@@ -95,5 +95,12 @@
   "p5b_sales_stable_operation_id": "PRESERVED",
   "p5b_ambiguous_network_failure": "VISIBLE_NOT_SILENTLY_REPLAYED",
   "p5b_database_change": "NONE",
-  "p5b_production_deployment": "NONE"
+  "p5b_production_deployment": "NONE",
+  "p5c_backup_health_gate": "PREPARED_SAFE",
+  "p5c_logical_export": "MISSING",
+  "p5c_retained_copy": "MISSING",
+  "p5c_restore_verification": "MISSING",
+  "p5c_backup_health": "UNHEALTHY_FAIL_CLOSED",
+  "p5c_credentials_in_repo": "NONE",
+  "p5c_production_deployment": "NONE"
 }

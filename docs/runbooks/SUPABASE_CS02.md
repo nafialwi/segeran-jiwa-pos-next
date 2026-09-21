@@ -49,3 +49,32 @@ When production business data exists, a healthy logical backup requires a Postgr
 ## GitHub delivery
 
 Normal delivery uses one guarded Mobile Inbox ZIP with `package_type: schema_patch`. The upload creates a working branch/PR/Preview and must not mutate Production automatically. After source PR merge and post-merge verification, a separate checkpoint/evidence package updates `PROJECT_STATE`, `ROADMAP_PROGRESS`, `CS-02_CHECKPOINT_REPORT`, and `RELEASE_MANIFEST` using the actual final merge commit.
+
+## P5C logical backup execution gate
+
+P5C is fail-closed: the application backup must not be described as healthy from project status, browser connectivity, file existence, or a checksum alone.
+
+For the Free-plan hosted project, keep the zero-cost path as a manual PostgreSQL logical export. Database credentials must be supplied locally at execution time and must never be committed to Git, written into connector job commands, copied into checkpoint documents, or pasted into chat.
+
+Preferred export procedure when the operator workstation has the required database connection string and Supabase CLI/Docker:
+
+    mkdir -p "$HOME/WORKSTATION/backups/segeran-jiwa-pos-next/$(date -u +%Y%m%dT%H%M%SZ)"
+    cd "$HOME/WORKSTATION/backups/segeran-jiwa-pos-next/"*
+    supabase db dump --db-url "$DATABASE_URL" -f roles.sql --role-only
+    supabase db dump --db-url "$DATABASE_URL" -f schema.sql
+    supabase db dump --db-url "$DATABASE_URL" -f data.sql --use-copy --data-only
+
+If the Supabase CLI path is unavailable, a compatible PostgreSQL logical-export procedure may be used, but it must be documented and must preserve the current application-owned schema/data recovery contract.
+
+After export:
+
+1. produce SHA-256 checksums;
+2. create backup-manifest.json with format_version = 1, project ref, UTC creation time, logical-export filename, and SHA-256;
+3. retain a byte-identical copy on storage separate from the hosted database and record where it is retained;
+4. restore the backup into an isolated PostgreSQL/Supabase test target, never into the active project;
+5. record restore-verification.json with status = PASS, UTC verification time, the exact backup SHA-256, and restore method;
+6. run npm run backup:health -- <bundle-dir> <retained-copy-file> and require BACKUP_HEALTH=HEALTHY.
+
+BACKUP_HEALTH=UNHEALTHY is a cutover blocker.
+
+The backup bundle itself is sensitive operational data and must stay outside this Git repository.
