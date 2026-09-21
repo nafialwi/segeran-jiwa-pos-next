@@ -2,9 +2,9 @@
   "workspace": "Segeran Jiwa Next Vol. 1",
   "product": "Segeran Jiwa POS Next",
   "blueprint_baseline": "1.0 FINAL LOCK",
-  "checkpoint": "P5C LOCKED_REMOTE",
+  "checkpoint": "UAT RC1 CREATED",
   "milestone": "Attention, Offline, Backup, Health & Cutover Hardening",
-  "plan_revision": "P5C-CLOSED",
+  "plan_revision": "UAT-RC1",
   "app_source_commit": "bdf1f51f248016a562ce0f042d1e691780ad143b",
   "schema_version": 6,
   "managed_migrations": [
@@ -23,7 +23,7 @@
   "closed_shift_fail_closed": "PASS",
   "whole_project_weighted_progress_percent": 95,
   "closeout_package_id": "SJPOSNEXT-P5C-20260921",
-  "next_action": "Pre-UAT full regression and immutable UAT candidate",
+  "next_action": "Official UAT against uat-rc-20260921-1",
   "employee_kasbon_separate_from_customer_debt": "PASS",
   "employee_only_target_gate": "PASS",
   "employee_kasbon_single_money_engine": "PASS",
@@ -121,9 +121,11 @@
   "p5c_restore_target": "ISOLATED_LOCAL_POSTGRESQL_18_6",
   "p5c_temp_backup_reader": "DISABLED_NOLOGIN_NO_READ_ALL",
   "pre_uat_regression_status": "PASS",
-  "uat_release_candidate": "NOT_CREATED",
+  "uat_release_candidate": "PASS",
   "uat_official_status": "NOT_STARTED",
   "final_regression_status": "NOT_RUN",
   "final_cutover_acceptance": "BLOCKED_UAT",
-  "p5c_checkpoint": "LOCKED_REMOTE"
+  "p5c_checkpoint": "LOCKED_REMOTE",
+  "uat_candidate_tag": "uat-rc-20260921-1",
+  "uat_candidate_commit": "e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489"
 }
