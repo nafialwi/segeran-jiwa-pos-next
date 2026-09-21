@@ -67,6 +67,21 @@ P5D security review can therefore close without pretending that the Pro-only set
 
 Final cutover still requires P5C backup health and restore evidence.
 
+## Verification
+
+Feature commit: c551d702bdfbe640eb68ff91a50336fe6fe754ce
+
+Canonical verification after review closure:
+
+- JavaScript: 90/90 PASS;
+- Python: 205/205 PASS;
+- format check: PASS;
+- lint: PASS;
+- typecheck: PASS;
+- production build: PASS;
+- git diff --check: PASS;
+- cutover check: expected fail-closed on P5C backup health and restore evidence only.
+
 ## Safety boundary
 
 No hosted function, grant, policy, schema object, or business row was changed during this review.

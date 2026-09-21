@@ -5,7 +5,7 @@
   "checkpoint": "P5D2 SECURITY REVIEW CLEAR_OR_ACCEPTED",
   "milestone": "Attention, Offline, Backup, Health & Cutover Hardening",
   "plan_revision": "P5D2",
-  "app_source_commit": "96b9003fb4c59bbf846eec3812f31a7a03a36491",
+  "app_source_commit": "c551d702bdfbe640eb68ff91a50336fe6fe754ce",
   "schema_version": 6,
   "managed_migrations": [
     "hrr_p1_transaction_history",
@@ -15,14 +15,14 @@
   ],
   "release_guard_mode": "PROCESS-GUARD",
   "production_automatic_deployment": false,
-  "canonical_verify": "PASS_89_JS_205_PY",
+  "canonical_verify": "PASS_90_JS_205_PY",
   "hosted_behavior_regression": "PASS_CASH_CREDIT_PERMISSION_TRANSFER_PAID_DEBT_BLOCKER",
   "expense_approval_threshold": "PASS",
   "pending_financial_inertness": "PASS",
   "approval_anti_bypass": "PASS",
   "closed_shift_fail_closed": "PASS",
   "whole_project_weighted_progress_percent": 95,
-  "closeout_package_id": "SJPOSNEXT-P5D-GATE-20260921",
+  "closeout_package_id": "SJPOSNEXT-P5D2-20260921",
   "next_action": "P5C real backup and restore evidence",
   "employee_kasbon_separate_from_customer_debt": "PASS",
   "employee_only_target_gate": "PASS",
@@ -116,5 +116,6 @@
   "p5d_authenticated_security_definer_unclassified": 0,
   "p5d_authenticated_security_definer_also_anon": 0,
   "p5d_authenticated_security_definer_empty_search_path": 60,
-  "p5d_security_review": "LOCKED_REMOTE"
+  "p5d_security_review": "LOCKED_REMOTE",
+  "p5d2_checkpoint": "LOCKED_REMOTE"
 }
