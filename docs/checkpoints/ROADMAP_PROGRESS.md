@@ -65,9 +65,9 @@
 ### History, Reversal/Refund, Reports & Excel
 
 - Weight: 7%
-- Completion: In progress
-- Earned: 0.0%
-- Note: HRR-P1 Transaction History, HRR-P2 Sale Refund / Reversal Authority, and HRR-P3 Reports & Excel Foundation are LOCKED_REMOTE. Full bucket remains unearned pending explicit Koreksi/Pembalikan closure acceptance.
+- Completion: 100%
+- Earned: 7.0%
+- Note: HRR-P1 Transaction History, HRR-P2 Sale Refund / Reversal Authority, HRR-P3 Reports & Excel Foundation, and HRR-P4 Correction / Reversal Closure are LOCKED_REMOTE. Complete bucket acceptance CLEAR on 2026-09-21.
 
 ### Attention, Offline, Backup, Health & Cutover Hardening
 
@@ -78,7 +78,7 @@
 ## Current total
 
 - Total roadmap weight: 100%
-- Whole-project earned progress: 88.0%
+- Whole-project earned progress: 95.0%
 
 ## Reporting rules
 
@@ -95,4 +95,4 @@
 - 2026-09-13: CS-02 & CS-03 retroactive closure; progress moved from 32.0% to 54.0%.
 - 2026-09-20: CS-05 & CS-06 final closure; progress moved from 54.0% to 78.0%.
 - 2026-09-20: FIN-P1 through FIN-P7 plus Finance closure hardening/front door accepted; Finance bucket earned 10.0% and whole-project progress moved from 78.0% to 88.0%.
-- 2026-09-21: HRR-P3 Reports & Excel locked. A closure audit found Blueprint Koreksi/Pembalikan is distinct from Refund/Pengembalian; the HRR bucket remains unearned and whole-project progress remains 88.0% pending HRR-P4.
+- 2026-09-21: HRR-P4 Correction/Reversal locked after pc-main full verify and hosted rollback regressions; the HRR bucket earned 7.0% and whole-project progress moved from 88.0% to 95.0%.

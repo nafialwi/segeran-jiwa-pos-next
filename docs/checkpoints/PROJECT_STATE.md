@@ -1,14 +1,14 @@
-# PROJECT STATE - HRR-P3 LOCKED_REMOTE
+# PROJECT STATE - HRR-P4 LOCKED_REMOTE
 
 ## Canonical identity
 
 - Workspace: Segeran Jiwa Next Vol. 1
 - Product: Segeran Jiwa POS Next
 - Blueprint: v1.0 FINAL LOCK
-- Current milestone: HRR-P3 - Reports & Excel Foundation - LOCKED_REMOTE
+- Current milestone: HRR-P4 - Correction / Reversal Closure - LOCKED_REMOTE
 - Current branch: work/cs06743-patch3-hardening
-- HRR-P3 canonical source: 9b02545efb37378cefe7e99c8ca6f56ed4dbf237
-- Latest managed hosted migration: hrr_p3_reports_excel
+- HRR-P4 canonical source: 0e543ab50b66c5dafafabb81d78a3171c76173e5
+- Latest managed hosted migration: hrr_p4_sale_correction
 - Release guard: PROCESS-GUARD
 - Production automatic deployment: DISABLED
 
@@ -22,12 +22,12 @@
 - CS-05: 100%
 - CS-06: 100%
 - Finance milestone: 100% / LOCKED_REMOTE
-- History/Reversal/Reports milestone: IN PROGRESS; HRR-P1, HRR-P2 and HRR-P3 locked
-- Whole-project weighted progress: 88.0%
+- History/Reversal/Reports milestone: 100% / LOCKED_REMOTE
+- Whole-project weighted progress: 95.0%
 
 The Finance roadmap bucket is accepted and earns its full 10.0% roadmap weight.
 
-The History, Reversal/Refund, Reports & Excel roadmap bucket remains unearned pending explicit Koreksi/Pembalikan closure acceptance.
+The History, Reversal/Refund, Reports & Excel roadmap bucket is accepted and earns its full 7.0% roadmap weight.
 
 ## Current verified state
 
@@ -61,7 +61,14 @@ The History, Reversal/Refund, Reports & Excel roadmap bucket remains unearned pe
 - Excel exporter executable contract: PASS; multi-sheet/sticky headers/column widths/.xlsx filename verified.
 - npm audit after Excel dependency selection: 0 vulnerabilities.
 - HRR-P3 hosted rollback left 0 temporary users/sales/refunds/receipts and preserved the real OPEN shift expected cash at Rp17.000.
-- History/Reversal/Reports bucket acceptance: PENDING HRR-P4 Koreksi/Pembalikan closure audit; earned 0.0% until the complete acceptance gate is satisfied.
+- HRR-P4 Correction / Reversal Closure: LOCKED_REMOTE.
+- Hosted HRR-P4 cash regression: HRR_P4_HOSTED_CASH_REGRESSION_PASS.
+- Hosted HRR-P4 credit/permission regression: HRR_P4_HOSTED_CREDIT_PERMISSION_PASS.
+- Hosted HRR-P4 transfer regression: HRR_P4_HOSTED_TRANSFER_PASS.
+- Hosted HRR-P4 paid-debt blocker regression: HRR_P4_HOSTED_PAID_DEBT_BLOCKER_PASS.
+- HRR-P4 final source verify: PASS (74 JS / 199 Python).
+- HRR-P1 through HRR-P4 complete the 7% History/Reversal/Refund/Reports/Excel bucket.
+- History/Reversal/Reports bucket acceptance: CLEAR; earned 7.0%.
 - Production automatic deployment remains disabled.
 
 ## Historical provenance note
@@ -76,22 +83,23 @@ The original Blueprint v1.0 FINAL LOCK file path referenced by older state files
 2. Decision / Change Control records
 3. docs/checkpoints/PROJECT_STATE.md
 4. docs/checkpoints/ROADMAP_PROGRESS.md
-5. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
-6. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
-7. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
-8. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
-9. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
-10. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
-11. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
-12. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
-13. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
-14. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-15. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-16. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-17. docs/checkpoints/RELEASE_MANIFEST.json
+5. docs/checkpoints/HRR-P4_CHECKPOINT_REPORT.md
+6. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
+7. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
+8. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
+9. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
+10. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
+11. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
+12. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
+13. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
+14. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
+15. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+16. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+17. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
+18. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-HRR-P4 Correction/Reversal Closure Audit.
+Attention, Offline, Backup, Health & Cutover Hardening.
 
-Blueprint section 14 distinguishes Refund/Pengembalian from Koreksi/Pembalikan. Audit and, if required, implement a distinct completed-transaction correction/replacement authority that preserves the original fact and links its reversal/replacement before crediting the HRR 7% bucket.
+Close the final 5% only after offline action boundaries, attention/health behavior, backup/restore evidence, global security follow-ups, and cutover acceptance are proven.
