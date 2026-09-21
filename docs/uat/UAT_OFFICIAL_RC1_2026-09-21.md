@@ -27,6 +27,18 @@ Preview: https://5188a6b0.segeran-jiwa-pos-next.pages.dev
 
 These checks are supporting evidence only. They do not replace human acceptance of user-visible workflows.
 
+## Automated browser smoke on the deployed RC1 source
+
+A Linux Chrome 153 headless smoke was executed against the Cloudflare preview at a 390x844 mobile viewport.
+
+- HTTP load: PASS.
+- Login UI rendered: PASS.
+- Global offline attention banner after browser network-offline emulation: PASS.
+- Page errors: 0.
+- Console errors: 0.
+
+This reduces the remaining human gate to authenticated, user-visible acceptance.
+
 ## Human acceptance gate
 
 Use an existing authorized Owner account. Do not create synthetic production users or alter credentials solely for UAT.
