@@ -1155,3 +1155,28 @@ textarea {
   background: #fffaf0;
   line-height: 1.45;
 }
+
+/* P5A operational attention: connectivity only, no backend-health claim. */
+.operational-health-banner {
+  width: min(100% - 32px, 720px);
+  display: grid;
+  gap: 4px;
+  margin: 12px auto 0;
+  padding: 12px 14px;
+  border: 1px solid #e2c87d;
+  border-radius: 12px;
+  background: #fff8df;
+  color: #654d0d;
+  box-shadow: 0 6px 18px rgb(73 54 5 / 8%);
+}
+
+.operational-health-banner span {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 480px) {
+  .operational-health-banner {
+    width: min(100% - 20px, 720px);
+  }
+}
