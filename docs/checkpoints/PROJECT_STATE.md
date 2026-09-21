@@ -83,23 +83,24 @@ The original Blueprint v1.0 FINAL LOCK file path referenced by older state files
 2. Decision / Change Control records
 3. docs/checkpoints/PROJECT_STATE.md
 4. docs/checkpoints/ROADMAP_PROGRESS.md
-5. docs/checkpoints/HRR-P4_CHECKPOINT_REPORT.md
-6. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
-7. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
-8. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
-9. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
-10. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
-11. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
-12. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
-13. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
-14. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
-15. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-16. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-17. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-18. docs/checkpoints/RELEASE_MANIFEST.json
+5. docs/checkpoints/P5A_OPERATIONAL_HEALTH_CHECKPOINT_REPORT.md
+6. docs/checkpoints/HRR-P4_CHECKPOINT_REPORT.md
+7. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
+8. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
+9. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
+10. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
+11. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
+12. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
+13. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
+14. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
+15. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
+16. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
+17. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
+18. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
+19. docs/checkpoints/RELEASE_MANIFEST.json
 
 ## NEXT ACTION
 
-Attention, Offline, Backup, Health & Cutover Hardening.
+P5B — Offline Action Boundaries.
 
-Close the final 5% only after offline action boundaries, attention/health behavior, backup/restore evidence, global security follow-ups, and cutover acceptance are proven.
+P5A Operational Health is LOCKED_REMOTE. The final 5% remains unearned until offline action boundaries, backup/restore evidence, global security follow-ups, and cutover acceptance are proven.

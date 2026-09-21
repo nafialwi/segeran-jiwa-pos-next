@@ -74,6 +74,7 @@
 - Weight: 5%
 - Completion: 0%
 - Earned: 0.0%
+- Note: P5A Operational Health is LOCKED_REMOTE. The bucket remains unearned because no approved internal phase weighting exists; offline boundaries, backup/restore evidence, global security follow-up, and cutover acceptance are still open.
 
 ## Current total
 
