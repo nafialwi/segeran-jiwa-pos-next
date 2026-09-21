@@ -1,111 +1,125 @@
-# PROJECT STATE - HRR-P4 LOCKED_REMOTE
+# PROJECT STATE — POST-RC1 REFINEMENT CONVERGENCE
 
 ## Canonical identity
 
-- Workspace: Segeran Jiwa Next Vol. 1
+- Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
-- Blueprint: v1.0 FINAL LOCK
-- Current milestone: HRR-P4 - Correction / Reversal Closure - LOCKED_REMOTE
-- Current branch: work/cs06743-patch3-hardening
-- HRR-P4 canonical source: 0e543ab50b66c5dafafabb81d78a3171c76173e5
-- Latest managed hosted migration: hrr_p4_sale_correction
-- Release guard: PROCESS-GUARD
-- Production automatic deployment: DISABLED
+- Branch: work/cs06743-patch3-hardening
+- Current phase: **POST-RC1 REFINEMENT CONVERGENCE**
+- Production automatic deployment: **DISABLED**
+- Runtime release candidate baseline: **uat-rc-20260921-1**
+- RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
+- RC1 preview: **https://5188a6b0.segeran-jiwa-pos-next.pages.dev**
+- Latest context authority: **docs/checkpoints/REFINEMENT_CONVERGENCE_CONTEXT_LOCK_2026-09-22.md**
 
-## Progress
+## Current interpretation of progress
 
-- Blueprint / Design: 100%
-- CS-01: 100%
-- CS-02: 100%
-- CS-03: 100%
-- CS-04: 100%
-- CS-05: 100%
-- CS-06: 100%
-- Finance milestone: 100% / LOCKED_REMOTE
-- History/Reversal/Reports milestone: 100% / LOCKED_REMOTE
-- Whole-project weighted progress: 95.0%
+The historical weighted implementation roadmap reached 95% before P5 hardening.
+P5A/P5B/P5C/P5D hardening has since been completed to safe/locked checkpoints and RC1 exists.
 
-The Finance roadmap bucket is accepted and earns its full 10.0% roadmap weight.
+Do not use the old 95% number as a claim that the approved final product is visually complete.
+Track these concerns separately:
 
-The History, Reversal/Refund, Reports & Excel roadmap bucket is accepted and earns its full 7.0% roadmap weight.
+- Core business engine: mature / substantially complete.
+- Hardening: P5A-P5D safe/locked as documented.
+- RC1 behavioural candidate: created and smoke-tested.
+- Human official UAT: awaiting full acceptance.
+- Visual/product convergence to revised blueprint + four approved refinement boards: in progress.
+- Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
 
-- FIN-P1 Finance Foundation: LOCKED_REMOTE
-- FIN-P2A Shift Funding Bridge: LOCKED_REMOTE
-- FIN-P2B Shift Expense Fact: LOCKED_REMOTE
-- FIN-P3 Customer Debt Foundation: LOCKED_REMOTE
-- FIN-P4 QRIS Settlement & Daily Finance Reconciliation: LOCKED_REMOTE
-- FIN-P5 Supplier Payable Foundation: LOCKED_REMOTE
-- FIN-P6 Expense Approval: LOCKED_REMOTE
-- FIN-P7 Employee Kasbon Foundation: LOCKED_REMOTE
-- FIN-P1 through FIN-P7: LOCKED_REMOTE.
-- Finance closure minimum account set: CLEAR.
-- Modal and Pengeluaran Pribadi canonical two-sided ledger hardening: CLEAR.
-- Owner Finance Front Door /keuangan: CLEAR.
-- Hosted aggregate closure regression: FINANCE_CLOSURE_HOSTED_PASS.
-- Hosted Modal/Prive hardening regression: FINANCE_OWNER_ACCOUNTS_HOSTED_PASS.
-- Employee Kasbon repayment/payroll semantics remain intentionally deferred by Blueprint.
-- Month close/reopen semantics remain intentionally deferred by Blueprint.
-- Final technical verify: PASS (73 JS / 172 Python).
-- HRR-P1 Transaction History: LOCKED_REMOTE.
-- Hosted HRR-P1 regression: HRR_P1_HOSTED_REGRESSION_PASS.
-- HRR-P1 final verify: PASS (73 JS / 176 Python).
-- HRR-P2 Sale Refund / Reversal Authority: LOCKED_REMOTE.
-- Hosted HRR-P2 regression: HRR_P2_HOSTED_REGRESSION_PASS.
-- HRR-P2 final verify: PASS (73 JS / 181 Python).
-- HRR-P2 hosted rollback left 0 test refunds/users/receipts and preserved the real OPEN shift expected cash at Rp17.000.
-- HRR-P3 Reports & Excel Foundation: LOCKED_REMOTE.
-- Hosted HRR-P3 regression: HRR_P3_HOSTED_REGRESSION_PASS.
-- HRR-P3 final verify: PASS (74 JS / 187 Python).
-- Excel exporter executable contract: PASS; multi-sheet/sticky headers/column widths/.xlsx filename verified.
-- npm audit after Excel dependency selection: 0 vulnerabilities.
-- HRR-P3 hosted rollback left 0 temporary users/sales/refunds/receipts and preserved the real OPEN shift expected cash at Rp17.000.
-- HRR-P4 Correction / Reversal Closure: LOCKED_REMOTE.
-- Hosted HRR-P4 cash regression: HRR_P4_HOSTED_CASH_REGRESSION_PASS.
-- Hosted HRR-P4 credit/permission regression: HRR_P4_HOSTED_CREDIT_PERMISSION_PASS.
-- Hosted HRR-P4 transfer regression: HRR_P4_HOSTED_TRANSFER_PASS.
-- Hosted HRR-P4 paid-debt blocker regression: HRR_P4_HOSTED_PAID_DEBT_BLOCKER_PASS.
-- HRR-P4 final source verify: PASS (74 JS / 199 Python).
-- HRR-P1 through HRR-P4 complete the 7% History/Reversal/Refund/Reports/Excel bucket.
-- History/Reversal/Reports bucket acceptance: CLEAR; earned 7.0%.
-- Production automatic deployment remains disabled.
+- P5A Operational Health: LOCKED_REMOTE.
+- P5B Offline Action Boundaries: LOCKED_REMOTE.
+- P5C Backup Health: HEALTHY.
+- P5C isolated restore verification: PASS.
+- P5D/P5D2 security review: CLEAR_OR_ACCEPTED / safe checkpoint.
+- Pre-UAT regression: PASS (91 JS / 205 Python).
+- Isolated SQL UAT suite: 4/4 PASS.
+- Cloudflare RC1 Preview: PASS.
+- Browser smoke at 390x844: PASS.
+- Browser smoke page errors: 0.
+- Browser smoke console errors: 0.
+- Production automatic deployment: DISABLED.
+- Official Human UAT: AWAITING_HUMAN_ACCEPTANCE.
+- Final cutover: BLOCKED.
 
-## Historical provenance note
+## Why the project is now in refinement convergence
 
-Historical CS-04 through CS-06 managed migration rows remain incomplete although hosted objects are verified. Current Finance migrations are recorded normally.
+RC1 proved that the core application and hardening are materially functional, but real-device UAT
+and source audit showed a product-coherence gap:
 
-The original Blueprint v1.0 FINAL LOCK file path referenced by older state files is not present in the working tree. Finance work is reconciled against the authoritative Library/handoff copy; unresolved business rules are not silently invented.
+- Home is still primarily an engineering/permission navigation grid.
+- Sales V2 is much more polished than many other modules.
+- Inventory/Purchase/Finance remain more administrative/long-form than the approved final UX.
+- Production backend exists without a final dedicated product surface.
+- Settings is not yet a canonical Control Center.
+- Attention is not yet a full actionable authority page.
+- Approved Segeran Jiwa icon assets are not yet integrated into runtime source.
+- final Product/Variant/Recipe/Packaging semantics still need convergence with the revised blueprint.
 
-## Source of truth order
+The four approved refinement boards were created to solve this product-coherence gap.
+They are not merely decorative references.
 
-1. Blueprint v1.0 FINAL LOCK / authoritative handoff copy
-2. Decision / Change Control records
-3. docs/checkpoints/PROJECT_STATE.md
-4. docs/checkpoints/ROADMAP_PROGRESS.md
-5. docs/checkpoints/P5A_OPERATIONAL_HEALTH_CHECKPOINT_REPORT.md
-6. docs/checkpoints/P5B_OFFLINE_ACTION_BOUNDARIES_CHECKPOINT_REPORT.md
-7. docs/checkpoints/P5C_BACKUP_HEALTH_GATE_SAFEPOINT.md
-8. docs/checkpoints/P5C_BACKUP_RESTORE_CHECKPOINT_REPORT.md
-9. docs/checkpoints/P5D_SECURITY_CUTOVER_GATE_SAFEPOINT.md
-10. docs/checkpoints/P5D2_AUTHENTICATED_SECURITY_DEFINER_REVIEW_CHECKPOINT.md
-11. docs/checkpoints/HRR-P4_CHECKPOINT_REPORT.md
-12. docs/checkpoints/HRR-P3_CHECKPOINT_REPORT.md
-13. docs/checkpoints/HRR-P2_CHECKPOINT_REPORT.md
-14. docs/checkpoints/HRR-P1_CHECKPOINT_REPORT.md
-15. docs/checkpoints/FINANCE_CLOSURE_REPORT.md
-16. docs/checkpoints/FIN-P7_CHECKPOINT_REPORT.md
-17. docs/checkpoints/FIN-P6_CHECKPOINT_REPORT.md
-18. docs/checkpoints/FIN-P5_CHECKPOINT_REPORT.md
-19. docs/checkpoints/FIN-P4_CHECKPOINT_REPORT.md
-20. docs/checkpoints/FIN-P3_CHECKPOINT_REPORT.md
-21. docs/checkpoints/FIN-P2B_CHECKPOINT_REPORT.md
-22. docs/checkpoints/FIN-P2A_CHECKPOINT_REPORT.md
-23. docs/checkpoints/FIN-P1_CHECKPOINT_REPORT.md
-24. docs/checkpoints/RELEASE_MANIFEST.json
+## Authority order for current convergence
+
+1. **REFINEMENT_CONVERGENCE_CONTEXT_LOCK_2026-09-22.md**
+2. Revised Blueprint / business-rule authority and decision records
+3. Four approved Visual Refinement boards
+4. RC1 behavioural baseline and UAT evidence
+5. Fidelity Lock icon package authority
+6. This PROJECT_STATE.md
+7. RELEASE_MANIFEST.json and milestone checkpoint reports
+
+If an older document says the next action is to create RC1 or begin pre-UAT work, that instruction
+is historical and superseded by this current state.
+
+## RC1 immutability
+
+- Tag: uat-rc-20260921-1
+- Commit: e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489
+- Preview: https://5188a6b0.segeran-jiwa-pos-next.pages.dev
+
+RC1 must not be rewritten, retagged or silently changed.
+Any runtime refinement after RC1 must lead to RC2 or later after full regression.
+
+## Icon authority
+
+External package supplied for refinement convergence:
+
+- File: SEGERAN_JIWA_ICON_FAMILY_BATCH_02_WAVE_02_FIDELITY_LOCK_FILES(1).zip
+- SHA-256: a536f31afe0e84c1a6e76f66008e99f6c934a53a660b15e3bba81ff1eb6bd50d
+- Binary package is not yet committed to this repo.
+- Approved Wave 02 semantic/system icons and navigation REVIEW/TODO status are documented in the context lock.
 
 ## NEXT ACTION
 
-Run the full pre-UAT regression, then create the immutable UAT release candidate.
+**Begin C1 — Icon + Design System + AppShell convergence.**
 
-P5A, P5B, P5C, and the P5D security review are closed at safe checkpoints. Final cutover remains fail-closed until the UAT candidate exists, official UAT passes, and the final post-UAT regression passes.
+Concrete order:
+
+1. controlled icon registry + brand assets;
+2. shared design tokens/components;
+3. canonical mobile AppShell and bottom navigation:
+   Beranda | Jual | Riwayat | Perhatian | Menu;
+4. desktop/sidebar adaptation from the same navigation authority;
+5. preserve permissions, routes and existing business writers;
+6. then proceed to Product/Variant/Recipe/Packaging convergence.
+
+Do not start another broad audit unless current source contradicts the context lock.
+
+## Cutover rule
+
+Production remains fail-closed.
+
+Required path:
+
+Convergence source change
+-> full regression
+-> RC2 (or later)
+-> new Cloudflare Preview
+-> batched Human UAT
+-> final post-UAT regression
+-> cutover readiness
+-> explicit approval
+-> Production release gate
