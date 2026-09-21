@@ -84,6 +84,21 @@ The current repository state must report CUTOVER_READY=NO.
 4. Auth credential protection is disabled.
 5. The 60 authenticated SECURITY DEFINER advisor findings are not yet fully dispositioned.
 
+## Verification
+
+Feature commit: 96b9003fb4c59bbf846eec3812f31a7a03a36491
+
+Canonical verification after the gate implementation:
+
+- JavaScript: 89/89 PASS;
+- Python: 205/205 PASS;
+- format check: PASS;
+- lint: PASS;
+- typecheck: PASS;
+- production build: PASS;
+- git diff --check: PASS;
+- current cutover check: expected fail-closed with four explicit blockers.
+
 ## Safety boundary
 
 No hosted schema or business data was changed by this checkpoint.
