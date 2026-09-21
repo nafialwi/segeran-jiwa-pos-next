@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { requireOnlineAction } from '../health/online-action';
 
 type ApprovalRule = {
   id: string;
@@ -70,6 +71,7 @@ export function ExpenseApprovalScreen() {
 
   async function saveRule(event: React.FormEvent) {
     event.preventDefault();
+    requireOnlineAction('Perubahan rule approval');
     setBusy(true);
     setMessage('');
     try {
@@ -96,6 +98,7 @@ export function ExpenseApprovalScreen() {
   }
 
   async function decide(requestId: string, approve: boolean) {
+    requireOnlineAction('Keputusan approval pengeluaran');
     const reason = approve
       ? (window.prompt('Catatan approval (opsional):', '') ?? '')
       : (window.prompt('Alasan penolakan (opsional):', '') ?? '');

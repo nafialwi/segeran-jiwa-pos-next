@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { requireOnlineAction } from '../health/online-action';
 
 export type HistoryPayment = {
   method: string;
@@ -209,6 +210,7 @@ export async function refundSale(args: {
   refundMethod: RefundMethod;
   reason: string;
 }) {
+  requireOnlineAction('Refund transaksi');
   const { data, error } = await supabase.rpc('refund_sale', {
     p_sale_id: args.saleId,
     p_stock_disposition: args.stockDisposition,
@@ -233,6 +235,7 @@ export async function refundSale(args: {
 export async function previewSaleCorrection(
   saleId: string,
 ): Promise<CorrectionPreview> {
+  requireOnlineAction('Koreksi transaksi');
   const { data, error } = await supabase.rpc('sale_correction_preview', {
     p_sale_id: saleId,
   });
@@ -248,6 +251,7 @@ export async function previewSaleCorrection(
 }
 
 export async function correctSale(args: { saleId: string; reason: string }) {
+  requireOnlineAction('Koreksi transaksi');
   const { data, error } = await supabase.rpc('correct_sale', {
     p_sale_id: args.saleId,
     p_reason: args.reason.trim(),

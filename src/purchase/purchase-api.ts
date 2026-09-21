@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { requireOnlineAction } from '../health/online-action';
 
 export type PurchaseSupplier = {
   id: string;
@@ -106,6 +107,7 @@ export async function createPurchaseSupplier(args: {
   displayName: string;
   phone?: string;
 }): Promise<string> {
+  requireOnlineAction('Pembuatan supplier');
   const { data, error } = await supabase.rpc('purchase_create_supplier', {
     p_code: args.code,
     p_display_name: args.displayName,
@@ -122,6 +124,7 @@ export async function createPurchaseItem(args: {
   itemKind: string;
   unitId: string;
 }): Promise<string> {
+  requireOnlineAction('Pembuatan item pembelian');
   const { data, error } = await supabase.rpc('purchase_create_item', {
     p_code: args.code,
     p_display_name: args.displayName,
@@ -139,6 +142,7 @@ export async function createPurchaseOrder(args: {
   lines: PurchaseLineInput[];
   notes?: string;
 }) {
+  requireOnlineAction('Purchase order');
   const { data, error } = await supabase.rpc('purchase_create_order', {
     p_supplier_id: args.supplierId,
     p_location_id: args.locationId,
@@ -162,6 +166,7 @@ export async function createGoodsReceipt(args: {
   }>;
   notes?: string;
 }) {
+  requireOnlineAction('Penerimaan barang');
   const { data, error } = await supabase.rpc('purchase_create_goods_receipt', {
     p_purchase_order_id: args.purchaseOrderId,
     p_lines: args.lines,
@@ -182,6 +187,7 @@ export async function directBuy(args: {
   lines: PurchaseLineInput[];
   notes?: string;
 }) {
+  requireOnlineAction('Pembelian langsung');
   const { data, error } = await supabase.rpc('purchase_direct_buy', {
     p_supplier_id: args.supplierId,
     p_location_id: args.locationId,
@@ -200,6 +206,7 @@ export async function directBuy(args: {
 }
 
 export async function postGoodsReceipt(goodsReceiptId: string) {
+  requireOnlineAction('Posting penerimaan barang');
   const { data, error } = await supabase.rpc('post_goods_receipt', {
     p_goods_receipt_id: goodsReceiptId,
   });

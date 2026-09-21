@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { requireOnlineAction } from '../health/online-action';
 import {
   legacyMasterSummary,
   parseLegacyMaster,
@@ -78,6 +79,7 @@ export function LegacyImportScreen() {
 
   async function runImport() {
     if (!payload || !locationId || !sourceHash || existing) return;
+    requireOnlineAction('Import master Legacy');
 
     const summary = legacyMasterSummary(payload);
     const ok = window.confirm(

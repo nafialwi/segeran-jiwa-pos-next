@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { requireOnlineAction } from '../health/online-action';
 
 export type SalesCatalogItem = {
   stock_item_id: string;
@@ -81,6 +82,7 @@ export async function checkoutSale(args: {
   customerId?: string;
   note?: string;
 }): Promise<CheckoutResult> {
+  requireOnlineAction('Penjualan');
   const payment: Record<string, unknown> = {
     method: args.method,
     amount: args.total,

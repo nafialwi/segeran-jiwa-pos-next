@@ -2,6 +2,7 @@
 // Wraps Supabase RPC calls to the CS-05-P3-API wrappers.
 
 import { supabase } from '../lib/supabase';
+import { requireOnlineAction } from '../health/online-action';
 import type { Handover, Shift, ShiftExpense } from './shift-core';
 
 export type LocationOption = {
@@ -36,6 +37,7 @@ export async function openShift(
   openingBalance: number,
   config: Record<string, unknown> = {},
 ): Promise<string> {
+  requireOnlineAction('Buka shift');
   if (openingBalance > 0) {
     const { data, error } = await supabase.rpc(
       'finance_open_shift_from_main_cash',
@@ -64,6 +66,7 @@ export async function closeShift(
   actualCash: number,
   toProfileId: string | null = null,
 ): Promise<number> {
+  requireOnlineAction('Tutup shift');
   const { data, error } = await supabase.rpc('cs05_close_my_shift', {
     p_shift: shiftId,
     p_actual: actualCash,
@@ -77,6 +80,7 @@ export async function resolveHandover(
   handoverId: string,
   accept: boolean,
 ): Promise<void> {
+  requireOnlineAction('Keputusan serah terima');
   const { error } = await supabase.rpc('cs05_resolve_handover', {
     p_handover: handoverId,
     p_accept: accept,
@@ -160,6 +164,7 @@ export async function postShiftExpense(
   description: string,
   amount: number,
 ): Promise<ShiftExpenseSubmission> {
+  requireOnlineAction('Pengeluaran shift');
   const { data, error } = await supabase.rpc('finance_submit_shift_expense', {
     p_category_code: categoryCode,
     p_description: description,

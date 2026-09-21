@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { requireOnlineAction } from '../health/online-action';
 
 export type FinanceAccount = {
   id: string;
@@ -242,6 +243,7 @@ export async function postFinanceTransfer(args: {
   amount: number;
   reason: string;
 }) {
+  requireOnlineAction('Transfer keuangan');
   const { data, error } = await supabase.rpc('finance_post_transfer', {
     p_from_account_id: args.fromAccountId,
     p_to_account_id: args.toAccountId,
@@ -258,6 +260,7 @@ export async function postOwnerCapital(args: {
   amount: number;
   reason: string;
 }) {
+  requireOnlineAction('Setoran modal');
   const { data, error } = await supabase.rpc('finance_post_owner_capital', {
     p_to_account_id: args.toAccountId,
     p_amount: args.amount,
@@ -273,6 +276,7 @@ export async function postOwnerPersonalWithdrawal(args: {
   amount: number;
   reason: string;
 }) {
+  requireOnlineAction('Pengambilan pribadi');
   const { data, error } = await supabase.rpc(
     'finance_post_owner_personal_withdrawal',
     {
@@ -292,6 +296,7 @@ export async function settleQris(args: {
   grossAmount: number;
   providerFee: number;
 }) {
+  requireOnlineAction('Settlement QRIS');
   const { data, error } = await supabase.rpc('finance_settle_qris', {
     p_settlement_date: args.settlementDate,
     p_provider_reference: args.providerReference,
@@ -309,6 +314,7 @@ export async function reconcileFinanceDay(args: {
   bankTransferReceived: number;
   stockStatus: 'SESUAI' | 'PERLU_DIPERIKSA' | 'NOT_CHECKED';
 }) {
+  requireOnlineAction('Rekonsiliasi harian');
   const { data, error } = await supabase.rpc('finance_reconcile_day', {
     p_business_date: args.businessDate,
     p_counted_cash: args.countedCash,
@@ -325,6 +331,7 @@ export async function payCustomerDebt(args: {
   method: 'CASH' | 'TRANSFER';
   amount: number;
 }) {
+  requireOnlineAction('Pembayaran hutang pelanggan');
   const { data, error } = await supabase.rpc('finance_pay_customer_debt', {
     p_debt_id: args.debtId,
     p_method: args.method,
@@ -340,6 +347,7 @@ export async function paySupplierPayable(args: {
   method: 'CASH' | 'TRANSFER';
   amount: number;
 }) {
+  requireOnlineAction('Pembayaran hutang supplier');
   const { data, error } = await supabase.rpc('finance_pay_supplier_payable', {
     p_payable_id: args.payableId,
     p_method: args.method,
@@ -356,6 +364,7 @@ export async function createEmployeeKasbon(args: {
   amount: number;
   note?: string;
 }) {
+  requireOnlineAction('Kasbon karyawan');
   const { data, error } = await supabase.rpc('finance_create_employee_kasbon', {
     p_employee_profile_id: args.employeeProfileId,
     p_source_method: args.sourceMethod,

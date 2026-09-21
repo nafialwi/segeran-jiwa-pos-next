@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../auth/AuthProvider';
 import type { PermissionCode, ProfileStatus } from '../auth/types';
 import { supabase } from '../lib/supabase';
+import { requireOnlineAction } from '../health/online-action';
 
 type PermissionEffect = 'ALLOW' | 'DENY' | 'INHERIT';
 
@@ -253,6 +254,7 @@ export function OwnerUsersScreen() {
   );
 
   async function invokeAdmin(body: Record<string, unknown>) {
+    requireOnlineAction('Administrasi pengguna');
     setBusy(true);
     setMessage('');
 
@@ -295,6 +297,7 @@ export function OwnerUsersScreen() {
   }
 
   async function invokeDeviceAdmin(body: Record<string, unknown>) {
+    requireOnlineAction('Administrasi perangkat');
     setBusy(true);
     setMessage('');
 
