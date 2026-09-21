@@ -13,7 +13,7 @@ function goodManifest() {
 
 function goodSecurity() {
   return {
-    auth_credential_protection: 'ENABLED_VERIFIED',
+    auth_credential_protection: 'UNAVAILABLE_FREE_PLAN_ACCEPTED_LIMITATION',
     authenticated_security_definer_review: 'CLEAR_OR_ACCEPTED',
     connector_v2_custom_auth_negative_tests: 'PASS',
     rls_no_policy_direct_grants_to_anon_authenticated: 0,
@@ -25,6 +25,11 @@ describe('P5D cutover readiness gate', () => {
     const result = evaluateCutoverReadiness(goodManifest(), goodSecurity());
     expect(result.ready).toBe(true);
     expect(result.blockers).toEqual([]);
+  });
+
+  it('accepts the documented Free-plan credential-protection limitation', () => {
+    const result = evaluateCutoverReadiness(goodManifest(), goodSecurity());
+    expect(result.ready).toBe(true);
   });
 
   it('fails closed while backup evidence is incomplete', () => {

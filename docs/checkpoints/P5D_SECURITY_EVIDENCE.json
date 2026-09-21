@@ -19,7 +19,24 @@
   "connector_v2_agent_hashes_invalid": 0,
   "connector_v2_custom_auth_negative_tests": "PASS",
   "connector_v2_anon_warning_disposition": "REVIEWED_INTENTIONAL_CUSTOM_AUTH_LINTER_WARNING_REMAINS",
-  "authenticated_security_definer_review": "OPEN",
-  "auth_credential_protection": "DISABLED_OPEN",
-  "cutover_security_status": "BLOCKED_SAFE"
+  "authenticated_security_definer_review": "CLEAR_OR_ACCEPTED",
+  "auth_credential_protection": "UNAVAILABLE_FREE_PLAN_ACCEPTED_LIMITATION",
+  "cutover_security_status": "CLEAR_WITH_ACCEPTED_PLATFORM_LIMITATION",
+  "authenticated_security_definer_total": 60,
+  "authenticated_security_definer_also_anon_executable": 0,
+  "authenticated_security_definer_empty_search_path": 60,
+  "authenticated_security_definer_unclassified": 0,
+  "authenticated_security_definer_guard_classes": {
+    "AUTH_UID_GATE": 1,
+    "AUTHORITY_PROJECTION": 1,
+    "BUSINESS_AUTHORITY_GATE": 2,
+    "COMPOSED_GUARDED_COMMANDS": 1,
+    "DISABLED_FAIL_CLOSED": 1,
+    "EXPLICIT_PERMISSION_GATE": 24,
+    "OWNER_AUTHORITY_GATE": 7,
+    "OWNER_GATE": 17,
+    "SELF_SESSION_GATE": 1,
+    "SHIFT_PERMISSION_GATE": 5
+  },
+  "auth_credential_protection_basis": "Supabase leaked password protection is a Pro-plan feature; project plan is Free."
 }

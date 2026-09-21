@@ -16,8 +16,19 @@ export function evaluateCutoverReadiness(manifest, securityEvidence) {
   if (manifest.p5c_restore_verification !== 'PASS') {
     blockers.push('P5C restore verification belum PASS.');
   }
-  if (securityEvidence.auth_credential_protection !== 'ENABLED_VERIFIED') {
-    blockers.push('Auth credential protection belum ENABLED_VERIFIED.');
+  const credentialProtectionAccepted = new Set([
+    'ENABLED_VERIFIED',
+    'UNAVAILABLE_FREE_PLAN_ACCEPTED_LIMITATION',
+  ]);
+
+  if (
+    !credentialProtectionAccepted.has(
+      securityEvidence.auth_credential_protection,
+    )
+  ) {
+    blockers.push(
+      'Auth credential protection belum enabled atau belum didisposisi sebagai batasan plan.',
+    );
   }
   if (
     securityEvidence.authenticated_security_definer_review !==

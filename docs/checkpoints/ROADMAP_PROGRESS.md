@@ -74,7 +74,7 @@
 - Weight: 5%
 - Completion: 0%
 - Earned: 0.0%
-- Note: P5A Operational Health and P5B Offline Action Boundaries are LOCKED_REMOTE. P5C Backup Health and P5D Security/Cutover now have PREPARED_SAFE fail-closed gates. The bucket remains unearned until real backup/restore evidence is HEALTHY, auth credential protection is enabled and verified, authenticated SECURITY DEFINER findings are fully dispositioned, and final cutover acceptance is clear.
+- Note: P5A Operational Health and P5B Offline Action Boundaries are LOCKED_REMOTE. P5D authenticated SECURITY DEFINER review is CLEAR_OR_ACCEPTED; the Pro-only leaked-password protection setting is recorded as an explicit Free-plan limitation rather than falsely marked enabled. The final gate now remains blocked on P5C real backup/restore evidence; the bucket stays unearned until final cutover acceptance is clear.
 
 ## Current total
 
