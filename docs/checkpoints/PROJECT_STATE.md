@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **POST-RC1 REFINEMENT CONVERGENCE**
+- Current phase: **C1-A APP SHELL / ICON FOUNDATION — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: in progress.
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon foundation complete; later boards still in progress.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -92,21 +92,30 @@ External package supplied for refinement convergence:
 - Binary package is not yet committed to this repo.
 - Approved Wave 02 semantic/system icons and navigation REVIEW/TODO status are documented in the context lock.
 
+## C1-A safe checkpoint
+
+C1-A is implemented and verified:
+
+- controlled icon registry is in source;
+- canonical mobile AppShell + bottom navigation exists;
+- desktop sidebar adaptation exists;
+- /perhatian and /menu front doors exist;
+- existing route permissions remain in force;
+- global P5A OperationalHealthBanner contract remains intact;
+- canonical verify passes: **96/96 JS + 205/205 Python**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+`docs/checkpoints/C1A_APP_SHELL_ICON_FOUNDATION_SAFEPOINT.md`
+
+Known intentional deferment: exact approved Segeran Jiwa logo asset is not yet present in the canonical repo;
+the shell uses a temporary explicit SJ monogram and does not claim final logo fidelity.
+
 ## NEXT ACTION
 
-**Begin C1 — Icon + Design System + AppShell convergence.**
+**Begin C2 — Product / Variant / Recipe / Packaging convergence.**
 
-Concrete order:
-
-1. controlled icon registry + brand assets;
-2. shared design tokens/components;
-3. canonical mobile AppShell and bottom navigation:
-   Beranda | Jual | Riwayat | Perhatian | Menu;
-4. desktop/sidebar adaptation from the same navigation authority;
-5. preserve permissions, routes and existing business writers;
-6. then proceed to Product/Variant/Recipe/Packaging convergence.
-
-Do not start another broad audit unless current source contradicts the context lock.
+Perform only a narrow C2 contract audit first, then implement against the existing single inventory engine.
+Do not restart broad architecture discovery and do not create a second stock or finance writer.
 
 ## Cutover rule
 

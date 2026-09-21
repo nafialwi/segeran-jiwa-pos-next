@@ -308,9 +308,9 @@ SHA-256 of the exact package received for this context lock:
 
 `a536f31afe0e84c1a6e76f66008e99f6c934a53a660b15e3bba81ff1eb6bd50d`
 
-This ZIP is an external input at the time this document is written; the binary package is not yet
-copied into the repository. Its mapping/status authority is recorded here so that future work does
-not invent a different icon system.
+The source ZIP remains an external authority package. C1-A has now ingested a controlled runtime subset
+into `public/icons/segeran-jiwa/`; icon mapping/status remains governed by this package and the C1-A
+checkpoint rather than being inferred from filenames.
 
 ### APPROVED icons in Wave 02 mapping
 
@@ -511,6 +511,6 @@ Then inspect current Git HEAD/status before doing anything.
 
 The expected next action after this context-lock commit is:
 
-> **Begin C1 — Icon + Design System + AppShell convergence.**
+> **C1-A AppShell/Icon foundation is now complete. Proceed to C2 Product / Variant / Recipe / Packaging convergence after the narrow C2 contract audit.**
 
 No new broad audit is required unless current source contradicts this lock.

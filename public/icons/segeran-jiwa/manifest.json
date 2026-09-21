@@ -1,0 +1,59 @@
+{
+  "source_package": "SEGERAN_JIWA_ICON_FAMILY_BATCH_02_WAVE_02_FIDELITY_LOCK_FILES(1).zip",
+  "source_package_sha256": "a536f31afe0e84c1a6e76f66008e99f6c934a53a660b15e3bba81ff1eb6bd50d",
+  "ingested_subset": "C1 shell/navigation subset rendered at 24px plus approved 1x assets",
+  "icons": {
+    "home": {
+      "status": "REVIEW",
+      "variants": ["outline", "active"]
+    },
+    "point-of-sale": {
+      "status": "REVIEW",
+      "variants": ["outline", "active"]
+    },
+    "settings": {
+      "status": "REVIEW",
+      "variants": ["outline", "active"]
+    },
+    "activity": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "notification": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "warehouse": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "product": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "users": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "account": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "logout": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "diagnostics": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "security-sync": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    },
+    "backup-restore": {
+      "status": "APPROVED",
+      "variants": ["outline"]
+    }
+  }
+}
