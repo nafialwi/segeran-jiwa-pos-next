@@ -13,7 +13,8 @@
     "test": "npm run test:js && npm run test:py",
     "build": "vite build",
     "verify": "node scripts/verify.mjs",
-    "backup:health": "node scripts/backup-health.mjs"
+    "backup:health": "node scripts/backup-health.mjs",
+    "cutover:check": "node scripts/cutover-readiness.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.116.0",

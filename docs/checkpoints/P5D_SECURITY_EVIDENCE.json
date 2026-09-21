@@ -1,0 +1,25 @@
+{
+  "observed_at": "2026-09-21T10:14:11.736Z",
+  "project_ref": "pkynjaqrxhhnnfuaxoqp",
+  "project_status": "ACTIVE_HEALTHY",
+  "postgres_engine": "17",
+  "postgres_version": "17.6.1.166",
+  "organization_plan": "free",
+  "security_advisors": {
+    "rls_enabled_no_policy_info": 10,
+    "anon_security_definer_warn": 4,
+    "authenticated_security_definer_warn": 60,
+    "auth_credential_protection_warn": 1
+  },
+  "rls_no_policy_direct_grants_to_anon_authenticated": 0,
+  "connector_v2_anon_rpc_count": 4,
+  "connector_v2_authorizer_public_execute": false,
+  "connector_v2_enabled_agents": 4,
+  "connector_v2_agent_hashes_valid_sha256": 4,
+  "connector_v2_agent_hashes_invalid": 0,
+  "connector_v2_custom_auth_negative_tests": "PASS",
+  "connector_v2_anon_warning_disposition": "REVIEWED_INTENTIONAL_CUSTOM_AUTH_LINTER_WARNING_REMAINS",
+  "authenticated_security_definer_review": "OPEN",
+  "auth_credential_protection": "DISABLED_OPEN",
+  "cutover_security_status": "BLOCKED_SAFE"
+}

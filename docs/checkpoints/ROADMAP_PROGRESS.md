@@ -74,7 +74,7 @@
 - Weight: 5%
 - Completion: 0%
 - Earned: 0.0%
-- Note: P5A Operational Health and P5B Offline Action Boundaries are LOCKED_REMOTE. P5C Backup Health has a PREPARED_SAFE fail-closed gate but is not complete until a real logical export, retained copy, checksum manifest, and isolated restore verification PASS. The bucket remains unearned; global security follow-up and cutover acceptance are also still open.
+- Note: P5A Operational Health and P5B Offline Action Boundaries are LOCKED_REMOTE. P5C Backup Health and P5D Security/Cutover now have PREPARED_SAFE fail-closed gates. The bucket remains unearned until real backup/restore evidence is HEALTHY, auth credential protection is enabled and verified, authenticated SECURITY DEFINER findings are fully dispositioned, and final cutover acceptance is clear.
 
 ## Current total
 
