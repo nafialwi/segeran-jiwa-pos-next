@@ -84,4 +84,14 @@ Official RC2 UAT may be marked PASS only when batches A-E have human acceptance 
 
 Any P0/P1 finding means: stop, patch source, rerun full regression, create the next immutable release candidate, rerun impacted smoke and UAT.
 
-Current status: AWAITING_HUMAN_ACCEPTANCE.
+Current status: SUPERSEDED_BY_RC3.
+
+## RC2 UAT finding
+
+Authenticated Human UAT reached **Shift Saya** and exposed a P1 blocker:
+
+`permission denied for table sales`
+
+The failure came from the frontend packaging-usage helper directly reading the protected `public.sales` fact table. RC2 is therefore **SUPERSEDED_BY_RC3** and must not be accepted as the final UAT candidate.
+
+Repair candidate: `uat-rc-20260922-3`.

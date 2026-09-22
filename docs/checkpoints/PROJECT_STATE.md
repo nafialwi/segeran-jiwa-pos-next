@@ -287,11 +287,30 @@ C9 RC2 Promotion & Preview Gate is complete through managed schema promotion and
 See:
 `docs/checkpoints/C9_RC2_PROMOTION_PREVIEW_GATE.md`
 
+## C10 RC2 finding / RC3 repair checkpoint
+
+Authenticated RC2 Human UAT reached the real Owner shell and exposed one P1 authority defect on **Shift Saya**:
+
+- observed error: `permission denied for table sales`;
+- root cause: direct frontend read of protected `public.sales` solely to derive shift packaging usage;
+- repair: new authenticated `public.shift_packaging_usage(uuid)` authority RPC reads immutable sale component snapshots server-side;
+- direct client sales-table read removed from the packaging helper;
+- hosted managed migration applied;
+- new RPC denies anon execute and allows authenticated execute with pinned empty search_path;
+- post-repair canonical verify: **96/96 JS + 293/293 Python PASS**, plus format/lint/typecheck/build/diff-check PASS;
+- immutable RC3 tag: `uat-rc-20260922-3` at `3855e82`;
+- RC3 Cloudflare Preview: `https://f70613ca.segeran-jiwa-pos-next.pages.dev`;
+- GitHub verify, Cloudflare deploy, and unauthenticated mobile-width smoke: PASS;
+- Production automatic deployment remains disabled.
+
+See:
+`docs/uat/UAT_OFFICIAL_RC3_2026-09-22.md`
+
 ## NEXT ACTION
 
-**Begin C10 — Batched Human UAT against immutable RC2.**
+**Recheck the repaired Shift path on immutable RC3, then continue C10 Batched Human UAT.**
 
-C10 must use the new RC2 Preview, not RC1. Group acceptance into shell/navigation/responsive,
+C10 must now use RC3; RC2 is superseded by the Shift authority finding. Group acceptance into shell/navigation/responsive,
 sales/payment, inventory/purchase/production, shift/finance, and settings/attention/devices/health/backup/offline.
 
 A P0/P1 finding requires a source patch, full regression, next release candidate, and rerun of impacted UAT.
