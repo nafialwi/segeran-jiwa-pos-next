@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { OperationsNav } from '../components/OperationsNav';
 import { supabase } from '../lib/supabase';
 import {
   createGoodsReceipt,
@@ -290,7 +291,7 @@ export function PurchaseScreen() {
   }
 
   return (
-    <main className="shell">
+    <main className="shell operations-shell">
       <header className="topbar">
         <div>
           <Link className="muted" to="/">
@@ -300,6 +301,8 @@ export function PurchaseScreen() {
           <h1>Pembelian & Pemasok</h1>
         </div>
       </header>
+
+      <OperationsNav />
 
       {error && <p className="error-banner">{error}</p>}
       {message && <p className="success-banner">{message}</p>}

@@ -102,6 +102,22 @@ export function MenuScreen() {
       icon: 'warehouse',
     });
   }
+  if (hasAnyPermission(authority, ['INVENTORY_READ', 'PRODUCTION_MANAGE'])) {
+    business.push({
+      label: 'Produk & Resep',
+      detail: 'Varian, resep penjualan, kemasan, dan BOM',
+      to: '/produk',
+      icon: 'product',
+    });
+  }
+  if (hasPermission(authority, 'PRODUCTION_MANAGE')) {
+    business.push({
+      label: 'Produksi',
+      detail: 'Rencana batch dan posting hasil produksi',
+      to: '/produksi',
+      icon: 'activity',
+    });
+  }
   if (hasPermission(authority, 'PURCHASE_MANAGE')) {
     business.push({
       label: 'Pembelian',

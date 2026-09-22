@@ -2,22 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { canAccessOwnerArea } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
-import { supabase } from '../lib/supabase';
-
-type InventoryRow = {
-  location_id: string;
-  location_name: string;
-  stock_item_id: string;
-  code: string;
-  display_name: string;
-  item_kind: string;
-  base_unit: string;
-  quantity: number;
-  sale_enabled: boolean;
-  sale_price: number | null;
-  sale_category: string | null;
-  inventory_tracked: boolean;
-};
+import { OperationsNav } from '../components/OperationsNav';
+import {
+  aggregateInventoryItems,
+  fetchInventoryOverview,
+  type InventoryRow,
+} from '../inventory/inventory-api';
+import { Icon } from '../ui/Icon';
 
 function formatIdr(value: number | null): string {
   if (value === null) return '-';
@@ -28,24 +19,42 @@ function formatIdr(value: number | null): string {
   }).format(value);
 }
 
+function itemKindLabel(value: string): string {
+  if (value === 'MATERIAL') return 'Bahan';
+  if (value === 'PACKAGING') return 'Kemasan';
+  if (value === 'FINISHED_GOOD') return 'Barang Jadi';
+  return 'Lainnya';
+}
+
 export function InventoryScreen() {
   const { authority } = useAuth();
   const [rows, setRows] = useState<InventoryRow[]>([]);
   const [search, setSearch] = useState('');
   const [location, setLocation] = useState('ALL');
+  const [kind, setKind] = useState('ALL');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    void (async () => {
-      const { data, error: loadError } = await supabase.rpc(
-        'inventory_operational_overview',
-      );
-      if (loadError) {
-        setError(loadError.message);
-        return;
-      }
-      setRows((data ?? []) as InventoryRow[]);
-    })();
+    let active = true;
+
+    void fetchInventoryOverview()
+      .then((result) => {
+        if (active) setRows(result);
+      })
+      .catch((cause: unknown) => {
+        if (!active) return;
+        setError(
+          cause instanceof Error ? cause.message : 'INVENTORY_READ_FAILED',
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   const locations = useMemo(
@@ -58,53 +67,85 @@ export function InventoryScreen() {
     [rows],
   );
 
-  const visible = useMemo(() => {
+  const filteredRows = useMemo(
+    () =>
+      rows.filter(
+        (row) =>
+          (location === 'ALL' || row.location_id === location) &&
+          (kind === 'ALL' || row.item_kind === kind),
+      ),
+    [rows, location, kind],
+  );
+
+  const items = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return rows.filter(
-      (row) =>
-        (location === 'ALL' || row.location_id === location) &&
-        (!query ||
-          row.display_name.toLowerCase().includes(query) ||
-          row.code.toLowerCase().includes(query) ||
-          String(row.sale_category ?? '')
-            .toLowerCase()
-            .includes(query)),
+    return aggregateInventoryItems(filteredRows).filter(
+      (item) =>
+        !query ||
+        item.displayName.toLowerCase().includes(query) ||
+        item.code.toLowerCase().includes(query) ||
+        String(item.saleCategory ?? '')
+          .toLowerCase()
+          .includes(query),
     );
-  }, [rows, search, location]);
+  }, [filteredRows, search]);
+
+  const allItems = useMemo(() => aggregateInventoryItems(rows), [rows]);
+  const trackedCount = allItems.filter((item) => item.inventoryTracked).length;
+  const saleCount = allItems.filter((item) => item.saleEnabled).length;
 
   return (
-    <main className="shell">
-      <header className="topbar">
+    <main className="shell operations-shell">
+      <header className="topbar operations-header">
         <div>
-          <Link className="muted" to="/">
-            Kembali ke Beranda
-          </Link>
-          <p className="eyebrow">PERSEDIAAN</p>
-          <h1>Stok</h1>
+          <p className="eyebrow">OPERASIONAL · PERSEDIAAN</p>
+          <h1>Persediaan</h1>
+          <p className="muted">
+            Saldo berasal dari satu inventory movement authority.
+          </p>
         </div>
+        {authority && canAccessOwnerArea(authority) && (
+          <Link className="secondary-button link-button" to="/legacy-import">
+            Migrasi Legacy
+          </Link>
+        )}
       </header>
+
+      <OperationsNav />
 
       {error && <p className="error-banner">{error}</p>}
 
-      <section className="identity-card">
-        <div className="section-heading">
-          <div>
-            <h2>Persediaan per lokasi</h2>
-            <p className="muted">
-              Saldo berasal dari inventory movement authority.
-            </p>
-          </div>
-          {authority && canAccessOwnerArea(authority) && (
-            <Link className="secondary-button link-button" to="/legacy-import">
-              Migrasi Master Legacy
-            </Link>
-          )}
-        </div>
+      <section
+        className="inventory-summary-grid"
+        aria-label="Ringkasan persediaan"
+      >
+        <article>
+          <Icon name="product" />
+          <span>Barang</span>
+          <strong>{allItems.length}</strong>
+        </article>
+        <article>
+          <Icon name="warehouse" />
+          <span>Dilacak Stok</span>
+          <strong>{trackedCount}</strong>
+        </article>
+        <article>
+          <Icon name="activity" />
+          <span>Lokasi</span>
+          <strong>{locations.length}</strong>
+        </article>
+        <article>
+          <Icon name="point-of-sale" />
+          <span>Barang Jual</span>
+          <strong>{saleCount}</strong>
+        </article>
+      </section>
 
-        <div className="filter-row">
+      <section className="operations-panel">
+        <div className="operations-filter-row">
           <input
             type="search"
-            placeholder="Cari item"
+            placeholder="Cari barang, kode, atau kategori"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
@@ -119,47 +160,82 @@ export function InventoryScreen() {
               </option>
             ))}
           </select>
+          <select
+            value={kind}
+            onChange={(event) => setKind(event.target.value)}
+          >
+            <option value="ALL">Semua kategori</option>
+            <option value="MATERIAL">Bahan</option>
+            <option value="PACKAGING">Kemasan</option>
+            <option value="FINISHED_GOOD">Barang Jadi</option>
+            <option value="OTHER">Lainnya</option>
+          </select>
         </div>
 
-        {rows.length === 0 ? (
+        {loading ? (
+          <div className="operations-card-skeleton" aria-label="Memuat stok">
+            <span />
+            <span />
+            <span />
+          </div>
+        ) : rows.length === 0 ? (
           <div className="empty-state">
             <strong>Master stok belum tersedia.</strong>
             <p>
-              Import data Legacy terlebih dahulu. Sistem tidak membuat item
-              dummy.
+              Import data Legacy atau tambahkan barang lewat alur Pembelian.
+              Sistem tidak membuat item dummy.
             </p>
           </div>
+        ) : items.length === 0 ? (
+          <p className="operations-empty">Tidak ada barang sesuai filter.</p>
         ) : (
-          <div className="data-table-wrap">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Lokasi</th>
-                  <th>Item</th>
-                  <th>Stok</th>
-                  <th>Harga Jual</th>
-                  <th>Status Jual</th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((row) => (
-                  <tr key={row.location_id + ':' + row.stock_item_id}>
-                    <td>{row.location_name}</td>
-                    <td>
-                      <strong>{row.display_name}</strong>
-                      <small>{row.code}</small>
-                    </td>
-                    <td>
-                      {row.inventory_tracked
-                        ? row.quantity + ' ' + row.base_unit
-                        : 'Non-stock'}
-                    </td>
-                    <td>{formatIdr(row.sale_price)}</td>
-                    <td>{row.sale_enabled ? 'Aktif' : 'Tidak dijual'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="inventory-item-grid">
+            {items.map((item) => (
+              <Link
+                className="inventory-item-card"
+                key={item.stockItemId}
+                to={'/stok/' + item.stockItemId}
+              >
+                <div className="inventory-item-head">
+                  <span className="operations-icon">
+                    <Icon
+                      name={
+                        item.itemKind === 'PACKAGING' ? 'product' : 'warehouse'
+                      }
+                    />
+                  </span>
+                  <span>
+                    <strong>{item.displayName}</strong>
+                    <small>
+                      {item.code} · {itemKindLabel(item.itemKind)}
+                    </small>
+                  </span>
+                </div>
+
+                <div className="inventory-item-balance">
+                  <span>
+                    {item.inventoryTracked ? 'Saldo' : 'Status persediaan'}
+                  </span>
+                  <strong>
+                    {item.inventoryTracked
+                      ? item.totalQuantity + ' ' + item.baseUnit
+                      : 'Non-stock'}
+                  </strong>
+                </div>
+
+                <div className="inventory-item-meta">
+                  <span>
+                    {item.saleEnabled
+                      ? 'Dijual · ' + formatIdr(item.salePrice)
+                      : 'Tidak dijual'}
+                  </span>
+                  <span>
+                    {item.locations.length}{' '}
+                    {item.locations.length === 1 ? 'lokasi' : 'lokasi'}
+                  </span>
+                </div>
+              </Link>
+            ))}
           </div>
         )}
       </section>

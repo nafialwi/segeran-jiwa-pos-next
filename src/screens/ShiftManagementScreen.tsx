@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { OperationsNav } from '../components/OperationsNav';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { hasPermission } from '../auth/permission';
@@ -176,7 +177,7 @@ export function ShiftManagementScreen() {
 
   if (loading) {
     return (
-      <main className="shell">
+      <main className="shell operations-shell">
         <p>Memuat shift…</p>
       </main>
     );
@@ -192,6 +193,8 @@ export function ShiftManagementScreen() {
           <h1>Shift Saya</h1>
         </div>
       </header>
+
+      <OperationsNav />
 
       {error && <p className="error-banner">{error}</p>}
 

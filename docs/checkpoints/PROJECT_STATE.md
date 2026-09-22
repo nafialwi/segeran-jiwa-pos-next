@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C4 BOARD 01 ROLE-AWARE DASHBOARD — SAFEPOINT**
+- Current phase: **C5-A BOARD 03 OPERATIONS FRONT DOOR — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1 shell/icon + C2 Product/Variant/execution/readers + C3 Board 02 Sales + C4 Board 01 role-aware dashboards complete in source; next is C5 Board 03 Operations convergence.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1 shell/icon + C2 Product/Variant/execution/readers + C3 Board 02 Sales + C4 Board 01 dashboards + C5-A Board 03 operations front doors complete in source; next is C5-B Purchase/Shift/Recipe configuration convergence.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -215,13 +215,31 @@ C4 Board 01 role-aware dashboard convergence is complete in source.
 See:
 docs/checkpoints/C4_BOARD01_DASHBOARD_CONVERGENCE_SAFEPOINT.md
 
+## C5-A safe checkpoint
+
+C5-A Board 03 operations front-door convergence is complete in source.
+
+- shared permission-aware Operations navigation;
+- Persediaan converted from an admin table into card/detail-oriented operational UI;
+- new Detail Barang route with authoritative saldo/location and movement history;
+- new Product/Variant/Recipe/Packaging read surface;
+- Product screen keeps SALE-stage components distinct from BOM Produksi;
+- missing persistent C2 Product/Variant schema fails closed;
+- new Produksi front door reuses existing create/post production RPCs and canonical inventory writer;
+- Purchase and Shift are placed into the same operational navigation context;
+- no new DB migration or business writer was introduced;
+- full canonical verify before checkpoint docs: **96/96 JS + 257/257 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+`docs/checkpoints/C5A_BOARD03_OPERATIONS_FRONT_DOOR_SAFEPOINT.md`
+
 ## NEXT ACTION
 
-**Begin C5 — Board 03 Operations convergence.**
+**Begin C5-B — Board 03 Purchase / Shift / Recipe Configuration Convergence.**
 
-Converge Persediaan, Detail Barang, Product/Variant/Recipe/Packaging, Pembelian, Produksi and Shift
-onto the shared design system while preserving the canonical inventory, production, purchase and
-shift authorities.
+Converge Purchase workflow presentation, Shift opening/active/closing/reconciliation and packaging
+control, and expose existing BOM draft/activate authority where appropriate. Bring inventory
+restock/transfer/count/adjustment controls forward only through their existing canonical writers.
 
 Do not persistently apply C2/C3 database changes or deploy a new Preview until the dedicated RC2
 promotion gate.

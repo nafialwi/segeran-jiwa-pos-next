@@ -9,11 +9,14 @@ import { ExpenseApprovalScreen } from './screens/ExpenseApprovalScreen';
 import { FinanceScreen } from './screens/FinanceScreen';
 import { HandoverScreen } from './screens/HandoverScreen';
 import { HomeScreen } from './screens/HomeScreen';
+import { InventoryItemScreen } from './screens/InventoryItemScreen';
 import { InventoryScreen } from './screens/InventoryScreen';
 import { LegacyImportScreen } from './screens/LegacyImportScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { MenuScreen } from './screens/MenuScreen';
 import { OwnerUsersScreen } from './screens/OwnerUsersScreen';
+import { ProductOperationsScreen } from './screens/ProductOperationsScreen';
+import { ProductionScreen } from './screens/ProductionScreen';
 import { PurchaseScreen } from './screens/PurchaseScreen';
 import { ReconciliationScreen } from './screens/ReconciliationScreen';
 import { ReportsScreen } from './screens/ReportsScreen';
@@ -82,6 +85,32 @@ export function App() {
             element={
               <RequireAccess permission="INVENTORY_READ">
                 <InventoryScreen />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/stok/:stockItemId"
+            element={
+              <RequireAccess permission="INVENTORY_READ">
+                <InventoryItemScreen />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/produk"
+            element={
+              <RequireAccess
+                anyPermissions={['INVENTORY_READ', 'PRODUCTION_MANAGE']}
+              >
+                <ProductOperationsScreen />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/produksi"
+            element={
+              <RequireAccess permission="PRODUCTION_MANAGE">
+                <ProductionScreen />
               </RequireAccess>
             }
           />

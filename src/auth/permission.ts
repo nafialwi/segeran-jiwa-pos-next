@@ -39,5 +39,23 @@ export function canAccessRoute(
     ]);
   }
   if (route === '/jual') return hasPermission(authority, 'SALE_EXECUTE');
+  if (route === '/stok' || route.startsWith('/stok/')) {
+    return hasPermission(authority, 'INVENTORY_READ');
+  }
+  if (route === '/produk') {
+    return hasAnyPermission(authority, ['INVENTORY_READ', 'PRODUCTION_MANAGE']);
+  }
+  if (route === '/pembelian') {
+    return hasPermission(authority, 'PURCHASE_MANAGE');
+  }
+  if (route === '/produksi') {
+    return hasPermission(authority, 'PRODUCTION_MANAGE');
+  }
+  if (route === '/shift' || route === '/handover') {
+    return hasPermission(authority, 'SHIFT_OPEN_CLOSE');
+  }
+  if (route === '/shift-history' || route === '/rekonsiliasi') {
+    return hasPermission(authority, 'SHIFT_READ_OWN');
+  }
   return authority.status === 'ACTIVE';
 }
