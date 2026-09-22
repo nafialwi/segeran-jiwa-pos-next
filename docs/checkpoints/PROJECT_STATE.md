@@ -271,16 +271,30 @@ See:
 docs/checkpoints/C8_FULL_CROSS_DOMAIN_REGRESSION_SAFEPOINT.md
 docs/checkpoints/C8_REGRESSION_EVIDENCE.json
 
+## C9 safe checkpoint
+
+C9 RC2 Promotion & Preview Gate is complete through managed schema promotion and source-preview smoke.
+
+- C2-A / C2-B / C2-C / C3-B managed migrations are present in hosted migration history in source order;
+- immediate pre-promotion P5C backup-health recheck: **HEALTHY**;
+- promoted Product/Variant/Sale component objects and checkout V2 authorities are present;
+- expected C3-B sales/payment constraints and grants are present;
+- no new anonymous application command exposure was introduced;
+- Cloudflare Pages Preview for the converged runtime source passed unauthenticated Chrome 153 mobile-width smoke;
+- RC1 remains immutable;
+- Production automatic deployment remains disabled.
+
+See:
+`docs/checkpoints/C9_RC2_PROMOTION_PREVIEW_GATE.md`
+
 ## NEXT ACTION
 
-**Begin C9 — RC2 Promotion & Preview Gate.**
+**Create and verify immutable RC2, then begin C10 — Batched Human UAT.**
 
-C9 is the controlled promotion boundary for the source-controlled C2/C3 database changes and the
-new RC2 Preview. Do not mutate RC1 and do not enable Production application deployment.
+C10 must use the new RC2 Preview, not RC1. Group acceptance into shell/navigation/responsive,
+sales/payment, inventory/purchase/production, shift/finance, and settings/attention/devices/health/backup/offline.
 
-C9 must recheck backup immediately before persistent schema promotion, verify managed migration
-order, prove post-apply schema/checkout coherence, create RC2, deploy a new Preview, and run browser
-smoke before C10 Human UAT.
+A P0/P1 finding requires a source patch, full regression, next release candidate, and rerun of impacted UAT.
 
 ## Cutover rule
 
