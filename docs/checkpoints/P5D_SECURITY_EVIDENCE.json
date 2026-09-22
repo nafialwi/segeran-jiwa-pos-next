@@ -1,5 +1,5 @@
 {
-  "observed_at": "2026-09-21T10:14:11.736Z",
+  "observed_at": "2026-09-22T17:05:34.098Z",
   "project_ref": "pkynjaqrxhhnnfuaxoqp",
   "project_status": "ACTIVE_HEALTHY",
   "postgres_engine": "17",
@@ -8,7 +8,7 @@
   "security_advisors": {
     "rls_enabled_no_policy_info": 10,
     "anon_security_definer_warn": 4,
-    "authenticated_security_definer_warn": 60,
+    "authenticated_security_definer_warn": 65,
     "auth_credential_protection_warn": 1
   },
   "rls_no_policy_direct_grants_to_anon_authenticated": 0,
@@ -22,21 +22,28 @@
   "authenticated_security_definer_review": "CLEAR_OR_ACCEPTED",
   "auth_credential_protection": "UNAVAILABLE_FREE_PLAN_ACCEPTED_LIMITATION",
   "cutover_security_status": "CLEAR_WITH_ACCEPTED_PLATFORM_LIMITATION",
-  "authenticated_security_definer_total": 60,
+  "authenticated_security_definer_total": 65,
   "authenticated_security_definer_also_anon_executable": 0,
-  "authenticated_security_definer_empty_search_path": 60,
+  "authenticated_security_definer_empty_search_path": 65,
   "authenticated_security_definer_unclassified": 0,
   "authenticated_security_definer_guard_classes": {
     "AUTH_UID_GATE": 1,
     "AUTHORITY_PROJECTION": 1,
-    "BUSINESS_AUTHORITY_GATE": 2,
-    "COMPOSED_GUARDED_COMMANDS": 1,
+    "BUSINESS_AUTHORITY_GATE": 3,
+    "COMPOSED_GUARDED_COMMANDS": 3,
     "DISABLED_FAIL_CLOSED": 1,
-    "EXPLICIT_PERMISSION_GATE": 24,
-    "OWNER_AUTHORITY_GATE": 7,
+    "EXPLICIT_PERMISSION_GATE": 25,
+    "OWNER_AUTHORITY_GATE": 8,
     "OWNER_GATE": 17,
     "SELF_SESSION_GATE": 1,
     "SHIFT_PERMISSION_GATE": 5
   },
-  "auth_credential_protection_basis": "Supabase leaked password protection is a Pro-plan feature; project plan is Free."
+  "auth_credential_protection_basis": "Supabase leaked password protection is a Pro-plan feature; project plan is Free.",
+  "post_c9_c10_recheck": {
+    "sales_catalog_v2": "EXPLICIT_PERMISSION_GATE",
+    "checkout_sale_v2_overloads": "COMPOSED_GUARDED_COMMANDS",
+    "shift_packaging_usage": "BUSINESS_AUTHORITY_GATE",
+    "finance_owner_overview": "OWNER_AUTHORITY_GATE",
+    "new_anon_application_command_exposure": 0
+  }
 }

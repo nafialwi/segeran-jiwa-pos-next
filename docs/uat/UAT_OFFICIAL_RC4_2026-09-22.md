@@ -136,6 +136,70 @@ Before final UAT PASS and cutover readiness, the remaining acceptance work is de
 2. final critical-submit offline guard confirmation; actual browser OFFLINE banner/state already PASS;
 3. final post-UAT canonical regression after the Human UAT evidence is closed.
 
-Current status: **RC4_MOBILE_ROUTE_MATRIX_PASS_REMAINING_INTERACTION_UAT**.
+Current status: **PASS**.
 
 Production remains fail-closed.
+
+## Checkout and offline interaction closeout
+
+The remaining checkout interaction was completed non-destructively on the exact immutable RC4 Preview.
+
+Observed checkout evidence:
+
+- one available product (`BAKARAN 1K`) was added to the local cart;
+- cart quantity changed to 1 and total changed to Rp 1.000;
+- the checkout sheet opened correctly over the sales catalog;
+- payment choices **Tunai / QRIS / Transfer / Kasbon** were all present;
+- CASH showed quick tender choices, tender input, and change presentation;
+- with tendered cash at Rp 0 for a Rp 1.000 total, **Bayar Rp 1.000 remained disabled**;
+- QRIS remains gated by QR availability plus explicit manual-verification confirmation;
+- Transfer remains gated by explicit confirmation that funds have arrived;
+- Kasbon remains gated by selecting a customer;
+- no server-side sale was submitted solely for UAT.
+
+The critical offline guard is accepted through combined real-browser and executable guard evidence:
+
+- authenticated RC4 browser OFFLINE state and global attention banner: PASS;
+- Offline & Sync explicitly reports no offline mutation queue: PASS;
+- `checkoutSale()` calls `requireOnlineAction('Penjualan')` before the checkout RPC;
+- `online-action.test.ts`: **2/2 PASS**, including explicit offline rejection;
+- canonical P5B offline-boundary regression: PASS;
+- no sale/refund/correction/finance/shift mutation was executed just to prove the guard.
+
+This is intentionally non-destructive acceptance: the application proves the offline boundary before the server writer while the real browser independently proves the OFFLINE state. No financial fact was created for test convenience.
+
+## Fresh final security recheck
+
+After the C9/C10 managed migrations:
+
+- RLS-without-policy advisor population: **10**;
+- direct table grants from those 10 tables to anon/authenticated: **0**;
+- anonymous SECURITY DEFINER warnings: **4**, unchanged XP Connector V2 custom-auth surface;
+- authenticated SECURITY DEFINER callable functions: **65**;
+- authenticated SECURITY DEFINER also executable by anon: **0**;
+- authenticated SECURITY DEFINER with pinned search_path: **65/65**;
+- the new Shift and Finance read RPCs deny anon execution;
+- no new anonymous application command boundary was introduced.
+
+The increase from 60 to 65 authenticated SECURITY DEFINER functions is explained by the promoted C2/C3 sales surfaces plus the two C10 UAT repair projections. Their authority model is explicit and no unclassified authenticated SECURITY DEFINER remains.
+
+## Final post-UAT regression
+
+Executed after the Human UAT evidence was closed:
+
+- repository guard: PASS;
+- Prettier: PASS;
+- ESLint: PASS;
+- TypeScript: PASS;
+- JavaScript: **96/96 PASS**;
+- Python: **300/300 PASS**;
+- production build: PASS;
+- diff-check: PASS.
+
+## Official RC4 UAT verdict
+
+**PASS**
+
+RC4 has no remaining P0/P1 UAT blocker. Mobile-first route coverage, Shift, Finance, checkout presentation/pre-submit guards, history, reports, inventory, purchase, production, reconciliation, settings, backup/health evidence, and offline behavior are accepted for this release candidate.
+
+Production automatic deployment remains **DISABLED**. UAT PASS does not itself authorize Production release.

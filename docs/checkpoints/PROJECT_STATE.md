@@ -327,18 +327,28 @@ Continuing authenticated Human UAT after RC3 found a second P1 authority defect 
 See:
 `docs/uat/UAT_OFFICIAL_RC4_2026-09-22.md`
 
+## C10 RC4 final UAT checkpoint
+
+Official Human UAT on immutable RC4 is complete.
+
+- authenticated mobile-first route matrix: PASS;
+- Shift authority blocker repair: PASS;
+- Finance authority blocker repair: PASS;
+- checkout sheet and payment-method presentation: PASS;
+- pre-submit payment guards: PASS;
+- browser OFFLINE state/banner and no-mutation-queue behavior: PASS;
+- critical sale offline guard: PASS via real OFFLINE browser state plus executable require-online boundary before RPC;
+- fresh security recheck: 10 RLS-without-policy / 0 direct grants, 4 known anon custom-auth warnings, 65 authenticated SECURITY DEFINER / 65 pinned search_path / 0 also-anon;
+- final post-UAT regression: **96/96 JS + 300/300 Python PASS**, plus repo guard, format, lint, TypeScript, build, and diff-check;
+- Production automatic deployment remains disabled.
+
+Official UAT status: **PASS**.
+
 ## NEXT ACTION
 
-**Finish the remaining non-destructive interaction UAT on immutable RC4, then run final post-UAT regression.**
+**Run the cutover-readiness gate and stop before Production release until explicit approval is given.**
 
-Remaining RC4 acceptance:
-
-- checkout sheet/payment-method presentation and pre-submit guards;
-- authenticated browser OFFLINE state/banner is PASS; only final critical-submit guard confirmation remains;
-- close Human UAT evidence;
-- final canonical regression before cutover readiness.
-
-Any new P0/P1 finding still requires a source patch, a new immutable release candidate, and rerun of impacted UAT.
+No additional source repair is currently required for RC4. Production remains fail-closed until the explicit release approval step.
 
 ## Cutover rule
 
