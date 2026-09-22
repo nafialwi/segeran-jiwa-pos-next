@@ -1,0 +1,87 @@
+{
+  "date": "2026-09-22",
+  "phase": "C8_FULL_CROSS_DOMAIN_REGRESSION",
+  "baseline_commit": "41f198013a70ce0ecc7216df43d5a9e904f92c4e",
+  "branch": "work/cs06743-patch3-hardening",
+  "rc1_tag": "uat-rc-20260921-1",
+  "rc1_commit": "e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489",
+  "rc1_immutable": true,
+  "c2_c3_persistent_apply": false,
+  "c2_c3_sql_payload_identity": {
+    "verdict": "PASS_UNCHANGED_FROM_C3B_TRANSACTIONAL_REHEARSAL",
+    "comparison_commit": "f0709ea",
+    "migration_or_test_delta_since_c3b": 0,
+    "sha256": {
+      "supabase/migrations/20260922080000_c2a_product_variant_foundation.sql": "6208e616eec09008fe890b57ba968132e5a88b6895656ac5330551201400e6fd",
+      "supabase/migrations/20260922090000_c2b_sale_execution_snapshot.sql": "963af532cb403a14b9ad63b75d01074e3296d4c79f3dd3f2f74b2813d3651840",
+      "supabase/migrations/20260922100000_c2c_read_projection_convergence.sql": "5253b9e9a807ab9fa2c9b6f8a5f717a52dae932afb29fdc6ce54be0d05368a1b",
+      "supabase/migrations/20260922110000_c3b_sales_facts_checkout.sql": "f589f5a7a1004ef4fec13d9f7c2cafc30be4e63616d988fb845363cc87c6a247",
+      "supabase/tests/c2a_product_variant_foundation_test.sql": "3daedfc869ee9ef107d8e226adccbc4e2ce1bc0fbe8b2557d7598a1d44af073a",
+      "supabase/tests/c2b_sale_execution_snapshot_test.sql": "ec085bfe01bc87d42cb997720ed7dace71d5f3a9a2364bf9095f9adf919561ce",
+      "supabase/tests/c2c_read_projection_convergence_test.sql": "a88841014f4282d38b686c152e8429f1764ddc156339efcb06199e669e24068f",
+      "supabase/tests/c3b_sales_facts_checkout_test.sql": "c7ca35d29a33bbb81563ec0f5f752c347003d2b5ae76ca8c0f26f4ce2ea9ce7b"
+    }
+  },
+  "hosted_rc1_authority_probe": {
+    "mode": "READ_ONLY",
+    "checks": 31,
+    "passed": 31,
+    "failed": 0,
+    "c2_sale_products_persistently_present": false,
+    "c2_product_variants_persistently_present": false,
+    "c2_variant_sale_components_persistently_present": false
+  },
+  "hosted_writer_call_chain_probe": {
+    "mode": "READ_ONLY",
+    "checks": 7,
+    "passed": 7,
+    "failed": 0,
+    "production": "ROW_LOCK_PLUS_POSTED_REPLAY_AND_CANONICAL_INVENTORY_WRITER",
+    "goods_receipt": "CREATE_IDEMPOTENT_THEN_POST_THROUGH_CANONICAL_INVENTORY_WRITER",
+    "direct_buy": "DELEGATES_PO_TO_GRN_TO_POST_WITHOUT_PARALLEL_INVENTORY_WRITER"
+  },
+  "security_live_probe": {
+    "rls_table_count": 65,
+    "rls_no_policy_count": 10,
+    "direct_grants_on_rls_no_policy_to_anon_or_authenticated": 0,
+    "public_authenticated_security_definer_count": 60,
+    "public_authenticated_security_definer_also_anon_count": 0,
+    "public_authenticated_security_definer_missing_search_path_count": 0,
+    "anon_private_schema_usage": false,
+    "advisor_observed_at": "2026-09-22T11:50:12.942Z",
+    "advisor_rls_enabled_no_policy_count": 10,
+    "advisor_anon_security_definer_count": 4,
+    "advisor_authenticated_security_definer_count": 60,
+    "advisor_leaked_password_protection_count": 1,
+    "classification": "MATCHES_P5D_CLASSIFIED_STATE_NO_NEW_DRIFT"
+  },
+  "backup_recheck": {
+    "status": "HEALTHY",
+    "backup_sha256": "75d9fa5d95d61403d6aa2f1b64f6ba3a9bd87a74b847c8587a25bea06de48ef3",
+    "restore_verification": "PASS",
+    "retained_copy_sha256_match": true
+  },
+  "cutover_gate": {
+    "ready": false,
+    "expected_fail_closed": true,
+    "blockers": [
+      "Official UAT belum PASS",
+      "Final post-UAT regression belum PASS"
+    ],
+    "production_automatic_deployment": false
+  },
+  "canonical_verify": {
+    "repository_guard": "PASS",
+    "format": "PASS",
+    "lint": "PASS",
+    "typecheck": "PASS",
+    "javascript": "96/96 PASS",
+    "python": "289/289 PASS",
+    "production_build": "PASS",
+    "git_diff_check": "PASS"
+  },
+  "database_mutation_by_c8": "NONE",
+  "production_deployment_by_c8": "NONE",
+  "verdict": "PASS_SAFEPOINT",
+  "next_phase": "C9_RC2_PROMOTION_AND_PREVIEW_GATE"
+}

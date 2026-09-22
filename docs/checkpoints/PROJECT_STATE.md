@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C7 SECONDARY SCREEN CONVERGENCE — SAFEPOINT**
+- Current phase: **C8 FULL CROSS-DOMAIN REGRESSION — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1 shell/icon + C2 Product/Variant/execution/readers + C3 Board 02 Sales + C4 Board 01 dashboards + C5 Board 03 Operations + C6 Board 04 Control Center + C7 secondary screens complete in source; next is C8 full cross-domain regression.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-C7 complete in source; C8 full cross-domain regression PASS; next is C9 RC2 Promotion & Preview Gate.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -251,35 +251,36 @@ C5-B Board 03 Purchase / Shift / Recipe Configuration convergence is complete in
 See:
 `docs/checkpoints/C5B_BOARD03_PURCHASE_SHIFT_RECIPE_CONFIGURATION_SAFEPOINT.md`
 
-## C7 safe checkpoint
+## C8 safe checkpoint
 
-C7 Secondary Screen Convergence is complete in source.
+C8 Full Cross-domain Regression is complete.
 
-- Finance now shares Control Center navigation and a workflow index without changing finance writers;
-- Reports keep the same read-only authority with a converged filter/result workspace;
-- Transaction History keeps the same search authority with clearer transaction cards;
-- Refund and Correction remain distinct authorities with visually distinct impact panels;
-- Handover and Shift History now share the Operations workspace;
-- Reconciliation duplicate empty-state eyebrow was removed;
-- Owner Users/Permissions/Devices, Expense Approval and Legacy utility now share Control Center navigation;
-- legacy malformed Finance control characters were removed;
-- no DB migration or business writer was introduced;
-- canonical verify before checkpoint docs: **96/96 JS + 289/289 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+- canonical verify: **96/96 JS + 289/289 Python PASS**;
+- C2/C3 migration + SQL regression payload: byte-for-byte unchanged from the real C3-B transactional rehearsal;
+- fresh hosted RC1 authority probe: **31/31 PASS**;
+- corrected hosted writer call-chain probe: **7/7 PASS**;
+- C2/C3 tables remain intentionally unapplied persistently before RC2;
+- fresh security state matches the classified P5D state with no new drift;
+- official P5C backup-health validator recheck: **HEALTHY**;
+- restore evidence remains **PASS**;
+- cutover remains correctly fail-closed because Official UAT and final post-UAT regression are not PASS;
+- Production automatic deployment remains disabled;
+- no database mutation or deployment was performed by C8.
 
 See:
-docs/checkpoints/C7_SECONDARY_SCREEN_CONVERGENCE_SAFEPOINT.md
+docs/checkpoints/C8_FULL_CROSS_DOMAIN_REGRESSION_SAFEPOINT.md
+docs/checkpoints/C8_REGRESSION_EVIDENCE.json
 
 ## NEXT ACTION
 
-**Begin C8 — Full Cross-domain Regression.**
+**Begin C9 — RC2 Promotion & Preview Gate.**
 
-Do not redesign C1-C7 again.
+C9 is the controlled promotion boundary for the source-controlled C2/C3 database changes and the
+new RC2 Preview. Do not mutate RC1 and do not enable Production application deployment.
 
-Re-prove the full converged source across sale/stock/money/history, purchase, production, transfer,
-refund/correction, shift/reconciliation, permissions/devices, idempotency, offline boundaries,
-backup/restore evidence and security/cutover guards.
-
-Only after C8 passes should C9 create RC2 and a new Cloudflare Preview.
+C9 must recheck backup immediately before persistent schema promotion, verify managed migration
+order, prove post-apply schema/checkout coherence, create RC2, deploy a new Preview, and run browser
+smoke before C10 Human UAT.
 
 ## Cutover rule
 
