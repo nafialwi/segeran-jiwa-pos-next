@@ -119,8 +119,8 @@ export function ReportsScreen() {
   if (!authority) return null;
 
   return (
-    <main className="shell">
-      <header className="topbar">
+    <main className="shell secondary-screen reports-workspace">
+      <header className="topbar secondary-hero">
         <div>
           <Link to="/">Beranda</Link>
           <p className="eyebrow">READ MODEL</p>
@@ -134,7 +134,7 @@ export function ReportsScreen() {
 
       {error && <div className="error-banner">{error}</div>}
 
-      <section className="identity-card">
+      <section className="identity-card secondary-filter-panel">
         <form className="compact-grid-form" onSubmit={load}>
           <label className="field-label">
             Jenis Laporan
@@ -185,7 +185,7 @@ export function ReportsScreen() {
       </section>
 
       {!report && !loading && (
-        <section className="identity-card">
+        <section className="identity-card report-result-shell">
           <p className="empty-state">
             Pilih laporan dan periode, lalu tekan Tampilkan Laporan.
           </p>
@@ -194,7 +194,7 @@ export function ReportsScreen() {
 
       {report && (
         <>
-          <section className="identity-card">
+          <section className="identity-card report-result-shell">
             <div className="section-heading">
               <div>
                 <h2>{report.report_title}</h2>

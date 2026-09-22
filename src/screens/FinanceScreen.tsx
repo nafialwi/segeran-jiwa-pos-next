@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ControlCenterNav } from '../components/ControlCenterNav';
 import {
   createEmployeeKasbon,
   fetchFinanceOverview,
@@ -254,19 +255,31 @@ export function FinanceScreen() {
   }
 
   return (
-    <main className="shell">
-      <header className="topbar">
+    <main className="shell secondary-screen finance-workspace">
+      <header className="topbar secondary-hero">
         <div>
-          <Link to="/">� Beranda</Link>
+          <Link to="/pengaturan">Kembali ke Pusat Kontrol</Link>
           <p className="eyebrow">OWNER FINANCE</p>
           <h1>Keuangan</h1>
         </div>
       </header>
 
+      <ControlCenterNav />
+
       {error && <div className="error-banner">{error}</div>}
       {success && <div className="success-banner">{success}</div>}
 
-      <section className="identity-card">
+      <nav className="secondary-workflow-nav" aria-label="Alur Keuangan">
+        <a href="#finance-balances">Ringkasan</a>
+        <a href="#finance-transfer">Pindah Uang</a>
+        <a href="#finance-qris">QRIS</a>
+        <a href="#finance-reconciliation">Rekonsiliasi</a>
+        <a href="#finance-receivables">Piutang & Utang</a>
+        <a href="#finance-kasbon">Kasbon</a>
+        <a href="#finance-owner">Owner</a>
+      </nav>
+
+      <section className="identity-card secondary-panel" id="finance-balances">
         <div>
           <h2>Saldo Keuangan</h2>
           <p className="muted">
@@ -285,7 +298,7 @@ export function FinanceScreen() {
         </div>
       </section>
 
-      <section className="identity-card">
+      <section className="identity-card secondary-panel" id="finance-transfer">
         <div>
           <h2>Pindah Uang</h2>
           <p className="muted">Kas Utama, Kas Shift, dan Bank.</p>
@@ -303,7 +316,7 @@ export function FinanceScreen() {
               <option value="">Pilih sumber</option>
               {liquidAccounts.map((account) => (
                 <option key={account.id} value={account.id}>
-                  {account.display_name}  {formatIdr(account.balance)}
+                  {account.display_name} · {formatIdr(account.balance)}
                 </option>
               ))}
             </select>
@@ -359,7 +372,7 @@ export function FinanceScreen() {
         </form>
       </section>
 
-      <section className="identity-card">
+      <section className="identity-card secondary-panel" id="finance-owner">
         <div>
           <h2>Modal Owner</h2>
           <p className="muted">
@@ -419,12 +432,11 @@ export function FinanceScreen() {
         </form>
       </section>
 
-      <section className="identity-card">
+      <section className="identity-card secondary-panel" id="finance-qris">
         <div>
           <h2>Settlement QRIS</h2>
           <p className="muted">
-            QRIS Belum Cair � settlement!� Bank. Biaya provider dicatat
-            terpisah.
+            QRIS Belum Cair settlement! Bank. Biaya provider dicatat terpisah.
           </p>
         </div>
         <form className="stack-form" onSubmit={submitQris}>
@@ -488,8 +500,8 @@ export function FinanceScreen() {
                 <strong>{item.settlement_date}</strong>
                 <span>{item.provider_reference}</span>
                 <span>
-                  Gross {formatIdr(item.gross_amount)} � Fee{' '}
-                  {formatIdr(item.provider_fee)} � Net{' '}
+                  Gross {formatIdr(item.gross_amount)} Fee{' '}
+                  {formatIdr(item.provider_fee)} Net{' '}
                   {formatIdr(item.net_amount)}
                 </span>
               </article>
@@ -498,7 +510,10 @@ export function FinanceScreen() {
         )}
       </section>
 
-      <section className="identity-card">
+      <section
+        className="identity-card secondary-panel"
+        id="finance-reconciliation"
+      >
         <div>
           <h2>Rekonsiliasi Harian</h2>
           <p className="muted">
@@ -572,15 +587,15 @@ export function FinanceScreen() {
           {(overview?.reconciliations ?? []).map((item) => (
             <article className="list-card" key={item.id}>
               <strong>
-                {item.business_date}  {item.result}
+                {item.business_date} · {item.result}
               </strong>
               <span>
                 Kas {formatIdr(item.expected_cash)} / hitung{' '}
-                {formatIdr(item.counted_cash)} � selisih{' '}
+                {formatIdr(item.counted_cash)} selisih{' '}
                 {formatIdr(item.cash_variance)}
               </span>
               <span>
-                QRIS selisih {formatIdr(item.qris_variance)} � Transfer selisih{' '}
+                QRIS selisih {formatIdr(item.qris_variance)} Transfer selisih{' '}
                 {formatIdr(item.transfer_variance)}
               </span>
             </article>
@@ -588,7 +603,10 @@ export function FinanceScreen() {
         </div>
       </section>
 
-      <section className="identity-card">
+      <section
+        className="identity-card secondary-panel"
+        id="finance-receivables"
+      >
         <div>
           <h2>Hutang Pelanggan</h2>
           <p className="muted">
@@ -623,7 +641,7 @@ export function FinanceScreen() {
               <option value="">Pilih hutang</option>
               {overview?.customerDebts.map((item) => (
                 <option key={item.debt_id} value={item.debt_id}>
-                  {item.customer_name}  {formatIdr(item.balance)}
+                  {item.customer_name} · {formatIdr(item.balance)}
                 </option>
               ))}
             </select>
@@ -664,7 +682,7 @@ export function FinanceScreen() {
         </form>
       </section>
 
-      <section className="identity-card">
+      <section className="identity-card secondary-panel" id="finance-payables">
         <div>
           <h2>Utang Pemasok</h2>
           <p className="muted">
@@ -705,7 +723,7 @@ export function FinanceScreen() {
               <option value="">Pilih utang pemasok</option>
               {overview?.supplierPayables.map((item) => (
                 <option key={item.payable_id} value={item.payable_id}>
-                  {item.supplier_name}  {formatIdr(item.balance)}
+                  {item.supplier_name} · {formatIdr(item.balance)}
                 </option>
               ))}
             </select>
@@ -746,7 +764,7 @@ export function FinanceScreen() {
         </form>
       </section>
 
-      <section className="identity-card">
+      <section className="identity-card secondary-panel" id="finance-kasbon">
         <div>
           <h2>Kasbon Karyawan</h2>
           <p className="muted">
@@ -835,7 +853,7 @@ export function FinanceScreen() {
         </form>
       </section>
 
-      <section className="identity-card">
+      <section className="identity-card secondary-panel" id="finance-approval">
         <div>
           <h2>Approval Pengeluaran</h2>
           <p className="muted">
@@ -848,7 +866,7 @@ export function FinanceScreen() {
         </div>
       </section>
 
-      <section className="identity-card">
+      <section className="identity-card secondary-panel" id="finance-personal">
         <div>
           <h2>Pengeluaran Pribadi Owner</h2>
           <p>
@@ -874,7 +892,7 @@ export function FinanceScreen() {
               <option value="">Pilih akun</option>
               {ownerCashAccounts.map((account) => (
                 <option key={account.id} value={account.id}>
-                  {account.display_name}  {formatIdr(account.balance)}
+                  {account.display_name} · {formatIdr(account.balance)}
                 </option>
               ))}
             </select>

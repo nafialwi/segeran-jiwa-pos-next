@@ -84,7 +84,6 @@ export function ReconciliationScreen() {
               ← Beranda
             </Link>
             <p className="eyebrow">OPERASIONAL · SHIFT</p>
-            <p className="eyebrow">OPERASIONAL · SHIFT</p>
             <h1>Rekonsiliasi Shift</h1>
           </div>
         </header>

@@ -5,6 +5,7 @@ import {
   useState,
   type FormEvent,
 } from 'react';
+import { ControlCenterNav } from '../components/ControlCenterNav';
 import { useAuth } from '../auth/AuthProvider';
 import type { PermissionCode, ProfileStatus } from '../auth/types';
 import { supabase } from '../lib/supabase';
@@ -470,8 +471,10 @@ export function OwnerUsersScreen() {
   }
 
   return (
-    <main className="shell">
-      <header className="topbar">
+    <main className="shell secondary-screen owner-users-workspace">
+      <ControlCenterNav />
+
+      <header className="topbar secondary-hero">
         <div>
           <p className="eyebrow">OWNER</p>
           <h1>Pengguna</h1>

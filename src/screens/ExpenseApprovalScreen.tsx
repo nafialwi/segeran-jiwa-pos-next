@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { ControlCenterNav } from '../components/ControlCenterNav';
 import { supabase } from '../lib/supabase';
 import { requireOnlineAction } from '../health/online-action';
 
@@ -127,8 +128,10 @@ export function ExpenseApprovalScreen() {
   }
 
   return (
-    <main className="shell">
-      <header className="topbar">
+    <main className="shell secondary-screen expense-approval-workspace">
+      <ControlCenterNav />
+
+      <header className="topbar secondary-hero">
         <div>
           <Link className="muted" to="/">
             Kembali ke Beranda

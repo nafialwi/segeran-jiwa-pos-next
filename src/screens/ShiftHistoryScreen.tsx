@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { OperationsNav } from '../components/OperationsNav';
 import {
   formatVariance,
   toShiftErrorMessage,
@@ -30,15 +31,18 @@ export function ShiftHistoryScreen() {
   }, []);
 
   return (
-    <main className="shell">
-      <header className="topbar">
+    <main className="shell operations-shell shift-history-screen">
+      <header className="topbar operations-header secondary-hero">
         <div>
           <Link className="muted" to="/">
             ← Beranda
           </Link>
+          <p className="eyebrow">OPERASIONAL · SHIFT</p>
           <h1>Riwayat Shift</h1>
         </div>
       </header>
+
+      <OperationsNav />
 
       {error && <p className="error-banner">{error}</p>}
 

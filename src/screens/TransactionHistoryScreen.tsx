@@ -240,8 +240,8 @@ export function TransactionHistoryScreen() {
   }
 
   return (
-    <main className="shell">
-      <header className="topbar">
+    <main className="shell secondary-screen history-workspace">
+      <header className="topbar secondary-hero">
         <div>
           <Link to="/">Beranda</Link>
           <p className="eyebrow">TRANSAKSI</p>
@@ -255,7 +255,7 @@ export function TransactionHistoryScreen() {
       {error && <div className="error-banner">{error}</div>}
       {message && <div className="success-banner">{message}</div>}
 
-      <section className="identity-card">
+      <section className="identity-card history-filter-panel">
         <form className="compact-grid-form" onSubmit={submit}>
           <label className="field-label">
             Tanggal / Hari Usaha - dari
@@ -399,7 +399,7 @@ export function TransactionHistoryScreen() {
         </form>
       </section>
 
-      <section className="identity-card">
+      <section className="identity-card history-results-panel">
         <div className="section-heading">
           <div>
             <h2>Transaksi</h2>
@@ -414,7 +414,10 @@ export function TransactionHistoryScreen() {
         ) : (
           <div className="stack-list">
             {rows.map((row) => (
-              <article className="list-card" key={row.sale_id}>
+              <article
+                className="list-card history-transaction-card"
+                key={row.sale_id}
+              >
                 <div className="section-heading">
                   <div>
                     <strong>{row.invoice_number}</strong>
@@ -576,7 +579,7 @@ export function TransactionHistoryScreen() {
       </section>
 
       {refundTarget && refundImpact && (
-        <section className="identity-card">
+        <section className="identity-card history-impact-panel refund">
           <div className="section-heading">
             <div>
               <p className="eyebrow">REFUND / REVERSAL</p>
@@ -693,7 +696,7 @@ export function TransactionHistoryScreen() {
       )}
 
       {correctionTarget && correctionPreview && (
-        <section className="identity-card">
+        <section className="identity-card history-impact-panel correction">
           <div className="section-heading">
             <div>
               <p className="eyebrow">KOREKSI / PEMBALIKAN</p>
