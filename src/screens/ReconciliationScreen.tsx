@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { OperationsNav } from '../components/OperationsNav';
 import {
   formatIdr,
   formatVariance,
@@ -68,7 +69,7 @@ export function ReconciliationScreen() {
 
   if (loading) {
     return (
-      <main className="shell">
+      <main className="shell operations-shell shift-reconciliation-screen">
         <p>Memuat riwayat shift…</p>
       </main>
     );
@@ -76,16 +77,19 @@ export function ReconciliationScreen() {
 
   if (shifts.length === 0) {
     return (
-      <main className="shell">
-        <header className="topbar">
+      <main className="shell operations-shell shift-reconciliation-screen">
+        <header className="topbar operations-header">
           <div>
             <Link className="muted" to="/">
               ← Beranda
             </Link>
+            <p className="eyebrow">OPERASIONAL · SHIFT</p>
+            <p className="eyebrow">OPERASIONAL · SHIFT</p>
             <h1>Rekonsiliasi Shift</h1>
           </div>
         </header>
-        <section className="identity-card">
+        <OperationsNav />
+        <section className="operations-panel">
           <p className="muted">
             Belum ada shift tertutup untuk direkonsiliasi.
           </p>
@@ -95,19 +99,22 @@ export function ReconciliationScreen() {
   }
 
   return (
-    <main className="shell">
-      <header className="topbar">
+    <main className="shell operations-shell shift-reconciliation-screen">
+      <header className="topbar operations-header">
         <div>
           <Link className="muted" to="/">
             ← Beranda
           </Link>
+          <p className="eyebrow">OPERASIONAL · SHIFT</p>
           <h1>Rekonsiliasi Shift</h1>
         </div>
       </header>
 
+      <OperationsNav />
+
       {error && <p className="error-banner">{error}</p>}
 
-      <section className="identity-card">
+      <section className="operations-panel">
         <label>
           Pilih Shift
           <select
@@ -127,7 +134,7 @@ export function ReconciliationScreen() {
       {loadingRecon ? (
         <p>Memuat rekonsiliasi…</p>
       ) : reconciliation ? (
-        <section className="identity-card">
+        <section className="operations-panel">
           <h2>Breakdown Kas</h2>
           <dl className="identity-meta">
             <div>

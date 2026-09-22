@@ -9,6 +9,7 @@ import { ExpenseApprovalScreen } from './screens/ExpenseApprovalScreen';
 import { FinanceScreen } from './screens/FinanceScreen';
 import { HandoverScreen } from './screens/HandoverScreen';
 import { HomeScreen } from './screens/HomeScreen';
+import { InventoryControlScreen } from './screens/InventoryControlScreen';
 import { InventoryItemScreen } from './screens/InventoryItemScreen';
 import { InventoryScreen } from './screens/InventoryScreen';
 import { LegacyImportScreen } from './screens/LegacyImportScreen';
@@ -85,6 +86,21 @@ export function App() {
             element={
               <RequireAccess permission="INVENTORY_READ">
                 <InventoryScreen />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/stok/kontrol"
+            element={
+              <RequireAccess
+                anyPermissions={[
+                  'INVENTORY_REQUEST',
+                  'INVENTORY_TRANSFER',
+                  'INVENTORY_COUNT',
+                  'INVENTORY_ADJUST',
+                ]}
+              >
+                <InventoryControlScreen />
               </RequireAccess>
             }
           />

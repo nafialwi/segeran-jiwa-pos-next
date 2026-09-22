@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C5-A BOARD 03 OPERATIONS FRONT DOOR — SAFEPOINT**
+- Current phase: **C5-B BOARD 03 PURCHASE / SHIFT / RECIPE CONFIGURATION — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1 shell/icon + C2 Product/Variant/execution/readers + C3 Board 02 Sales + C4 Board 01 dashboards + C5-A Board 03 operations front doors complete in source; next is C5-B Purchase/Shift/Recipe configuration convergence.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1 shell/icon + C2 Product/Variant/execution/readers + C3 Board 02 Sales + C4 Board 01 dashboards + C5-A/C5-B Board 03 Operations convergence complete in source; next is C6 Board 04 Control Center convergence.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -233,13 +233,30 @@ C5-A Board 03 operations front-door convergence is complete in source.
 See:
 `docs/checkpoints/C5A_BOARD03_OPERATIONS_FRONT_DOOR_SAFEPOINT.md`
 
+## C5-B safe checkpoint
+
+C5-B Board 03 Purchase / Shift / Recipe Configuration convergence is complete in source.
+
+- Purchase is grouped into Belanja Langsung / Pesanan Pemasok / Penerimaan Barang / Master Data;
+- inventory Restock / Transfer / Stok Opname / Penyesuaian are first-class permission-bounded UI;
+- all stock control mutations reuse existing P7/P8 canonical RPCs;
+- packaging/cup is treated as an ordinary inventory Stock Item;
+- Shift now has coherent Opening / Active / Reconciliation / Packaging / Closing presentation;
+- theoretical packaging usage reads immutable sale-time component snapshots and fails closed until C2 is promoted;
+- BOM draft/activate is exposed only through existing versioned BOM authority and PRODUCTION_MANAGE;
+- Inventory Control child reads are scoped to bounded parent IDs to avoid read amplification;
+- no new DB migration or second business writer was introduced;
+- full canonical verify before checkpoint docs: **96/96 JS + 269/269 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+`docs/checkpoints/C5B_BOARD03_PURCHASE_SHIFT_RECIPE_CONFIGURATION_SAFEPOINT.md`
+
 ## NEXT ACTION
 
-**Begin C5-B — Board 03 Purchase / Shift / Recipe Configuration Convergence.**
+**Begin C6 — Board 04 Control Center convergence.**
 
-Converge Purchase workflow presentation, Shift opening/active/closing/reconciliation and packaging
-control, and expose existing BOM draft/activate authority where appropriate. Bring inventory
-restock/transfer/count/adjustment controls forward only through their existing canonical writers.
+Converge Settings, Attention, Devices, Backup/Restore, Health, Offline/Sync and Diagnostics onto the
+approved Control Center using real evidence and existing authorities.
 
 Do not persistently apply C2/C3 database changes or deploy a new Preview until the dedicated RC2
 promotion gate.

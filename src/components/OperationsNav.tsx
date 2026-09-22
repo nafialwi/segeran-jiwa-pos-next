@@ -23,6 +23,17 @@ export function OperationsNav() {
       visible: hasPermission(authority, 'INVENTORY_READ'),
     },
     {
+      label: 'Kontrol Stok',
+      to: '/stok/kontrol',
+      icon: 'diagnostics',
+      visible: hasAnyPermission(authority, [
+        'INVENTORY_REQUEST',
+        'INVENTORY_TRANSFER',
+        'INVENTORY_COUNT',
+        'INVENTORY_ADJUST',
+      ]),
+    },
+    {
       label: 'Produk & Resep',
       to: '/produk',
       icon: 'product',

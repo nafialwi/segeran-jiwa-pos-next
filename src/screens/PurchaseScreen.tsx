@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { OperationsNav } from '../components/OperationsNav';
 import { supabase } from '../lib/supabase';
 import {
@@ -29,6 +28,8 @@ type PayableRow = {
 type PurchaseOverview = {
   payables: PayableRow[];
 };
+
+type PurchaseTab = 'DIRECT' | 'ORDER' | 'RECEIPT' | 'MASTER';
 
 type DraftLine = {
   item: PurchaseItem;
@@ -60,6 +61,7 @@ export function PurchaseScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [purchaseTab, setPurchaseTab] = useState<PurchaseTab>('DIRECT');
 
   const [supplierCode, setSupplierCode] = useState('');
   const [supplierName, setSupplierName] = useState('');
@@ -290,147 +292,96 @@ export function PurchaseScreen() {
     });
   }
 
-  return (
-    <main className="shell operations-shell">
-      <header className="topbar">
-        <div>
-          <Link className="muted" to="/">
-            Kembali ke Beranda
-          </Link>
-          <p className="eyebrow">PEMBELIAN</p>
-          <h1>Pembelian & Pemasok</h1>
+  const payableBalance = payables.reduce(
+    (total, row) => total + Number(row.balance ?? 0),
+    0,
+  );
+  const pendingReceipts = options.receipts.filter(
+    (receipt) => receipt.status === 'RECEIVED',
+  ).length;
+
+  const purchaseTabs: Array<{
+    value: PurchaseTab;
+    label: string;
+    detail: string;
+  }> = [
+    {
+      value: 'DIRECT',
+      label: 'Belanja Langsung',
+      detail: 'Beli dan terima stok dalam satu alur',
+    },
+    {
+      value: 'ORDER',
+      label: 'Pesanan Pemasok',
+      detail: 'Buat PO tanpa menambah stok',
+    },
+    {
+      value: 'RECEIPT',
+      label: 'Penerimaan Barang',
+      detail: 'Terima dan posting barang dari PO',
+    },
+    {
+      value: 'MASTER',
+      label: 'Master Data',
+      detail: 'Pemasok dan barang pembelian',
+    },
+  ];
+
+  const renderDraftBuilder = (mode: 'DIRECT' | 'ORDER') => (
+    <>
+      {options.suppliers.length === 0 || options.items.length === 0 ? (
+        <div className="empty-state">
+          <strong>Master Pembelian belum lengkap.</strong>
+          <p>
+            Tambahkan minimal satu Pemasok dan satu Barang pada tab Master Data,
+            atau import master Legacy untuk Barang jual.
+          </p>
         </div>
-      </header>
-
-      <OperationsNav />
-
-      {error && <p className="error-banner">{error}</p>}
-      {message && <p className="success-banner">{message}</p>}
-
-      <section className="identity-card">
-        <h2>Tambah Pemasok</h2>
-        <form className="compact-grid-form" onSubmit={saveSupplier}>
-          <label>
-            Kode
-            <input
-              value={supplierCode}
-              onChange={(event) => setSupplierCode(event.target.value)}
-              placeholder="MISAL: TOKO_A"
-              required
-            />
-          </label>
-          <label>
-            Nama Pemasok
-            <input
-              value={supplierName}
-              onChange={(event) => setSupplierName(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Telepon
-            <input
-              value={supplierPhone}
-              onChange={(event) => setSupplierPhone(event.target.value)}
-            />
-          </label>
-          <button className="secondary-button" type="submit" disabled={busy}>
-            Tambah Pemasok
-          </button>
-        </form>
-      </section>
-
-      <section className="identity-card">
-        <h2>Tambah Barang</h2>
-        <form className="compact-grid-form" onSubmit={saveItem}>
-          <label>
-            Kode
-            <input
-              value={itemCode}
-              onChange={(event) => setItemCode(event.target.value)}
-              placeholder="MISAL: GULA"
-              required
-            />
-          </label>
-          <label>
-            Nama Barang
-            <input
-              value={itemName}
-              onChange={(event) => setItemName(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            Jenis
-            <select
-              value={itemKind}
-              onChange={(event) => setItemKind(event.target.value)}
-            >
-              <option value="MATERIAL">Bahan</option>
-              <option value="FINISHED_GOOD">Barang Jadi</option>
-              <option value="PACKAGING">Kemasan</option>
-              <option value="OTHER">Lainnya</option>
-            </select>
-          </label>
-          <label>
-            Satuan Dasar
-            <select
-              value={itemUnitId}
-              onChange={(event) => setItemUnitId(event.target.value)}
-              required
-            >
-              {options.units.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.display_name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <button className="secondary-button" type="submit" disabled={busy}>
-            Tambah Barang
-          </button>
-        </form>
-      </section>
-
-      <section className="identity-card">
-        <h2>Pembelian Baru</h2>
-        {options.suppliers.length === 0 || options.items.length === 0 ? (
-          <div className="empty-state">
-            <strong>Master Pembelian belum lengkap.</strong>
-            <p>
-              Tambahkan minimal satu Pemasok dan satu Barang, atau import master
-              Legacy untuk Barang jual.
-            </p>
+      ) : (
+        <>
+          <div className="purchase-flow-guide">
+            <span className="active">1 · Pilih pemasok</span>
+            <span>2 · Tambah barang</span>
+            <span>3 · {mode === 'DIRECT' ? 'Terima stok' : 'Simpan PO'}</span>
           </div>
-        ) : (
-          <>
+
+          <div className="compact-grid-form purchase-order-fields">
+            <label>
+              Pemasok
+              <select
+                value={supplierId}
+                onChange={(event) => setSupplierId(event.target.value)}
+              >
+                {options.suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.display_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Lokasi Penerimaan
+              <select
+                value={locationId}
+                onChange={(event) => setLocationId(event.target.value)}
+              >
+                {options.locations.map((location) => (
+                  <option key={location.id} value={location.id}>
+                    {location.display_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+
+          <section className="purchase-line-builder">
+            <header>
+              <div>
+                <p className="eyebrow">BARANG</p>
+                <h3>Tambah ke Pembelian</h3>
+              </div>
+            </header>
             <div className="compact-grid-form">
-              <label>
-                Pemasok
-                <select
-                  value={supplierId}
-                  onChange={(event) => setSupplierId(event.target.value)}
-                >
-                  {options.suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.display_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Lokasi Penerimaan
-                <select
-                  value={locationId}
-                  onChange={(event) => setLocationId(event.target.value)}
-                >
-                  {options.locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.display_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
               <label>
                 Barang
                 <select
@@ -472,188 +423,434 @@ export function PurchaseScreen() {
                 Tambah ke Pembelian
               </button>
             </div>
+          </section>
 
-            {draftLines.length > 0 && (
-              <div className="stack-list purchase-draft">
-                {draftLines.map((line) => (
-                  <article className="cart-row" key={line.item.id}>
-                    <div>
-                      <strong>{line.item.display_name}</strong>
-                      <span className="muted">
-                        {line.quantity} {line.item.base_unit} x{' '}
-                        {formatIdr(line.unitPrice)}
-                      </span>
-                    </div>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      onClick={() =>
-                        setDraftLines((current) =>
-                          current.filter(
-                            (entry) => entry.item.id !== line.item.id,
-                          ),
-                        )
-                      }
-                    >
-                      Hapus
-                    </button>
-                  </article>
-                ))}
-              </div>
-            )}
-
-            <label>
-              Catatan Pembelian
-              <textarea
-                value={purchaseNotes}
-                onChange={(event) => setPurchaseNotes(event.target.value)}
-                rows={2}
-              />
-            </label>
-
-            <div className="button-row">
-              <button
-                className="primary-button"
-                type="button"
-                disabled={busy || draftLines.length === 0}
-                onClick={() => void saveDirectBuy()}
-              >
-                Belanja Langsung
-              </button>
-              <button
-                className="secondary-button"
-                type="button"
-                disabled={busy || draftLines.length === 0}
-                onClick={() => void saveOrder()}
-              >
-                Pesanan ke Pemasok
-              </button>
-            </div>
-            <p className="muted">
-              Belanja Langsung langsung mencatat Barang Diterima. Pesanan ke
-              Pemasok belum menambah stok sampai penerimaan diposting.
-            </p>
-          </>
-        )}
-      </section>
-
-      <section className="identity-card">
-        <h2>Penerimaan Barang</h2>
-        {options.receivable_orders.length === 0 ? (
-          <p className="muted">
-            Tidak ada Pesanan ke Pemasok yang menunggu penerimaan.
-          </p>
-        ) : (
-          <>
-            <div className="compact-grid-form">
-              <label>
-                Pesanan
-                <select
-                  value={receiveOrderId}
-                  onChange={(event) => setReceiveOrderId(event.target.value)}
-                >
-                  {options.receivable_orders.map((order) => (
-                    <option key={order.id} value={order.id}>
-                      {order.order_number} - {order.supplier_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Barang
-                <select
-                  value={receiveLineId}
-                  onChange={(event) => setReceiveLineId(event.target.value)}
-                >
-                  {receivableLines.map((line) => (
-                    <option key={line.id} value={line.id}>
-                      {line.item_name} - sisa {Number(line.remaining_quantity)}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Jumlah Diterima
-                <input
-                  type="number"
-                  min="0.001"
-                  step="0.001"
-                  value={receiveQuantity}
-                  onChange={(event) =>
-                    setReceiveQuantity(Number(event.target.value))
-                  }
-                />
-              </label>
-              <label>
-                Catatan
-                <input
-                  value={receiveNotes}
-                  onChange={(event) => setReceiveNotes(event.target.value)}
-                />
-              </label>
-              <button
-                className="secondary-button"
-                type="button"
-                disabled={
-                  busy ||
-                  !receiveLineId ||
-                  receiveQuantity <= 0 ||
-                  receiveQuantity >
-                    Number(
-                      receivableLines.find((line) => line.id === receiveLineId)
-                        ?.remaining_quantity ?? 0,
-                    )
-                }
-                onClick={() => void saveReceipt()}
-              >
-                Simpan Penerimaan Barang
-              </button>
-            </div>
-          </>
-        )}
-
-        {options.receipts.length > 0 && (
-          <div className="stack-list">
-            {options.receipts.map((receipt) => (
-              <article className="list-card" key={receipt.id}>
-                <strong>{receipt.receipt_number}</strong>
-                <span>
-                  {receipt.order_number} - {receipt.supplier_name}
-                </span>
-                <span>
-                  {receipt.location_name} - {receipt.status}
-                </span>
-                {receipt.status === 'RECEIVED' && (
+          {draftLines.length > 0 ? (
+            <div className="stack-list purchase-draft">
+              {draftLines.map((line) => (
+                <article className="cart-row" key={line.item.id}>
+                  <div>
+                    <strong>{line.item.display_name}</strong>
+                    <span className="muted">
+                      {line.quantity} {line.item.base_unit} ×{' '}
+                      {formatIdr(line.unitPrice)}
+                    </span>
+                  </div>
+                  <strong>{formatIdr(line.quantity * line.unitPrice)}</strong>
                   <button
-                    className="primary-button"
+                    className="secondary-button"
                     type="button"
-                    disabled={busy}
-                    onClick={() => void postReceipt(receipt.id)}
+                    onClick={() =>
+                      setDraftLines((current) =>
+                        current.filter(
+                          (entry) => entry.item.id !== line.item.id,
+                        ),
+                      )
+                    }
                   >
-                    Barang Diterima
+                    Hapus
                   </button>
-                )}
-              </article>
-            ))}
+                </article>
+              ))}
+              <div className="purchase-total-row">
+                <span>Total</span>
+                <strong>
+                  {formatIdr(
+                    draftLines.reduce(
+                      (total, line) => total + line.quantity * line.unitPrice,
+                      0,
+                    ),
+                  )}
+                </strong>
+              </div>
+            </div>
+          ) : (
+            <p className="operations-empty">
+              Belum ada barang pada pembelian ini.
+            </p>
+          )}
+
+          <label>
+            Catatan Pembelian
+            <textarea
+              value={purchaseNotes}
+              onChange={(event) => setPurchaseNotes(event.target.value)}
+              rows={2}
+            />
+          </label>
+
+          <button
+            className="primary-button purchase-primary-action"
+            type="button"
+            disabled={busy || draftLines.length === 0}
+            onClick={() =>
+              void (mode === 'DIRECT' ? saveDirectBuy() : saveOrder())
+            }
+          >
+            {mode === 'DIRECT'
+              ? 'Selesaikan Belanja Langsung'
+              : 'Simpan Pesanan Pemasok'}
+          </button>
+
+          <div className="purchase-authority-note">
+            <strong>
+              {mode === 'DIRECT'
+                ? 'Stok akan bertambah setelah alur direct-buy selesai.'
+                : 'Pesanan Pemasok belum menambah stok.'}
+            </strong>
+            <span>
+              {mode === 'DIRECT'
+                ? 'Engine tetap memakai purchase + goods receipt authority yang sama.'
+                : 'Stok baru berubah setelah Penerimaan Barang diposting.'}
+            </span>
           </div>
-        )}
+        </>
+      )}
+    </>
+  );
+
+  return (
+    <main className="shell operations-shell">
+      <header className="topbar operations-header">
+        <div>
+          <p className="eyebrow">OPERASIONAL · PEMBELIAN</p>
+          <h1>Pembelian & Pemasok</h1>
+          <p className="muted">
+            Pisahkan pembelian langsung, pesanan, dan penerimaan agar status
+            stok selalu jelas.
+          </p>
+        </div>
+      </header>
+
+      <OperationsNav />
+
+      {error && <p className="error-banner">{error}</p>}
+      {message && <p className="success-banner">{message}</p>}
+
+      <section
+        className="purchase-summary-grid"
+        aria-label="Ringkasan pembelian"
+      >
+        <article>
+          <span>Pemasok</span>
+          <strong>{options.suppliers.length}</strong>
+        </article>
+        <article>
+          <span>PO Menunggu Barang</span>
+          <strong>{options.receivable_orders.length}</strong>
+        </article>
+        <article>
+          <span>Siap Diposting</span>
+          <strong>{pendingReceipts}</strong>
+        </article>
+        <article>
+          <span>Utang Pemasok</span>
+          <strong>{formatIdr(payableBalance)}</strong>
+        </article>
       </section>
 
-      <section className="identity-card">
-        <h2>Utang Pemasok</h2>
+      <div className="purchase-workflow-tabs" role="tablist">
+        {purchaseTabs.map((tab) => (
+          <button
+            type="button"
+            key={tab.value}
+            className={purchaseTab === tab.value ? 'active' : ''}
+            onClick={() => setPurchaseTab(tab.value)}
+          >
+            <strong>{tab.label}</strong>
+            <span>{tab.detail}</span>
+          </button>
+        ))}
+      </div>
+
+      {purchaseTab === 'DIRECT' && (
+        <section className="operations-panel purchase-workflow-panel">
+          <header className="operations-panel-header">
+            <div>
+              <p className="eyebrow">SATU LANGKAH</p>
+              <h2>Belanja Langsung</h2>
+              <p className="muted">
+                Untuk pembelian yang barangnya langsung diterima di lokasi.
+              </p>
+            </div>
+          </header>
+          {renderDraftBuilder('DIRECT')}
+        </section>
+      )}
+
+      {purchaseTab === 'ORDER' && (
+        <section className="operations-panel purchase-workflow-panel">
+          <header className="operations-panel-header">
+            <div>
+              <p className="eyebrow">ORDER</p>
+              <h2>Pesanan Pemasok</h2>
+              <p className="muted">
+                Buat pesanan terlebih dahulu. Stok belum berubah sampai barang
+                diterima.
+              </p>
+            </div>
+          </header>
+          {renderDraftBuilder('ORDER')}
+        </section>
+      )}
+
+      {purchaseTab === 'RECEIPT' && (
+        <section className="operations-panel purchase-workflow-panel">
+          <header className="operations-panel-header">
+            <div>
+              <p className="eyebrow">PENERIMAAN</p>
+              <h2>Penerimaan Barang</h2>
+              <p className="muted">
+                Catat jumlah datang, lalu posting hanya setelah barang
+                benar-benar diterima.
+              </p>
+            </div>
+          </header>
+
+          {options.receivable_orders.length === 0 ? (
+            <p className="operations-empty">
+              Tidak ada Pesanan Pemasok yang menunggu penerimaan.
+            </p>
+          ) : (
+            <div className="purchase-receipt-layout">
+              <div className="compact-grid-form">
+                <label>
+                  Pesanan
+                  <select
+                    value={receiveOrderId}
+                    onChange={(event) => setReceiveOrderId(event.target.value)}
+                  >
+                    {options.receivable_orders.map((order) => (
+                      <option key={order.id} value={order.id}>
+                        {order.order_number} · {order.supplier_name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Barang
+                  <select
+                    value={receiveLineId}
+                    onChange={(event) => setReceiveLineId(event.target.value)}
+                  >
+                    {receivableLines.map((line) => (
+                      <option key={line.id} value={line.id}>
+                        {line.item_name} · sisa{' '}
+                        {Number(line.remaining_quantity)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Jumlah Diterima
+                  <input
+                    type="number"
+                    min="0.001"
+                    step="0.001"
+                    value={receiveQuantity}
+                    onChange={(event) =>
+                      setReceiveQuantity(Number(event.target.value))
+                    }
+                  />
+                </label>
+                <label>
+                  Catatan
+                  <input
+                    value={receiveNotes}
+                    onChange={(event) => setReceiveNotes(event.target.value)}
+                  />
+                </label>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  disabled={
+                    busy ||
+                    !receiveLineId ||
+                    receiveQuantity <= 0 ||
+                    receiveQuantity >
+                      Number(
+                        receivableLines.find(
+                          (line) => line.id === receiveLineId,
+                        )?.remaining_quantity ?? 0,
+                      )
+                  }
+                  onClick={() => void saveReceipt()}
+                >
+                  Simpan Penerimaan Barang
+                </button>
+              </div>
+
+              <div className="purchase-receipt-list">
+                <h3>Dokumen Penerimaan</h3>
+                {options.receipts.length === 0 ? (
+                  <p className="operations-empty">
+                    Belum ada dokumen penerimaan.
+                  </p>
+                ) : (
+                  options.receipts.map((receipt) => (
+                    <article key={receipt.id}>
+                      <header>
+                        <span>
+                          <strong>{receipt.receipt_number}</strong>
+                          <small>
+                            {receipt.order_number} · {receipt.supplier_name}
+                          </small>
+                        </span>
+                        <span className="operations-status">
+                          {receipt.status}
+                        </span>
+                      </header>
+                      <p>{receipt.location_name}</p>
+                      {receipt.status === 'RECEIVED' && (
+                        <button
+                          className="primary-button"
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void postReceipt(receipt.id)}
+                        >
+                          Barang Diterima
+                        </button>
+                      )}
+                    </article>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
+
+      {purchaseTab === 'MASTER' && (
+        <div className="purchase-master-grid">
+          <section className="operations-panel">
+            <header className="operations-panel-header">
+              <div>
+                <p className="eyebrow">MASTER</p>
+                <h2>Tambah Pemasok</h2>
+              </div>
+            </header>
+            <form className="stack-form" onSubmit={saveSupplier}>
+              <label>
+                Kode
+                <input
+                  value={supplierCode}
+                  onChange={(event) => setSupplierCode(event.target.value)}
+                  placeholder="MISAL: TOKO_A"
+                  required
+                />
+              </label>
+              <label>
+                Nama Pemasok
+                <input
+                  value={supplierName}
+                  onChange={(event) => setSupplierName(event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Telepon
+                <input
+                  value={supplierPhone}
+                  onChange={(event) => setSupplierPhone(event.target.value)}
+                />
+              </label>
+              <button
+                className="secondary-button"
+                type="submit"
+                disabled={busy}
+              >
+                Tambah Pemasok
+              </button>
+            </form>
+          </section>
+
+          <section className="operations-panel">
+            <header className="operations-panel-header">
+              <div>
+                <p className="eyebrow">MASTER</p>
+                <h2>Tambah Barang</h2>
+              </div>
+            </header>
+            <form className="stack-form" onSubmit={saveItem}>
+              <label>
+                Kode
+                <input
+                  value={itemCode}
+                  onChange={(event) => setItemCode(event.target.value)}
+                  placeholder="MISAL: GULA"
+                  required
+                />
+              </label>
+              <label>
+                Nama Barang
+                <input
+                  value={itemName}
+                  onChange={(event) => setItemName(event.target.value)}
+                  required
+                />
+              </label>
+              <label>
+                Jenis
+                <select
+                  value={itemKind}
+                  onChange={(event) => setItemKind(event.target.value)}
+                >
+                  <option value="MATERIAL">Bahan</option>
+                  <option value="FINISHED_GOOD">Barang Jadi</option>
+                  <option value="PACKAGING">Kemasan</option>
+                  <option value="OTHER">Lainnya</option>
+                </select>
+              </label>
+              <label>
+                Satuan Dasar
+                <select
+                  value={itemUnitId}
+                  onChange={(event) => setItemUnitId(event.target.value)}
+                  required
+                >
+                  {options.units.map((unit) => (
+                    <option key={unit.id} value={unit.id}>
+                      {unit.display_name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                className="secondary-button"
+                type="submit"
+                disabled={busy}
+              >
+                Tambah Barang
+              </button>
+            </form>
+          </section>
+        </div>
+      )}
+
+      <section className="operations-panel purchase-payable-panel">
+        <header className="operations-panel-header">
+          <div>
+            <p className="eyebrow">KEWAJIBAN</p>
+            <h2>Utang Pemasok</h2>
+          </div>
+          <strong>{formatIdr(payableBalance)}</strong>
+        </header>
         {payables.length === 0 ? (
-          <p className="muted">Belum ada Utang Pemasok.</p>
+          <p className="operations-empty">Belum ada Utang Pemasok.</p>
         ) : (
-          <div className="stack-list">
+          <div className="inventory-control-list">
             {payables.map((row) => (
-              <article className="list-card" key={row.payable_id}>
-                <strong>{row.supplier_name}</strong>
-                <span>
-                  {row.invoice_reference ?? 'Tanpa referensi invoice'}
-                </span>
-                <span>
-                  Sisa {formatIdr(Number(row.balance))} - {row.status}
-                </span>
+              <article key={row.payable_id}>
+                <header>
+                  <span>
+                    <strong>{row.supplier_name}</strong>
+                    <small>
+                      {row.invoice_reference ?? 'Tanpa referensi invoice'}
+                    </small>
+                  </span>
+                  <span className="operations-status">{row.status}</span>
+                </header>
+                <p>Sisa {formatIdr(Number(row.balance))}</p>
               </article>
             ))}
           </div>

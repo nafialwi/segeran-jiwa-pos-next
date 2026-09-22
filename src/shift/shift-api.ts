@@ -227,3 +227,81 @@ export async function fetchMyClosedShifts(limit = 50): Promise<Shift[]> {
   if (error) fail(error);
   return (data as Shift[]) ?? [];
 }
+
+export type ShiftPackagingUsage = {
+  ready: boolean;
+  items: Array<{
+    stockItemId: string;
+    code: string;
+    name: string;
+    theoreticalUsage: number;
+  }>;
+};
+
+export async function fetchShiftPackagingUsage(
+  shiftId: string,
+): Promise<ShiftPackagingUsage> {
+  const saleResult = await supabase
+    .from('sales')
+    .select('id')
+    .eq('shift_id', shiftId);
+
+  if (saleResult.error) fail(saleResult.error);
+
+  const saleIds = ((saleResult.data ?? []) as Array<{ id: string }>).map(
+    (row) => row.id,
+  );
+  if (saleIds.length === 0) return { ready: true, items: [] };
+
+  const snapshotResult = await supabase
+    .from('sale_item_component_snapshots')
+    .select(
+      'sale_id,stock_item_id,stock_item_code_snapshot,stock_item_name_snapshot,quantity_total',
+    )
+    .in('sale_id', saleIds)
+    .eq('component_role', 'PACKAGING');
+
+  if (snapshotResult.error) {
+    const code = snapshotResult.error.code ?? '';
+    const message = snapshotResult.error.message.toLowerCase();
+    if (
+      code === '42P01' ||
+      code === 'PGRST205' ||
+      message.includes('sale_item_component_snapshots')
+    ) {
+      return { ready: false, items: [] };
+    }
+    fail(snapshotResult.error);
+  }
+
+  const totals = new Map<
+    string,
+    {
+      stockItemId: string;
+      code: string;
+      name: string;
+      theoreticalUsage: number;
+    }
+  >();
+
+  for (const row of (snapshotResult.data ?? []) as Array<
+    Record<string, unknown>
+  >) {
+    const stockItemId = String(row.stock_item_id);
+    const current = totals.get(stockItemId) ?? {
+      stockItemId,
+      code: String(row.stock_item_code_snapshot ?? ''),
+      name: String(row.stock_item_name_snapshot ?? ''),
+      theoreticalUsage: 0,
+    };
+    current.theoreticalUsage += Number(row.quantity_total ?? 0);
+    totals.set(stockItemId, current);
+  }
+
+  return {
+    ready: true,
+    items: Array.from(totals.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, 'id'),
+    ),
+  };
+}

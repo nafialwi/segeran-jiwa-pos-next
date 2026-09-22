@@ -1,3 +1,4 @@
+import { requireOnlineAction } from '../health/online-action';
 import { supabase } from '../lib/supabase';
 
 export type ProductComponent = {
@@ -259,4 +260,83 @@ export async function fetchProductOperations(): Promise<
       variants: variantsByProduct.get(String(row.id)) ?? [],
     }),
   );
+}
+
+export type BomStockOption = {
+  id: string;
+  code: string;
+  displayName: string;
+  itemKind: string;
+  baseUnit: string;
+};
+
+export async function fetchBomStockOptions(): Promise<{
+  finishedGoods: BomStockOption[];
+  components: BomStockOption[];
+}> {
+  const { data, error } = await supabase
+    .from('stock_items')
+    .select('id,code,display_name,item_kind,base_unit')
+    .eq('active', true)
+    .order('display_name');
+
+  if (error) fail(error);
+
+  const rows = ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+    id: String(row.id),
+    code: String(row.code ?? ''),
+    displayName: String(row.display_name ?? ''),
+    itemKind: String(row.item_kind ?? ''),
+    baseUnit: String(row.base_unit ?? ''),
+  }));
+
+  return {
+    finishedGoods: rows.filter((row) => row.itemKind === 'FINISHED_GOOD'),
+    components: rows.filter((row) =>
+      ['MATERIAL', 'PACKAGING', 'OTHER'].includes(row.itemKind),
+    ),
+  };
+}
+
+export async function saveBomDraft(args: {
+  finishedGoodId: string;
+  version: number;
+  yieldQuantity: number;
+  lines: Array<{ componentStockItemId: string; baseQuantity: number }>;
+}) {
+  requireOnlineAction('Simpan Draft BOM');
+  const { data, error } = await supabase.rpc('save_bom_draft', {
+    p_finished_good_id: args.finishedGoodId,
+    p_version: args.version,
+    p_yield_quantity: args.yieldQuantity,
+    p_lines: args.lines.map((line) => ({
+      component_stock_item_id: line.componentStockItemId,
+      base_quantity: line.baseQuantity,
+    })),
+    p_idempotency_key: crypto.randomUUID(),
+  });
+  if (error) fail(error);
+  return data as {
+    success: boolean;
+    replay: boolean;
+    bom_id: string;
+    status: string;
+    version: number;
+  };
+}
+
+export async function activateBom(bomId: string) {
+  requireOnlineAction('Aktifkan BOM');
+  const { data, error } = await supabase.rpc('activate_bom', {
+    p_bom_id: bomId,
+    p_idempotency_key: crypto.randomUUID(),
+  });
+  if (error) fail(error);
+  return data as {
+    success: boolean;
+    replay?: boolean;
+    bom_id: string;
+    status: string;
+    version: number;
+  };
 }

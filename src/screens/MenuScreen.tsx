@@ -102,6 +102,21 @@ export function MenuScreen() {
       icon: 'warehouse',
     });
   }
+  if (
+    hasAnyPermission(authority, [
+      'INVENTORY_REQUEST',
+      'INVENTORY_TRANSFER',
+      'INVENTORY_COUNT',
+      'INVENTORY_ADJUST',
+    ])
+  ) {
+    business.push({
+      label: 'Kontrol Stok',
+      detail: 'Restock, transfer, opname, dan penyesuaian',
+      to: '/stok/kontrol',
+      icon: 'diagnostics',
+    });
+  }
   if (hasAnyPermission(authority, ['INVENTORY_READ', 'PRODUCTION_MANAGE'])) {
     business.push({
       label: 'Produk & Resep',

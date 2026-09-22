@@ -39,6 +39,14 @@ export function canAccessRoute(
     ]);
   }
   if (route === '/jual') return hasPermission(authority, 'SALE_EXECUTE');
+  if (route === '/stok/kontrol') {
+    return hasAnyPermission(authority, [
+      'INVENTORY_REQUEST',
+      'INVENTORY_TRANSFER',
+      'INVENTORY_COUNT',
+      'INVENTORY_ADJUST',
+    ]);
+  }
   if (route === '/stok' || route.startsWith('/stok/')) {
     return hasPermission(authority, 'INVENTORY_READ');
   }
