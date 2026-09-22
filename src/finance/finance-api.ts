@@ -97,125 +97,75 @@ function num(value: unknown): number {
 }
 
 export async function fetchFinanceOverview(): Promise<FinanceOverview> {
-  const [
-    accountResult,
-    balanceResult,
-    customerDebtResult,
-    supplierPayableResult,
-    employeeKasbonResult,
-    reconciliationResult,
-    settlementResult,
-    userResult,
-  ] = await Promise.all([
-    supabase
-      .from('money_accounts')
-      .select('id,code,display_name,account_type')
-      .order('code'),
-    supabase.from('money_balances').select('account_id,balance'),
-    supabase
-      .from('customer_debt_balances')
-      .select(
-        'debt_id,customer_name,original_amount,paid_amount,balance,status,created_at',
-      )
-      .gt('balance', 0)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('supplier_payable_balances')
-      .select(
-        'payable_id,supplier_name,invoice_reference,original_amount,paid_amount,balance,status,created_at',
-      )
-      .gt('balance', 0)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('employee_kasbon_balances')
-      .select(
-        'kasbon_id,employee_profile_id,employee_name,original_amount,paid_amount,balance,status,note,created_at',
-      )
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('finance_daily_reconciliations')
-      .select(
-        'id,business_date,expected_cash,counted_cash,cash_variance,qris_recorded,qris_settled,qris_variance,transfer_recorded,transfer_received,transfer_variance,stock_status,result,created_at',
-      )
-      .order('business_date', { ascending: false })
-      .limit(10),
-    supabase
-      .from('qris_settlements')
-      .select(
-        'id,settlement_date,provider_reference,gross_amount,provider_fee,net_amount,created_at',
-      )
-      .order('settlement_date', { ascending: false })
-      .limit(10),
-    supabase.rpc('owner_list_users'),
-  ]);
+  const { data, error } = await supabase.rpc('finance_owner_overview');
+  if (error) fail(error);
 
-  for (const result of [
-    accountResult,
-    balanceResult,
-    customerDebtResult,
-    supplierPayableResult,
-    employeeKasbonResult,
-    reconciliationResult,
-    settlementResult,
-    userResult,
-  ]) {
-    if (result.error) fail(result.error);
-  }
+  const raw = (data ?? {}) as Record<string, unknown>;
 
-  const balanceMap = new Map(
-    (
-      (balanceResult.data ?? []) as Array<{
-        account_id: string;
-        balance: number | string;
-      }>
-    ).map((row) => [row.account_id, num(row.balance)]),
-  );
-
-  const accounts = (
-    (accountResult.data ?? []) as Array<{
-      id: string;
-      code: string;
-      display_name: string;
-      account_type: string;
-    }>
-  ).map((row) => ({
-    ...row,
-    balance: balanceMap.get(row.id) ?? 0,
-  }));
+  const accounts = ((raw.accounts ?? []) as Array<Record<string, unknown>>).map(
+    (row) => ({
+      id: String(row.id),
+      code: String(row.code),
+      display_name: String(row.display_name),
+      account_type: String(row.account_type),
+      balance: num(row.balance),
+    }),
+  ) as FinanceAccount[];
 
   return {
     accounts,
     customerDebts: (
-      (customerDebtResult.data ?? []) as Array<Record<string, unknown>>
+      (raw.customerDebts ?? []) as Array<Record<string, unknown>>
     ).map((row) => ({
       ...row,
+      debt_id: String(row.debt_id),
+      customer_name: String(row.customer_name),
       original_amount: num(row.original_amount),
       paid_amount: num(row.paid_amount),
       balance: num(row.balance),
+      status: String(row.status),
+      created_at: String(row.created_at),
     })) as CustomerDebtBalance[],
     supplierPayables: (
-      (supplierPayableResult.data ?? []) as Array<Record<string, unknown>>
+      (raw.supplierPayables ?? []) as Array<Record<string, unknown>>
     ).map((row) => ({
       ...row,
+      payable_id: String(row.payable_id),
+      supplier_name: String(row.supplier_name),
+      invoice_reference:
+        row.invoice_reference === null || row.invoice_reference === undefined
+          ? null
+          : String(row.invoice_reference),
       original_amount: num(row.original_amount),
       paid_amount: num(row.paid_amount),
       balance: num(row.balance),
+      status: String(row.status),
+      created_at: String(row.created_at),
     })) as SupplierPayableBalance[],
     employeeKasbons: (
-      (employeeKasbonResult.data ?? []) as Array<Record<string, unknown>>
+      (raw.employeeKasbons ?? []) as Array<Record<string, unknown>>
     ).map((row) => ({
       ...row,
+      kasbon_id: String(row.kasbon_id),
+      employee_profile_id: String(row.employee_profile_id),
+      employee_name: String(row.employee_name),
       original_amount: num(row.original_amount),
       paid_amount: num(row.paid_amount),
       balance: num(row.balance),
+      status: String(row.status),
+      note:
+        row.note === null || row.note === undefined ? null : String(row.note),
+      created_at: String(row.created_at),
     })) as EmployeeKasbonBalance[],
-    employees: ((userResult.data ?? []) as unknown as FinanceEmployee[]).filter(
+    employees: ((raw.employees ?? []) as FinanceEmployee[]).filter(
       (row) => row.status === 'ACTIVE',
     ),
     reconciliations: (
-      (reconciliationResult.data ?? []) as Array<Record<string, unknown>>
+      (raw.reconciliations ?? []) as Array<Record<string, unknown>>
     ).map((row) => ({
       ...row,
+      id: String(row.id),
+      business_date: String(row.business_date),
       expected_cash: num(row.expected_cash),
       counted_cash: num(row.counted_cash),
       cash_variance: num(row.cash_variance),
@@ -225,14 +175,21 @@ export async function fetchFinanceOverview(): Promise<FinanceOverview> {
       transfer_recorded: num(row.transfer_recorded),
       transfer_received: num(row.transfer_received),
       transfer_variance: num(row.transfer_variance),
+      stock_status: String(row.stock_status),
+      result: String(row.result),
+      created_at: String(row.created_at),
     })) as FinanceDailyReconciliation[],
     qrisSettlements: (
-      (settlementResult.data ?? []) as Array<Record<string, unknown>>
+      (raw.qrisSettlements ?? []) as Array<Record<string, unknown>>
     ).map((row) => ({
       ...row,
+      id: String(row.id),
+      settlement_date: String(row.settlement_date),
+      provider_reference: String(row.provider_reference),
       gross_amount: num(row.gross_amount),
       provider_fee: num(row.provider_fee),
       net_amount: num(row.net_amount),
+      created_at: String(row.created_at),
     })) as QrisSettlement[],
   };
 }

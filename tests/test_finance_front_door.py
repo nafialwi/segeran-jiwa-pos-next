@@ -44,6 +44,7 @@ class FinanceFrontDoorTests(unittest.TestCase):
     def test_api_uses_canonical_finance_authority(self):
         s=API.read_text()
         for rpc in [
+            "finance_owner_overview",
             "finance_post_transfer",
             "finance_post_owner_capital",
             "finance_post_owner_personal_withdrawal",
@@ -52,13 +53,23 @@ class FinanceFrontDoorTests(unittest.TestCase):
             "finance_pay_customer_debt",
             "finance_pay_supplier_payable",
             "finance_create_employee_kasbon",
-            "owner_list_users",
         ]:
             self.assertIn(rpc,s)
-        self.assertIn("money_balances",s)
-        self.assertIn("customer_debt_balances",s)
-        self.assertIn("supplier_payable_balances",s)
-        self.assertIn("employee_kasbon_balances",s)
+
+        migration=(
+            ROOT
+            / "supabase"
+            / "migrations"
+            / "20260922230000_c10_finance_overview_authority.sql"
+        ).read_text()
+        for authority in [
+            "owner_list_users",
+            "money_balances",
+            "customer_debt_balances",
+            "supplier_payable_balances",
+            "employee_kasbon_balances",
+        ]:
+            self.assertIn(authority,migration)
 
     def test_unlocked_month_close_is_not_invented(self):
         combined=(SCREEN.read_text()+API.read_text()).lower()

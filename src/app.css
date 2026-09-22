@@ -4203,3 +4203,162 @@ html[data-sj-density='compact'] .history-transaction-card {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
+
+/* C10 — Mobile-first UAT hardening */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.app-frame,
+.app-main,
+.app-route-content {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.app-mobile-header {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.app-bottom-nav {
+  width: 100%;
+  max-width: 100%;
+  grid-auto-columns: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.operations-nav,
+.control-center-nav,
+.secondary-workflow-nav,
+.purchase-workflow-tabs,
+.inventory-control-tabs,
+.product-ops-tabs,
+.purchase-flow-guide {
+  max-width: 100%;
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+
+.operations-nav-link,
+.control-center-nav-link,
+.secondary-workflow-nav a,
+.purchase-workflow-tabs button,
+.inventory-control-tabs button,
+.product-ops-tabs button,
+.purchase-flow-guide span {
+  scroll-snap-align: start;
+}
+
+@media (max-width: 620px) {
+  .shell,
+  .sales-v2-shell,
+  .dashboard-shell,
+  .operations-shell,
+  .control-page,
+  .control-center-screen,
+  .secondary-screen {
+    width: calc(100% - 16px);
+    max-width: calc(100% - 16px);
+  }
+
+  .app-mobile-header {
+    gap: 8px;
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
+  .app-brand {
+    min-width: 0;
+    max-width: 72%;
+  }
+
+  .app-brand-copy strong {
+    max-width: 140px;
+  }
+
+  .app-mobile-header .role-badge {
+    min-width: 0;
+    max-width: 38%;
+    flex: 0 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app-bottom-nav {
+    gap: 2px;
+    padding-right: 4px;
+    padding-left: 4px;
+  }
+
+  .app-bottom-nav-link {
+    padding-right: 2px;
+    padding-left: 2px;
+    font-size: 0.6rem;
+  }
+
+  .topbar,
+  .sales-v2-header,
+  .operations-header,
+  .secondary-hero,
+  .control-center-hero {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .sales-v2-header,
+  .operations-header,
+  .secondary-hero {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .operations-header .operations-status,
+  .operations-header .operations-mode,
+  .sales-v2-header .operations-status {
+    align-self: flex-start;
+  }
+
+  .dashboard-panel-header,
+  .operations-panel-header,
+  .product-ops-detail-head,
+  .inventory-count-workspace > header {
+    min-width: 0;
+    flex-wrap: wrap;
+  }
+
+  .control-center-evidence-strip > div {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .purchase-workflow-tabs button {
+    min-width: 138px;
+  }
+
+  .secondary-workflow-nav,
+  .control-center-nav,
+  .operations-nav {
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .dashboard-kpi-grid,
+  .purchase-summary-grid,
+  .shift-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .app-brand-copy strong {
+    max-width: 112px;
+  }
+}
