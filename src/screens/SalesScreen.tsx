@@ -132,8 +132,10 @@ export function SalesScreen() {
         category === 'SEMUA' || item.category_code === category;
       const matchesQuery =
         !query ||
-        item.display_name.toLowerCase().includes(query) ||
-        item.code.toLowerCase().includes(query) ||
+        item.product_name.toLowerCase().includes(query) ||
+        item.product_code.toLowerCase().includes(query) ||
+        item.variant_name.toLowerCase().includes(query) ||
+        item.variant_code.toLowerCase().includes(query) ||
         item.category_code.toLowerCase().includes(query);
       return matchesCategory && matchesQuery;
     });
@@ -159,22 +161,22 @@ export function SalesScreen() {
     invalidatePendingOperation();
     setCart((current) => {
       const existing = current.find(
-        (line) => line.item.stock_item_id === item.stock_item_id,
+        (line) => line.item.variant_id === item.variant_id,
       );
       const nextQuantity = (existing?.quantity ?? 0) + 1;
 
       if (
-        item.inventory_tracked &&
-        item.quantity !== null &&
-        nextQuantity > item.quantity
+        item.inventory_managed &&
+        item.available_quantity !== null &&
+        nextQuantity > item.available_quantity
       ) {
-        setError('Stok ' + item.display_name + ' tidak mencukupi.');
+        setError('Stok ' + item.product_name + ' tidak mencukupi.');
         return current;
       }
 
       if (existing) {
         return current.map((line) =>
-          line.item.stock_item_id === item.stock_item_id
+          line.item.variant_id === item.variant_id
             ? { ...line, quantity: nextQuantity }
             : line,
         );
@@ -184,19 +186,19 @@ export function SalesScreen() {
     });
   }
 
-  function adjust(stockItemId: string, delta: number) {
+  function adjust(variantId: string, delta: number) {
     invalidatePendingOperation();
     setCart((current) =>
       current.flatMap((line) => {
-        if (line.item.stock_item_id !== stockItemId) return [line];
+        if (line.item.variant_id !== variantId) return [line];
         const quantity = line.quantity + delta;
         if (quantity <= 0) return [];
         if (
-          line.item.inventory_tracked &&
-          line.item.quantity !== null &&
-          quantity > line.item.quantity
+          line.item.inventory_managed &&
+          line.item.available_quantity !== null &&
+          quantity > line.item.available_quantity
         ) {
-          setError('Stok ' + line.item.display_name + ' tidak mencukupi.');
+          setError('Stok ' + line.item.product_name + ' tidak mencukupi.');
           return [line];
         }
         return [{ ...line, quantity }];
@@ -248,7 +250,7 @@ export function SalesScreen() {
         operationId,
         locationId: shift.location_id,
         items: cart.map((line) => ({
-          stock_item_id: line.item.stock_item_id,
+          variant_id: line.item.variant_id,
           quantity: line.quantity,
         })),
         method,
@@ -368,23 +370,32 @@ export function SalesScreen() {
               <div className="sales-v2-product-grid">
                 {visibleItems.map((item) => {
                   const unavailable =
-                    item.inventory_tracked && (item.quantity ?? 0) <= 0;
+                    item.inventory_managed &&
+                    (item.available_quantity ?? 0) <= 0;
                   const inCart =
                     cart.find(
-                      (line) => line.item.stock_item_id === item.stock_item_id,
+                      (line) => line.item.variant_id === item.variant_id,
                     )?.quantity ?? 0;
+                  const showVariant =
+                    item.variant_code !== 'DEFAULT' ||
+                    item.variant_name !== item.product_name;
 
                   return (
                     <button
                       className="sales-v2-product-card"
-                      key={item.stock_item_id}
+                      key={item.variant_id}
                       type="button"
                       disabled={unavailable}
                       onClick={() => add(item)}
                     >
                       <span className="sales-v2-product-name">
-                        {item.display_name}
+                        {item.product_name}
                       </span>
+                      {showVariant && (
+                        <span className="sales-v2-variant-name">
+                          {item.variant_name}
+                        </span>
+                      )}
                       <strong>{formatIdr(item.unit_price)}</strong>
                       <span
                         className={
@@ -393,9 +404,11 @@ export function SalesScreen() {
                             : 'sales-v2-stock-badge'
                         }
                       >
-                        {item.inventory_tracked
-                          ? 'Stok ' + String(item.quantity ?? 0)
-                          : 'Siap dibuat'}
+                        {item.inventory_managed
+                          ? 'Tersedia ' + String(item.available_quantity ?? 0)
+                          : item.fulfillment_mode === 'MAKE_TO_ORDER'
+                            ? 'Siap dibuat'
+                            : 'Siap dijual'}
                       </span>
                       {inCart > 0 && (
                         <span className="sales-v2-in-cart">{inCart}</span>
@@ -457,10 +470,14 @@ export function SalesScreen() {
                   {cart.map((line) => (
                     <article
                       className="sales-v2-cart-line"
-                      key={line.item.stock_item_id}
+                      key={line.item.variant_id}
                     >
                       <div>
-                        <strong>{line.item.display_name}</strong>
+                        <strong>{line.item.product_name}</strong>
+                        {line.item.variant_code !== 'DEFAULT' ||
+                        line.item.variant_name !== line.item.product_name ? (
+                          <span>{line.item.variant_name}</span>
+                        ) : null}
                         <span>
                           {formatIdr(line.item.unit_price)} x {line.quantity}
                         </span>
@@ -469,7 +486,7 @@ export function SalesScreen() {
                         <button
                           type="button"
                           disabled={busy}
-                          onClick={() => adjust(line.item.stock_item_id, -1)}
+                          onClick={() => adjust(line.item.variant_id, -1)}
                         >
                           -
                         </button>
@@ -477,7 +494,7 @@ export function SalesScreen() {
                         <button
                           type="button"
                           disabled={busy}
-                          onClick={() => adjust(line.item.stock_item_id, 1)}
+                          onClick={() => adjust(line.item.variant_id, 1)}
                         >
                           +
                         </button>

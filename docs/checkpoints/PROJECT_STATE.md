@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C2-C V2 READ PROJECTION CONVERGENCE — SAFEPOINT**
+- Current phase: **C3-A SALES FRONTEND V2 CONTRACT — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon + C2-A Product/Variant + C2-B sale execution/snapshot + C2-C V2 readers complete in source; Sales frontend/visual convergence still in progress.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon + C2-A Product/Variant + C2-B execution/snapshots + C2-C readers + C3-A Sales frontend V2 contract complete in source; final Sales facts/visual convergence still in progress.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -160,15 +160,33 @@ rehearsal with rollback.
 See:
 `docs/checkpoints/C2C_READ_PROJECTION_CONVERGENCE_SAFEPOINT.md`
 
+## C3-A safe checkpoint
+
+C3-A Sales frontend contract convergence is complete in source.
+
+- Sales catalog now uses `sales_catalog_v2`;
+- cart identity is `variant_id`;
+- checkout now uses `checkout_sale_v2` with `variant_id + quantity`;
+- Product and Variant are both searchable and visibly represented;
+- availability uses V2 capacity semantics;
+- missing C2 schema fails closed and never silently falls back to Legacy checkout;
+- online/payment/idempotency guards remain intact;
+- hosted database and RC1 remain unchanged;
+- canonical verify before checkpoint docs: **96/96 JS + 233/233 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+`docs/checkpoints/C3A_SALES_FRONTEND_V2_CONTRACT_SAFEPOINT.md`
+
 ## NEXT ACTION
 
-**Begin C3-A — Sales Frontend V2 Contract Convergence.**
+**Begin C3-B — Sales Facts & Board 02 Checkout Convergence.**
 
-Move the frontend contract from stock-item sale identity to Product/Variant identity while preserving
-all existing cashier/payment/idempotency/offline safety behavior.
+Lock and implement the remaining checkout facts needed by the approved Board 02 experience:
+cash tendered/change, discount facts/permission, and line-note semantics; then finish the
+Product/Variant chooser, checkout, success and detail visual flow.
 
-Do not persistently apply C2 migrations or deploy a new Preview until a dedicated RC2
-migration/deployment gate is reached.
+Do not persistently apply C2/C3 database changes or deploy a new Preview until the dedicated RC2
+promotion gate.
 
 ## Cutover rule
 
