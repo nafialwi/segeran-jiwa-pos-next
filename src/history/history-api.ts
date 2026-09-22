@@ -10,9 +10,15 @@ export type HistoryPayment = {
 
 export type HistoryItem = {
   line_no: number;
-  stock_item_id: string;
+  stock_item_id: string | null;
+  sale_product_id: string | null;
+  variant_id: string | null;
   code: string;
   display_name: string;
+  variant_code: string | null;
+  variant_name: string | null;
+  fulfillment_mode: string | null;
+  category_code: string | null;
   quantity: number;
   unit_price: number;
   subtotal: number;
@@ -147,9 +153,23 @@ export async function searchTransactionHistory(
       items: ((row.items ?? []) as Array<Record<string, unknown>>).map(
         (item) => ({
           line_no: Number(item.line_no ?? 0),
-          stock_item_id: String(item.stock_item_id ?? ''),
+          stock_item_id:
+            item.stock_item_id == null ? null : String(item.stock_item_id),
+          sale_product_id:
+            item.sale_product_id == null ? null : String(item.sale_product_id),
+          variant_id: item.variant_id == null ? null : String(item.variant_id),
           code: String(item.code ?? ''),
           display_name: String(item.display_name ?? ''),
+          variant_code:
+            item.variant_code == null ? null : String(item.variant_code),
+          variant_name:
+            item.variant_name == null ? null : String(item.variant_name),
+          fulfillment_mode:
+            item.fulfillment_mode == null
+              ? null
+              : String(item.fulfillment_mode),
+          category_code:
+            item.category_code == null ? null : String(item.category_code),
           quantity: num(item.quantity),
           unit_price: num(item.unit_price),
           subtotal: num(item.subtotal),

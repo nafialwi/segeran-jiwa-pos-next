@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C2-B SALE EXECUTION / IMMUTABLE SNAPSHOT — SAFEPOINT**
+- Current phase: **C2-C V2 READ PROJECTION CONVERGENCE — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon + C2-A Product/Variant + C2-B sale execution/snapshot foundation complete in source; downstream read/UI convergence still in progress.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon + C2-A Product/Variant + C2-B sale execution/snapshot + C2-C V2 readers complete in source; Sales frontend/visual convergence still in progress.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -144,14 +144,31 @@ transactional PostgreSQL rehearsal with rollback.
 See:
 `docs/checkpoints/C2B_SALE_EXECUTION_SNAPSHOT_SAFEPOINT.md`
 
+## C2-C safe checkpoint
+
+C2-C downstream-reader convergence is complete in source and passed a real transactional PostgreSQL
+rehearsal with rollback.
+
+- unified private legacy/V2 sale-line read projection;
+- V2-aware Transaction History items and product/variant search;
+- Product/Sales reports group by sale Product/Variant identity rather than consumed inventory;
+- Correction preview reads original canonical sale inventory movement;
+- existing legacy rows remain readable through stock-item fallback;
+- hosted database remains unchanged after rollback;
+- canonical verify: **96/96 JS + 226/226 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+`docs/checkpoints/C2C_READ_PROJECTION_CONVERGENCE_SAFEPOINT.md`
+
 ## NEXT ACTION
 
-**Begin C2-C — V2 Read Projection Convergence.**
+**Begin C3-A — Sales Frontend V2 Contract Convergence.**
 
-Update Transaction History, Product Reports, transaction-detail projections, product search, and
-Correction preview to read immutable V2 Product/Variant snapshots with a legacy stock-item fallback.
+Move the frontend contract from stock-item sale identity to Product/Variant identity while preserving
+all existing cashier/payment/idempotency/offline safety behavior.
 
-Do not switch SalesScreen to `sales_catalog_v2` / `checkout_sale_v2` until C2-C is proven.
+Do not persistently apply C2 migrations or deploy a new Preview until a dedicated RC2
+migration/deployment gate is reached.
 
 ## Cutover rule
 

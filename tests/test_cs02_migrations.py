@@ -66,6 +66,7 @@ EXPECTED_MIGRATIONS = [
     "20260921003000_hrr_p4_sale_correction.sql",
     "20260922080000_c2a_product_variant_foundation.sql",
     "20260922090000_c2b_sale_execution_snapshot.sql",
+    "20260922100000_c2c_read_projection_convergence.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",
@@ -84,6 +85,7 @@ EXPECTED_SQL_TESTS = [
     "014_cs05_cash_integration.sql",
     "c2a_product_variant_foundation_test.sql",
     "c2b_sale_execution_snapshot_test.sql",
+    "c2c_read_projection_convergence_test.sql",
     "cs06_p1_products_suppliers_units_test.sql",
     "cs06_p2a_rls_fix_test.sql",
     "cs06_p2b_inventory_balances_test.sql",

@@ -511,6 +511,6 @@ Then inspect current Git HEAD/status before doing anything.
 
 The expected next action after this context-lock commit is:
 
-> **C1-A, C2-A, and C2-B are complete in source. Proceed to C2-C V2 read-projection convergence before switching the Sales frontend.**
+> **C1-A, C2-A, C2-B, and C2-C are complete in source. Proceed to C3-A Sales Frontend V2 Contract Convergence; persistent database migration and new Preview remain gated for RC2.**
 
 No new broad audit is required unless current source contradicts this lock.
