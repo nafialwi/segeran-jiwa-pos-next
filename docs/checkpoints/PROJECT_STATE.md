@@ -306,14 +306,39 @@ Authenticated RC2 Human UAT reached the real Owner shell and exposed one P1 auth
 See:
 `docs/uat/UAT_OFFICIAL_RC3_2026-09-22.md`
 
+## C10 RC4 finance + mobile-first checkpoint
+
+Continuing authenticated Human UAT after RC3 found a second P1 authority defect on **Keuangan**:
+
+- observed error: `permission denied for table sales`;
+- repair: new Owner-only `public.finance_owner_overview()` server-side read projection;
+- frontend finance overview no longer assembles protected finance/sales-derived facts through direct table reads;
+- hosted managed migration applied; anon execute denied, authenticated execute allowed, empty search_path pinned;
+- mobile-first shell/workflow hardening added;
+- full post-repair canonical verify: **96/96 JS + 300/300 Python PASS**;
+- immutable RC4 tag: `uat-rc-20260922-4` at `c86d4c0290261860e40df3501c09f4d1c4b63a14`;
+- RC4 Preview: `https://608af457.segeran-jiwa-pos-next.pages.dev`;
+- GitHub verify and Cloudflare Preview deploy: PASS;
+- authenticated Shift recheck: PASS;
+- authenticated Finance recheck: PASS;
+- true Chrome responsive-device visual matrix at 400x686: PASS across the primary mobile routes;
+- Production automatic deployment remains disabled.
+
+See:
+`docs/uat/UAT_OFFICIAL_RC4_2026-09-22.md`
+
 ## NEXT ACTION
 
-**Recheck the repaired Shift path on immutable RC3, then continue C10 Batched Human UAT.**
+**Finish the remaining non-destructive interaction UAT on immutable RC4, then run final post-UAT regression.**
 
-C10 must now use RC3; RC2 is superseded by the Shift authority finding. Group acceptance into shell/navigation/responsive,
-sales/payment, inventory/purchase/production, shift/finance, and settings/attention/devices/health/backup/offline.
+Remaining RC4 acceptance:
 
-A P0/P1 finding requires a source patch, full regression, next release candidate, and rerun of impacted UAT.
+- checkout sheet/payment-method presentation and pre-submit guards;
+- explicit browser-offline fail-closed behavior with no silent replay;
+- close Human UAT evidence;
+- final canonical regression before cutover readiness.
+
+Any new P0/P1 finding still requires a source patch, a new immutable release candidate, and rerun of impacted UAT.
 
 ## Cutover rule
 
