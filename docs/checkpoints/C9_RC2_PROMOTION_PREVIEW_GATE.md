@@ -96,3 +96,15 @@ Next phase after RC2 tag and Preview confirmation:
 **C10 — Batched Human UAT**
 
 Human UAT remains required before final post-UAT regression and cutover readiness can become PASS.
+
+## Immutable RC2 lock
+
+- candidate tag: `uat-rc-20260922-2`
+- candidate commit: `d4776b64550550c17f484eb68132185bcdfb8896`
+- final RC2 Preview: `https://3da4be58.segeran-jiwa-pos-next.pages.dev`
+- GitHub canonical verify: PASS
+- Cloudflare Pages deployment: PASS
+- Chrome 153 390x844 login smoke on final RC2 Preview: PASS
+- Production application deployment: unchanged / disabled
+
+C10 Human UAT must use this RC2 Preview.

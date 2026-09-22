@@ -289,7 +289,7 @@ See:
 
 ## NEXT ACTION
 
-**Create and verify immutable RC2, then begin C10 — Batched Human UAT.**
+**Begin C10 — Batched Human UAT against immutable RC2.**
 
 C10 must use the new RC2 Preview, not RC1. Group acceptance into shell/navigation/responsive,
 sales/payment, inventory/purchase/production, shift/finance, and settings/attention/devices/health/backup/offline.
