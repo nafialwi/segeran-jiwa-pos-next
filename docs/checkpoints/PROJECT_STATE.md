@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C1-A APP SHELL / ICON FOUNDATION — SAFEPOINT**
+- Current phase: **C2-A PRODUCT / VARIANT FOUNDATION — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon foundation complete; later boards still in progress.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon foundation + C2-A Product/Variant foundation complete in source; later convergence still in progress.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -110,12 +110,29 @@ See:
 Known intentional deferment: exact approved Segeran Jiwa logo asset is not yet present in the canonical repo;
 the shell uses a temporary explicit SJ monogram and does not claim final logo fidelity.
 
+## C2-A safe checkpoint
+
+C2 narrow contract audit and additive Product/Variant foundation are complete in source.
+
+- new source migration: `20260922080000_c2a_product_variant_foundation.sql`;
+- Product / Variant / SALE-stage component separation is defined;
+- production-stage recipe authority remains BOM;
+- current sale-enabled stock receives a DIRECT_STOCK compatibility backfill;
+- additive `sales_catalog_v2` is defined;
+- existing sale/inventory/finance writers are untouched;
+- hosted database has **not** been mutated by C2-A;
+- canonical verify: **96/96 JS + 212/212 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+`docs/checkpoints/C2A_PRODUCT_VARIANT_FOUNDATION_SAFEPOINT.md`
+
 ## NEXT ACTION
 
-**Begin C2 — Product / Variant / Recipe / Packaging convergence.**
+**Begin C2-B — Sale execution + immutable consumption snapshot convergence.**
 
-Perform only a narrow C2 contract audit first, then implement against the existing single inventory engine.
-Do not restart broad architecture discovery and do not create a second stock or finance writer.
+Do not switch the frontend to `sales_catalog_v2` until C2-B proves that variant-based checkout,
+sale-time component snapshots, inventory posting, replay/idempotency, refund, and correction all
+preserve the existing canonical business authorities.
 
 ## Cutover rule
 

@@ -511,6 +511,6 @@ Then inspect current Git HEAD/status before doing anything.
 
 The expected next action after this context-lock commit is:
 
-> **C1-A AppShell/Icon foundation is now complete. Proceed to C2 Product / Variant / Recipe / Packaging convergence after the narrow C2 contract audit.**
+> **C1-A is complete. C2-A Product/Variant foundation is now complete in source. Proceed to C2-B sale execution + immutable consumption snapshot convergence.**
 
 No new broad audit is required unless current source contradicts this lock.
