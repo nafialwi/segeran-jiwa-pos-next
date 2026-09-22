@@ -155,6 +155,15 @@ export function MenuScreen() {
       icon: 'activity',
     });
   }
+  if (hasPermission(authority, 'SETTINGS_NONCRITICAL')) {
+    system.push({
+      label: 'Pengaturan',
+      detail: 'Pusat kontrol sistem dan perangkat',
+      to: '/pengaturan',
+      icon: 'settings',
+    });
+  }
+
   if (canAccessOwnerArea(authority)) {
     business.push({
       label: 'Keuangan',

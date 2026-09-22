@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C5-B BOARD 03 PURCHASE / SHIFT / RECIPE CONFIGURATION — SAFEPOINT**
+- Current phase: **C6 BOARD 04 CONTROL CENTER — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1 shell/icon + C2 Product/Variant/execution/readers + C3 Board 02 Sales + C4 Board 01 dashboards + C5-A/C5-B Board 03 Operations convergence complete in source; next is C6 Board 04 Control Center convergence.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1 shell/icon + C2 Product/Variant/execution/readers + C3 Board 02 Sales + C4 Board 01 dashboards + C5 Board 03 Operations + C6 Board 04 Control Center complete in source; next is C7 Secondary Screen convergence.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -251,15 +251,34 @@ C5-B Board 03 Purchase / Shift / Recipe Configuration convergence is complete in
 See:
 `docs/checkpoints/C5B_BOARD03_PURCHASE_SHIFT_RECIPE_CONFIGURATION_SAFEPOINT.md`
 
+## C6 safe checkpoint
+
+C6 Board 04 Control Center convergence is complete in source.
+
+- canonical /pengaturan Pusat Kontrol;
+- noncritical device-local appearance/dashboard preferences;
+- live Backend Authority probe separated from navigator connectivity;
+- evidence-bounded System Health;
+- P5C Backup/Restore checkpoint evidence shown with timestamp and explicit non-realtime wording;
+- actionable Attention center;
+- explicit Offline & Sync boundaries with no mutation queue;
+- safe Diagnostics without credentials;
+- Control Center deep-links existing Finance, User/Permission and Device authorities;
+- no new DB migration or business writer;
+- canonical verify before checkpoint docs: **96/96 JS + 280/280 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+docs/checkpoints/C6_BOARD04_CONTROL_CENTER_SAFEPOINT.md
+
 ## NEXT ACTION
 
-**Begin C6 — Board 04 Control Center convergence.**
+**Begin C7 — Secondary Screen Convergence.**
 
-Converge Settings, Attention, Devices, Backup/Restore, Health, Offline/Sync and Diagnostics onto the
-approved Control Center using real evidence and existing authorities.
+Converge the remaining Finance, Reports, History/Refund/Correction, Handover, Shift History,
+Reconciliation residual, Owner Users/Permissions, Expense Approval and Legacy utility presentation
+onto the shared design system without replacing their existing engines.
 
-Do not persistently apply C2/C3 database changes or deploy a new Preview until the dedicated RC2
-promotion gate.
+After C7, run C8 full cross-domain regression before creating RC2.
 
 ## Cutover rule
 

@@ -4,7 +4,11 @@ import { useAuth } from './auth/AuthProvider';
 import { AppShell } from './components/AppShell';
 import { OperationalHealthBanner } from './components/OperationalHealthBanner';
 import { AccessDeniedScreen } from './screens/AccessDeniedScreen';
+import { AppearanceSettingsScreen } from './screens/AppearanceSettingsScreen';
 import { AttentionScreen } from './screens/AttentionScreen';
+import { BackupRestoreScreen } from './screens/BackupRestoreScreen';
+import { ControlCenterScreen } from './screens/ControlCenterScreen';
+import { DiagnosticsScreen } from './screens/DiagnosticsScreen';
 import { ExpenseApprovalScreen } from './screens/ExpenseApprovalScreen';
 import { FinanceScreen } from './screens/FinanceScreen';
 import { HandoverScreen } from './screens/HandoverScreen';
@@ -15,6 +19,7 @@ import { InventoryScreen } from './screens/InventoryScreen';
 import { LegacyImportScreen } from './screens/LegacyImportScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { MenuScreen } from './screens/MenuScreen';
+import { OfflineSyncScreen } from './screens/OfflineSyncScreen';
 import { OwnerUsersScreen } from './screens/OwnerUsersScreen';
 import { ProductOperationsScreen } from './screens/ProductOperationsScreen';
 import { ProductionScreen } from './screens/ProductionScreen';
@@ -24,6 +29,7 @@ import { ReportsScreen } from './screens/ReportsScreen';
 import { SalesScreen } from './screens/SalesScreen';
 import { ShiftHistoryScreen } from './screens/ShiftHistoryScreen';
 import { ShiftManagementScreen } from './screens/ShiftManagementScreen';
+import { SystemHealthScreen } from './screens/SystemHealthScreen';
 import { TransactionHistoryScreen } from './screens/TransactionHistoryScreen';
 
 function AuthenticatedLayout() {
@@ -51,6 +57,42 @@ export function App() {
           <Route path="/" element={<HomeScreen />} />
           <Route path="/perhatian" element={<AttentionScreen />} />
           <Route path="/menu" element={<MenuScreen />} />
+          <Route
+            path="/pengaturan"
+            element={
+              <RequireAccess permission="SETTINGS_NONCRITICAL">
+                <ControlCenterScreen />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/pengaturan/tampilan"
+            element={
+              <RequireAccess permission="SETTINGS_NONCRITICAL">
+                <AppearanceSettingsScreen />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/pengaturan/backup"
+            element={
+              <RequireAccess ownerOnly>
+                <BackupRestoreScreen />
+              </RequireAccess>
+            }
+          />
+          <Route
+            path="/pengaturan/kesehatan"
+            element={<SystemHealthScreen />}
+          />
+          <Route
+            path="/pengaturan/offline-sync"
+            element={<OfflineSyncScreen />}
+          />
+          <Route
+            path="/pengaturan/diagnostik"
+            element={<DiagnosticsScreen />}
+          />
           <Route
             path="/laporan"
             element={

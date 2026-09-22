@@ -25,8 +25,22 @@ export function canAccessRoute(
   authority: AuthoritySnapshot,
   route: string,
 ): boolean {
-  if (route === '/pengguna' || route === '/keuangan') {
+  if (
+    route === '/pengguna' ||
+    route === '/keuangan' ||
+    route === '/pengaturan/backup'
+  ) {
     return canAccessOwnerArea(authority);
+  }
+  if (route === '/pengaturan' || route === '/pengaturan/tampilan') {
+    return hasPermission(authority, 'SETTINGS_NONCRITICAL');
+  }
+  if (
+    route === '/pengaturan/kesehatan' ||
+    route === '/pengaturan/offline-sync' ||
+    route === '/pengaturan/diagnostik'
+  ) {
+    return authority.status === 'ACTIVE';
   }
   if (route === '/riwayat') {
     return hasAnyPermission(authority, ['HISTORY_OWN', 'HISTORY_ALL']);

@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
+import { initializeControlPreferences } from '../control/preferences';
 import {
   getPrimaryNavigation,
   isPrimaryNavigationActive,
@@ -23,6 +25,10 @@ function BrandBlock() {
 export function AppShell() {
   const { authority } = useAuth();
   const location = useLocation();
+
+  useEffect(() => {
+    initializeControlPreferences();
+  }, []);
 
   if (!authority) return <Outlet />;
 

@@ -604,7 +604,7 @@ export function OwnerUsersScreen() {
       </section>
 
       {selected && selected.role_code !== 'OWNER' && (
-        <section className="identity-card">
+        <section className="identity-card" id="permissions">
           <h2>Izin Operasional · {selected.display_name}</h2>
           <div className="stack">
             {OPERATIONAL_PERMISSIONS.map(({ code, label }) => (
@@ -632,7 +632,7 @@ export function OwnerUsersScreen() {
       )}
 
       {selected && (
-        <section className="identity-card">
+        <section className="identity-card" id="devices">
           <div className="topbar">
             <div>
               <p className="eyebrow">PERANGKAT</p>
