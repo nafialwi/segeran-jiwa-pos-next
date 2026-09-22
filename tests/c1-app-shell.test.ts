@@ -70,18 +70,30 @@ describe('C1 app shell navigation', () => {
   });
 });
 
-describe('C1 icon authority', () => {
-  it('keeps approved semantic icons separate from review navigation icons', () => {
+describe('C11 icon authority', () => {
+  it('uses the locked Legacy production SVG family as the canonical icon source', () => {
     expect(ICON_REGISTRY.notification.status).toBe('APPROVED');
     expect(ICON_REGISTRY.activity.status).toBe('APPROVED');
-    expect(ICON_REGISTRY.home.status).toBe('REVIEW');
-    expect(ICON_REGISTRY['point-of-sale'].status).toBe('REVIEW');
-    expect(ICON_REGISTRY.settings.status).toBe('REVIEW');
+    expect(ICON_REGISTRY.home.status).toBe('APPROVED');
+    expect(ICON_REGISTRY['point-of-sale'].status).toBe('APPROVED');
+    expect(ICON_REGISTRY.settings.status).toBe('APPROVED');
+    expect(ICON_REGISTRY.cart.status).toBe('APPROVED');
+    expect(ICON_REGISTRY.qris.status).toBe('APPROVED');
+    expect(ICON_REGISTRY.inventory.status).toBe('APPROVED');
   });
 
-  it('resolves active navigation variants without changing semantic icon paths', () => {
-    expect(resolveIconPath('home', true)).toContain('home-active.png');
-    expect(resolveIconPath('home', false)).toContain('home-outline.png');
-    expect(resolveIconPath('activity', true)).toContain('activity.png');
+  it('resolves canonical SVG navigation variants without raster fallback', () => {
+    expect(resolveIconPath('home', true)).toContain(
+      '/locked/active/navigation/home.svg',
+    );
+    expect(resolveIconPath('home', false)).toContain(
+      '/locked/outline/navigation/home.svg',
+    );
+    expect(resolveIconPath('activity', true)).toContain(
+      '/locked/outline/system/activity.svg',
+    );
+    expect(resolveIconPath('cart')).toContain(
+      '/locked/outline/commerce/cart.svg',
+    );
   });
 });
