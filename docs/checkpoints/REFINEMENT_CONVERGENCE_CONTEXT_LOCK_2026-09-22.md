@@ -511,6 +511,6 @@ Then inspect current Git HEAD/status before doing anything.
 
 The expected next action after this context-lock commit is:
 
-> **C1-A is complete. C2-A Product/Variant foundation is now complete in source. Proceed to C2-B sale execution + immutable consumption snapshot convergence.**
+> **C1-A, C2-A, and C2-B are complete in source. Proceed to C2-C V2 read-projection convergence before switching the Sales frontend.**
 
 No new broad audit is required unless current source contradicts this lock.

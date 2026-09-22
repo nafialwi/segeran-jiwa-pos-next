@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C2-A PRODUCT / VARIANT FOUNDATION — SAFEPOINT**
+- Current phase: **C2-B SALE EXECUTION / IMMUTABLE SNAPSHOT — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon foundation + C2-A Product/Variant foundation complete in source; later convergence still in progress.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon + C2-A Product/Variant + C2-B sale execution/snapshot foundation complete in source; downstream read/UI convergence still in progress.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -126,13 +126,32 @@ C2 narrow contract audit and additive Product/Variant foundation are complete in
 See:
 `docs/checkpoints/C2A_PRODUCT_VARIANT_FOUNDATION_SAFEPOINT.md`
 
+## C2-B safe checkpoint
+
+C2-B sale execution + immutable component snapshots are complete in source and have passed a real
+transactional PostgreSQL rehearsal with rollback.
+
+- additive `checkout_sale_v2`;
+- immutable Product/Variant/component sale-time facts;
+- one shared post-sale inventory/money engine;
+- deterministic definitive stock gate;
+- V2 replay proven non-duplicating;
+- existing Refund/Correction proven to reverse the original V2 movement;
+- legacy checkout fallback proven;
+- hosted database remains unchanged after rollback;
+- canonical verify: **96/96 JS + 220/220 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+`docs/checkpoints/C2B_SALE_EXECUTION_SNAPSHOT_SAFEPOINT.md`
+
 ## NEXT ACTION
 
-**Begin C2-B — Sale execution + immutable consumption snapshot convergence.**
+**Begin C2-C — V2 Read Projection Convergence.**
 
-Do not switch the frontend to `sales_catalog_v2` until C2-B proves that variant-based checkout,
-sale-time component snapshots, inventory posting, replay/idempotency, refund, and correction all
-preserve the existing canonical business authorities.
+Update Transaction History, Product Reports, transaction-detail projections, product search, and
+Correction preview to read immutable V2 Product/Variant snapshots with a legacy stock-item fallback.
+
+Do not switch SalesScreen to `sales_catalog_v2` / `checkout_sale_v2` until C2-C is proven.
 
 ## Cutover rule
 
