@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C3-B SALES FACTS / BOARD 02 CHECKOUT — SAFEPOINT**
+- Current phase: **C4 BOARD 01 ROLE-AWARE DASHBOARD — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon + C2 Product/Variant/execution/readers + C3-A/C3-B Board 02 Sales source convergence complete; next is C4 Board 01 Dashboard convergence.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1 shell/icon + C2 Product/Variant/execution/readers + C3 Board 02 Sales + C4 Board 01 role-aware dashboards complete in source; next is C5 Board 03 Operations convergence.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -49,7 +49,7 @@ Track these concerns separately:
 RC1 proved that the core application and hardening are materially functional, but real-device UAT
 and source audit showed a product-coherence gap:
 
-- Home is still primarily an engineering/permission navigation grid.
+- Home entered convergence as an engineering/permission navigation grid; C4 now replaces it with role-aware Owner/Kasir dashboards.
 - Sales V2 is much more polished than many other modules.
 - Inventory/Purchase/Finance remain more administrative/long-form than the approved final UX.
 - Production backend exists without a final dedicated product surface.
@@ -197,12 +197,31 @@ C3-B Sales facts + Board 02 checkout convergence is complete in source.
 See:
 `docs/checkpoints/C3B_SALES_FACTS_BOARD02_CHECKOUT_SAFEPOINT.md`
 
+## C4 safe checkpoint
+
+C4 Board 01 role-aware dashboard convergence is complete in source.
+
+- Home is now role-aware Owner/Kasir dashboard rather than an engineering navigation grid;
+- Owner KPIs reuse canonical SALES report and Owner-only money-balance authorities;
+- Cashier reads only own/open-shift reconciliation facts and never global finance/report data;
+- Owner-message surface is a truthful deferred state because no message authority exists yet;
+- Attention remains evidence-bounded to the existing health authority;
+- loading is card-level skeleton/error handling, not full-screen blocking;
+- module navigation remains canonical in Menu and no operational route was removed;
+- responsive mobile/desktop Board 01 hierarchy uses the C1 design system;
+- C4 focused contract: **7/7 PASS**;
+- full canonical verify before checkpoint docs: **96/96 JS + 248/248 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+docs/checkpoints/C4_BOARD01_DASHBOARD_CONVERGENCE_SAFEPOINT.md
+
 ## NEXT ACTION
 
-**Begin C4 — Board 01 Dashboard convergence.**
+**Begin C5 — Board 03 Operations convergence.**
 
-Replace the engineering-oriented Home surface with role-aware Owner/Kasir dashboards using existing
-sale, shift, finance, report and Attention read authorities.
+Converge Persediaan, Detail Barang, Product/Variant/Recipe/Packaging, Pembelian, Produksi and Shift
+onto the shared design system while preserving the canonical inventory, production, purchase and
+shift authorities.
 
 Do not persistently apply C2/C3 database changes or deploy a new Preview until the dedicated RC2
 promotion gate.

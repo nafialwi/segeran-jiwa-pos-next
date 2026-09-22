@@ -9,6 +9,7 @@ SHIFT_UI=ROOT/"src"/"screens"/"ShiftManagementScreen.tsx"
 OWNER_UI=ROOT/"src"/"screens"/"ExpenseApprovalScreen.tsx"
 APP=ROOT/"src"/"App.tsx"
 HOME=ROOT/"src"/"screens"/"HomeScreen.tsx"
+MENU=ROOT/"src"/"screens"/"MenuScreen.tsx"
 
 class FinP6ExpenseApprovalTests(unittest.TestCase):
     def test_migration_exists(self):
@@ -38,14 +39,15 @@ class FinP6ExpenseApprovalTests(unittest.TestCase):
         ui=SHIFT_UI.read_text(encoding="utf-8")
         owner=OWNER_UI.read_text(encoding="utf-8")
         app=APP.read_text(encoding="utf-8")
-        home=HOME.read_text(encoding="utf-8")
+        menu=MENU.read_text(encoding="utf-8")
         self.assertIn("finance_submit_shift_expense",api)
         self.assertIn("expense_approval_queue",api)
         self.assertIn("Menunggu persetujuan Owner",ui)
         self.assertIn("finance_set_expense_approval_rule",owner)
         self.assertIn("finance_decide_expense_request",owner)
         self.assertIn('path="/expense-approval"',app)
-        self.assertIn("Approval Pengeluaran",home)
+        self.assertIn("Approval Pengeluaran",menu)
+        self.assertIn("to: '/expense-approval'",menu)
 
 if __name__=="__main__":
     unittest.main()

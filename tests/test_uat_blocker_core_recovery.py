@@ -6,6 +6,7 @@ ROOT=Path(__file__).resolve().parents[1]
 MIG=ROOT/"supabase"/"migrations"/"20260920213000_uat_blocker_core_ui_recovery.sql"
 APP=ROOT/"src"/"App.tsx"
 HOME=ROOT/"src"/"screens"/"HomeScreen.tsx"
+MENU=ROOT/"src"/"screens"/"MenuScreen.tsx"
 SALES=ROOT/"src"/"screens"/"SalesScreen.tsx"
 INV=ROOT/"src"/"screens"/"InventoryScreen.tsx"
 PUR=ROOT/"src"/"screens"/"PurchaseScreen.tsx"
@@ -41,12 +42,14 @@ class UatBlockerCoreRecoveryTests(unittest.TestCase):
 
     def test_inventory_purchase_and_import_routes_exist(self):
         app=APP.read_text(encoding="utf-8")
-        home=HOME.read_text(encoding="utf-8")
+        menu=MENU.read_text(encoding="utf-8")
         self.assertIn("<InventoryScreen />",app)
         self.assertIn("<PurchaseScreen />",app)
         self.assertIn("<LegacyImportScreen />",app)
-        for token in ["Stok","Pembelian","Migrasi Master Legacy"]:
-            self.assertIn(token,home)
+        for route in ["/stok","/pembelian","/legacy-import"]:
+            self.assertIn(route,app)
+        for token in ["Persediaan","Pembelian","Migrasi Master Legacy"]:
+            self.assertIn(token,menu)
         self.assertTrue(INV.exists())
         self.assertTrue(PUR.exists())
         self.assertTrue(IMP.exists())

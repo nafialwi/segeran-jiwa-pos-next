@@ -511,6 +511,6 @@ Then inspect current Git HEAD/status before doing anything.
 
 The expected next action after this context-lock commit is:
 
-> **C1-A through C2-C plus C3-A/C3-B Board 02 Sales convergence are complete in source. Proceed to C4 Board 01 Dashboard convergence; persistent database migration and new Preview remain gated for RC2.**
+> **C1-A through C4 are complete in source, including Board 02 Sales and Board 01 role-aware dashboards. Proceed to C5 Board 03 Operations convergence; persistent database migration and new Preview remain gated for RC2.**
 
 No new broad audit is required unless current source contradicts this lock.
