@@ -108,7 +108,7 @@ function AttentionEntry() {
       to="/perhatian"
     >
       <span className="dashboard-section-icon">
-        <Icon name="notification" />
+        <Icon name={health.needsAttention ? 'warning' : 'notification'} />
       </span>
       <span>
         <strong>Perlu Perhatian</strong>
@@ -197,25 +197,25 @@ function OwnerDashboard() {
               label="Penjualan Hari Ini"
               value={formatIdr(data.salesToday)}
               detail="Nilai bersih setelah refund & koreksi"
-              icon="point-of-sale"
+              icon="sales"
             />
             <DashboardCard
               label="Transaksi"
               value={String(data.transactionsToday)}
               detail="Transaksi penjualan hari ini"
-              icon="activity"
+              icon="receipt"
             />
             <DashboardCard
               label="Kas Tersedia"
               value={formatIdr(data.cashAvailable)}
               detail="Kas Utama + Kas Shift"
-              icon="account"
+              icon="cash"
             />
             <DashboardCard
               label="QRIS Belum Cair"
               value={formatIdr(data.qrisPending)}
               detail="Saldo settlement tertunda"
-              icon="account"
+              icon="qris"
             />
           </section>
 
@@ -295,7 +295,7 @@ function OwnerDashboard() {
           {hasPermission(authority, 'SALE_EXECUTE') && (
             <QuickAction
               to="/jual"
-              icon="point-of-sale"
+              icon="cart"
               title="Jual"
               detail="Mulai transaksi"
             />
@@ -303,7 +303,7 @@ function OwnerDashboard() {
           {hasAnyPermission(authority, ['HISTORY_OWN', 'HISTORY_ALL']) && (
             <QuickAction
               to="/riwayat"
-              icon="activity"
+              icon="receipt"
               title="Riwayat"
               detail="Cek transaksi"
             />
@@ -315,14 +315,14 @@ function OwnerDashboard() {
           ]) && (
             <QuickAction
               to="/laporan"
-              icon="activity"
+              icon="reports"
               title="Laporan"
               detail="Pantau performa"
             />
           )}
           <QuickAction
             to="/keuangan"
-            icon="account"
+            icon="cash"
             title="Keuangan"
             detail="Kas, bank & QRIS"
           />
@@ -382,7 +382,7 @@ function CashierDashboard() {
             </div>
             {hasPermission(authority, 'SALE_EXECUTE') && (
               <Link className="dashboard-sale-cta" to="/jual">
-                <Icon name="point-of-sale" />
+                <Icon name="cart" />
                 <span>Jual Sekarang</span>
               </Link>
             )}
@@ -395,12 +395,12 @@ function CashierDashboard() {
             <DashboardCard
               label="Saldo Awal"
               value={formatIdr(data.openingCash)}
-              icon="account"
+              icon="cash"
             />
             <DashboardCard
               label="Penjualan Shift"
               value={formatIdr(data.salesTotal)}
-              icon="point-of-sale"
+              icon="sales"
             />
             <DashboardCard
               label="Kas Diharapkan"
@@ -410,7 +410,7 @@ function CashierDashboard() {
                   ? `Refund ${formatIdr(data.refundTotal)}`
                   : 'Berdasarkan fakta shift'
               }
-              icon="activity"
+              icon="cash-payment"
             />
           </section>
         </>
@@ -446,7 +446,7 @@ function CashierDashboard() {
           {hasPermission(authority, 'SALE_EXECUTE') && (
             <QuickAction
               to="/jual"
-              icon="point-of-sale"
+              icon="cart"
               title="Jual"
               detail="Transaksi baru"
             />
@@ -454,7 +454,7 @@ function CashierDashboard() {
           {hasAnyPermission(authority, ['HISTORY_OWN', 'HISTORY_ALL']) && (
             <QuickAction
               to="/riwayat"
-              icon="activity"
+              icon="receipt"
               title="Riwayat"
               detail="Transaksi saya"
             />
@@ -462,7 +462,7 @@ function CashierDashboard() {
           {hasPermission(authority, 'SHIFT_OPEN_CLOSE') && (
             <QuickAction
               to="/shift"
-              icon="activity"
+              icon="calendar"
               title="Shift Saya"
               detail="Kelola shift"
             />
@@ -511,7 +511,7 @@ export function HomeScreen() {
       }`}
     >
       <header className="dashboard-hero">
-        <div>
+        <div className="dashboard-hero-copy">
           <p className="eyebrow">SEGERAN JIWA POS NEXT</p>
           <h1>Selamat datang, {firstName}</h1>
           <p>
@@ -519,6 +519,9 @@ export function HomeScreen() {
               ? 'Ringkasan bisnis dan tindakan penting hari ini.'
               : 'Ringkasan shift dan akses kerja yang Anda perlukan.'}
           </p>
+        </div>
+        <div className="dashboard-hero-brand" aria-hidden="true">
+          <img src="/brand/segeran-jiwa-logo.png" alt="" />
         </div>
         <span className="role-badge">{authority.role_code}</span>
       </header>

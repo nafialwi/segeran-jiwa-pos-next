@@ -45,6 +45,13 @@ export function LoginScreen() {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
+        <div className="auth-brand" aria-hidden="true">
+          <img
+            className="auth-brand-logo"
+            src="/brand/segeran-jiwa-logo.png"
+            alt=""
+          />
+        </div>
         <p className="eyebrow">SEGERAN JIWA POS NEXT</p>
         <h1 id="login-title">Masuk</h1>
         <p className="muted">

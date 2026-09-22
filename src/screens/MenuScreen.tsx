@@ -58,7 +58,7 @@ export function MenuScreen() {
       label: 'Jual',
       detail: 'Kasir dan pembayaran',
       to: '/jual',
-      icon: 'point-of-sale',
+      icon: 'cart',
     });
   }
   if (hasPermission(authority, 'SHIFT_OPEN_CLOSE')) {
@@ -67,7 +67,7 @@ export function MenuScreen() {
         label: 'Shift Saya',
         detail: 'Buka, jalankan, dan tutup shift',
         to: '/shift',
-        icon: 'activity',
+        icon: 'calendar',
       },
       {
         label: 'Serah Terima',
@@ -83,13 +83,13 @@ export function MenuScreen() {
         label: 'Riwayat Shift',
         detail: 'Lihat shift sebelumnya',
         to: '/shift-history',
-        icon: 'activity',
+        icon: 'receipt',
       },
       {
         label: 'Rekonsiliasi',
         detail: 'Expected, aktual, dan selisih kas',
         to: '/rekonsiliasi',
-        icon: 'diagnostics',
+        icon: 'cash-payment',
       },
     );
   }
@@ -99,7 +99,7 @@ export function MenuScreen() {
       label: 'Persediaan',
       detail: 'Gudang, Gerai, dan saldo stok',
       to: '/stok',
-      icon: 'warehouse',
+      icon: 'inventory',
     });
   }
   if (
@@ -114,7 +114,7 @@ export function MenuScreen() {
       label: 'Kontrol Stok',
       detail: 'Restock, transfer, opname, dan penyesuaian',
       to: '/stok/kontrol',
-      icon: 'diagnostics',
+      icon: 'restock',
     });
   }
   if (hasAnyPermission(authority, ['INVENTORY_READ', 'PRODUCTION_MANAGE'])) {
@@ -130,7 +130,7 @@ export function MenuScreen() {
       label: 'Produksi',
       detail: 'Rencana batch dan posting hasil produksi',
       to: '/produksi',
-      icon: 'activity',
+      icon: 'operations',
     });
   }
   if (hasPermission(authority, 'PURCHASE_MANAGE')) {
@@ -138,7 +138,7 @@ export function MenuScreen() {
       label: 'Pembelian',
       detail: 'Pemasok, pesanan, dan penerimaan',
       to: '/pembelian',
-      icon: 'product',
+      icon: 'cart',
     });
   }
   if (
@@ -152,7 +152,7 @@ export function MenuScreen() {
       label: 'Laporan',
       detail: 'Penjualan, stok, dan pembelian',
       to: '/laporan',
-      icon: 'activity',
+      icon: 'reports',
     });
   }
   if (hasPermission(authority, 'SETTINGS_NONCRITICAL')) {
@@ -169,7 +169,7 @@ export function MenuScreen() {
       label: 'Keuangan',
       detail: 'Kas, bank, QRIS, hutang, dan modal',
       to: '/keuangan',
-      icon: 'account',
+      icon: 'cash',
     });
 
     system.push(
@@ -183,7 +183,7 @@ export function MenuScreen() {
         label: 'Approval Pengeluaran',
         detail: 'Tinjau permintaan yang memerlukan Owner',
         to: '/expense-approval',
-        icon: 'diagnostics',
+        icon: 'check',
       },
       {
         label: 'Migrasi Master Legacy',

@@ -62,3 +62,33 @@ Brand-logo note: the standalone Segeran Jiwa logo/wordmark asset is not present 
 - RC5 only after C11-F passes
 
 Production remains blocked until RC5 acceptance.
+
+## C11-B safe checkpoint — Shell, brand, dashboard & menu
+
+C11-B keeps RC4 behavior intact while converging the visible shell toward Refinement 01.
+
+Implemented:
+
+- the user-supplied Segeran Jiwa logo is now the canonical brand asset for login, AppShell, and dashboard identity surfaces;
+- the temporary `SJ` placeholder tile is removed from AppShell;
+- dashboard KPI/action icons now use semantic members of the locked Legacy SVG family;
+- Menu keeps the existing permission/route authority but uses semantic inventory, restock, reports, cash, approval, purchase, and shift icons;
+- mobile header, bottom navigation, dashboard hero, KPI cards, menu cards, and desktop sidebar receive refinement styling without new business data;
+- brand asset provenance and SHA-256 are recorded in `public/brand/manifest.json`;
+- no database migration, transaction writer, stock writer, finance writer, shift authority, permission boundary, or offline boundary was changed.
+
+Verification at this checkpoint:
+
+- JavaScript: 96/96 PASS;
+- Python: 309/309 PASS;
+- repo guard / format / lint / TypeScript / production build / diff-check: PASS.
+
+### Packaging/consumables architecture remains canonical
+
+Cup, straw, plastic, seal, tissue, and similar consumables remain Stock Items with `item_kind = PACKAGING`.
+A sale variant can bind packaging requirements through `variant_sale_components` with
+`component_role = PACKAGING`. Checkout snapshots the consumed components into immutable
+`sale_item_component_snapshots`. Shift packaging usage is projected through
+`shift_packaging_usage(uuid)` and the physical count continues through Inventory Stock Count.
+This preserves the expected-vs-physical basis needed to expose packaging variance by shift
+without creating a second cup-specific inventory engine.

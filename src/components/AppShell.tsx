@@ -11,8 +11,13 @@ import { Icon } from '../ui/Icon';
 function BrandBlock() {
   return (
     <Link className="app-brand" to="/" aria-label="Segeran Jiwa POS Next">
-      <span className="app-brand-mark" aria-hidden="true">
-        SJ
+      <span className="app-brand-logo-frame" aria-hidden="true">
+        <img
+          className="app-brand-logo"
+          src="/brand/segeran-jiwa-logo.png"
+          alt=""
+          loading="eager"
+        />
       </span>
       <span className="app-brand-copy">
         <strong>Segeran Jiwa</strong>
