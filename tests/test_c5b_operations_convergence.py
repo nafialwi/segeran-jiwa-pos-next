@@ -139,10 +139,14 @@ class C5BOperationsConvergenceTests(unittest.TestCase):
 
     def test_shift_packaging_usage_reads_sale_snapshots_and_is_fail_closed(self):
         api = (ROOT / "src/shift/shift-api.ts").read_text(encoding="utf-8")
+        migration = (
+            ROOT
+            / "supabase/migrations/20260922223000_c10_shift_packaging_read_authority.sql"
+        ).read_text(encoding="utf-8")
         screen = SHIFT.read_text(encoding="utf-8")
-        self.assertIn("sale_item_component_snapshots", api)
-        self.assertIn("component_role", api)
-        self.assertIn("PACKAGING", api)
+        self.assertIn("supabase.rpc('shift_packaging_usage'", api)
+        self.assertIn("sale_item_component_snapshots", migration)
+        self.assertIn("component_role = 'PACKAGING'", migration)
         self.assertIn("ready: false", api)
         self.assertIn("Theoretical usage", screen)
         self.assertNotIn("record_inventory_movement", api)

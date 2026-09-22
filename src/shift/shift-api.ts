@@ -241,67 +241,31 @@ export type ShiftPackagingUsage = {
 export async function fetchShiftPackagingUsage(
   shiftId: string,
 ): Promise<ShiftPackagingUsage> {
-  const saleResult = await supabase
-    .from('sales')
-    .select('id')
-    .eq('shift_id', shiftId);
+  const { data, error } = await supabase.rpc('shift_packaging_usage', {
+    p_shift: shiftId,
+  });
 
-  if (saleResult.error) fail(saleResult.error);
-
-  const saleIds = ((saleResult.data ?? []) as Array<{ id: string }>).map(
-    (row) => row.id,
-  );
-  if (saleIds.length === 0) return { ready: true, items: [] };
-
-  const snapshotResult = await supabase
-    .from('sale_item_component_snapshots')
-    .select(
-      'sale_id,stock_item_id,stock_item_code_snapshot,stock_item_name_snapshot,quantity_total',
-    )
-    .in('sale_id', saleIds)
-    .eq('component_role', 'PACKAGING');
-
-  if (snapshotResult.error) {
-    const code = snapshotResult.error.code ?? '';
-    const message = snapshotResult.error.message.toLowerCase();
+  if (error) {
+    const code = error.code ?? '';
+    const message = error.message.toLowerCase();
     if (
-      code === '42P01' ||
-      code === 'PGRST205' ||
-      message.includes('sale_item_component_snapshots')
+      code === '42883' ||
+      code === 'PGRST202' ||
+      message.includes('shift_packaging_usage')
     ) {
       return { ready: false, items: [] };
     }
-    fail(snapshotResult.error);
+    fail(error);
   }
 
-  const totals = new Map<
-    string,
-    {
-      stockItemId: string;
-      code: string;
-      name: string;
-      theoreticalUsage: number;
-    }
-  >();
-
-  for (const row of (snapshotResult.data ?? []) as Array<
-    Record<string, unknown>
-  >) {
-    const stockItemId = String(row.stock_item_id);
-    const current = totals.get(stockItemId) ?? {
-      stockItemId,
-      code: String(row.stock_item_code_snapshot ?? ''),
-      name: String(row.stock_item_name_snapshot ?? ''),
-      theoreticalUsage: 0,
-    };
-    current.theoreticalUsage += Number(row.quantity_total ?? 0);
-    totals.set(stockItemId, current);
-  }
-
+  const items = ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+    stockItemId: String(row.stock_item_id),
+    code: String(row.stock_item_code_snapshot ?? ''),
+    name: String(row.stock_item_name_snapshot ?? ''),
+    theoreticalUsage: Number(row.theoretical_usage ?? 0),
+  }));
   return {
     ready: true,
-    items: Array.from(totals.values()).sort((a, b) =>
-      a.name.localeCompare(b.name, 'id'),
-    ),
+    items: items.sort((a, b) => a.name.localeCompare(b.name, 'id')),
   };
 }
