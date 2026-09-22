@@ -26,11 +26,18 @@ export type SaleCustomer = {
 };
 
 export type SalePaymentMethod = 'CASH' | 'QRIS' | 'TRANSFER' | 'CREDIT';
+export type SaleDiscountType = 'NONE' | 'AMOUNT' | 'PERCENT';
 
 export type CheckoutResult = {
   success: boolean;
   sale_id: string;
   invoice_number: string;
+  subtotal: number;
+  discount_amount: number;
+  total_amount: number;
+  payment_method: SalePaymentMethod;
+  tendered_amount: number | null;
+  change_amount: number | null;
   customer_debt_id: string | null;
   inventory_basis: 'SNAPSHOT_V2' | 'LEGACY_SALE_ITEM' | null;
   already_posted: boolean;
@@ -153,9 +160,15 @@ export async function fetchManualQrisImage(): Promise<string | null> {
 export async function checkoutSale(args: {
   operationId: string;
   locationId: string;
-  items: Array<{ variant_id: string; quantity: number }>;
+  items: Array<{ variant_id: string; quantity: number; line_note?: string }>;
   method: SalePaymentMethod;
   total: number;
+  tenderedAmount?: number;
+  discount: {
+    type: SaleDiscountType;
+    value: number;
+    reason?: string;
+  };
   customerId?: string;
   note?: string;
 }): Promise<CheckoutResult> {
@@ -166,6 +179,10 @@ export async function checkoutSale(args: {
     amount: args.total,
   };
 
+  if (args.method === 'CASH') {
+    payment.tendered_amount = args.tenderedAmount ?? null;
+  }
+
   if (args.method === 'CREDIT') {
     payment.customer_id = args.customerId ?? null;
   }
@@ -175,6 +192,11 @@ export async function checkoutSale(args: {
     p_location_id: args.locationId,
     p_items: args.items,
     p_payment: payment,
+    p_discount: {
+      type: args.discount.type,
+      value: args.discount.value,
+      reason: args.discount.reason?.trim() || null,
+    },
     p_note: args.note?.trim() || null,
   });
 

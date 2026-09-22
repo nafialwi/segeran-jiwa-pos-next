@@ -18,6 +18,7 @@ export interface AuthoritySnapshot {
 
 export type PermissionCode =
   | 'SALE_EXECUTE'
+  | 'SALE_DISCOUNT'
   | 'SHIFT_OPEN_CLOSE'
   | 'SHIFT_READ_OWN'
   | 'EXPENSE_SHIFT_CREATE'

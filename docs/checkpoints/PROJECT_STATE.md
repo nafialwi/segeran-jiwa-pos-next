@@ -5,7 +5,7 @@
 - Workspace: Segeran Jiwa Next
 - Product: Segeran Jiwa POS Next
 - Branch: work/cs06743-patch3-hardening
-- Current phase: **C3-A SALES FRONTEND V2 CONTRACT — SAFEPOINT**
+- Current phase: **C3-B SALES FACTS / BOARD 02 CHECKOUT — SAFEPOINT**
 - Production automatic deployment: **DISABLED**
 - Runtime release candidate baseline: **uat-rc-20260921-1**
 - RC1 candidate commit: **e844f9b9ad07ca240e1ba4f72a39c6c7aefbb489**
@@ -24,7 +24,7 @@ Track these concerns separately:
 - Hardening: P5A-P5D safe/locked as documented.
 - RC1 behavioural candidate: created and smoke-tested.
 - Human official UAT: awaiting full acceptance.
-- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon + C2-A Product/Variant + C2-B execution/snapshots + C2-C readers + C3-A Sales frontend V2 contract complete in source; final Sales facts/visual convergence still in progress.**
+- Visual/product convergence to revised blueprint + four approved refinement boards: **C1-A shell/icon + C2 Product/Variant/execution/readers + C3-A/C3-B Board 02 Sales source convergence complete; next is C4 Board 01 Dashboard convergence.**
 - Final cutover: blocked until UAT and final post-UAT regression pass.
 
 ## Current verified state
@@ -177,13 +177,32 @@ C3-A Sales frontend contract convergence is complete in source.
 See:
 `docs/checkpoints/C3A_SALES_FRONTEND_V2_CONTRACT_SAFEPOINT.md`
 
+## C3-B safe checkpoint
+
+C3-B Sales facts + Board 02 checkout convergence is complete in source.
+
+- immutable discount authority with explicit `SALE_DISCOUNT` permission;
+- cash tendered/change are persisted payment facts, not revenue;
+- item notes are immutable sale-line facts;
+- 100% discount consumes stock without creating a money movement;
+- zero-total Refund/Correction are supported through original movement reversal;
+- Product -> Variant chooser is present;
+- checkout shows Subtotal / Diskon / Total;
+- one `Pembayaran Berhasil` success authority is present;
+- History exposes discount, line-note, tender/change facts;
+- real transactional C2-A/C2-B/C2-C/C3-B PostgreSQL rehearsal: **PASS**, then rollback;
+- hosted schema/data remain unchanged;
+- canonical verify before checkpoint docs: **96/96 JS + 241/241 Python PASS**, plus format/lint/typecheck/build/diff-check PASS.
+
+See:
+`docs/checkpoints/C3B_SALES_FACTS_BOARD02_CHECKOUT_SAFEPOINT.md`
+
 ## NEXT ACTION
 
-**Begin C3-B — Sales Facts & Board 02 Checkout Convergence.**
+**Begin C4 — Board 01 Dashboard convergence.**
 
-Lock and implement the remaining checkout facts needed by the approved Board 02 experience:
-cash tendered/change, discount facts/permission, and line-note semantics; then finish the
-Product/Variant chooser, checkout, success and detail visual flow.
+Replace the engineering-oriented Home surface with role-aware Owner/Kasir dashboards using existing
+sale, shift, finance, report and Attention read authorities.
 
 Do not persistently apply C2/C3 database changes or deploy a new Preview until the dedicated RC2
 promotion gate.

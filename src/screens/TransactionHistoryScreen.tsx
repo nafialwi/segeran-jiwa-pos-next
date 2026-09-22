@@ -478,12 +478,59 @@ export function TransactionHistoryScreen() {
                     {row.items.map((item) => (
                       <div className="list-card" key={item.line_no}>
                         <strong>{item.display_name}</strong>
+                        {item.variant_name &&
+                          item.variant_name !== item.display_name && (
+                            <span className="muted">
+                              Varian: {item.variant_name}
+                            </span>
+                          )}
                         <span>
                           {item.quantity} x {formatIdr(item.unit_price)}
                         </span>
                         <span>{formatIdr(item.subtotal)}</span>
+                        {item.line_note && (
+                          <span className="muted">
+                            Catatan item: {item.line_note}
+                          </span>
+                        )}
                       </div>
                     ))}
+                    {row.discount_amount > 0 && (
+                      <div className="list-card">
+                        <strong>Diskon</strong>
+                        <span>
+                          {row.discount_type === 'PERCENT'
+                            ? row.discount_value + '%'
+                            : formatIdr(row.discount_value)}
+                          {' · '}-{formatIdr(row.discount_amount)}
+                        </span>
+                        {row.discount_reason && (
+                          <span className="muted">
+                            {row.discount_reason}
+                            {row.discount_approved_by_name
+                              ? ' · ' + row.discount_approved_by_name
+                              : ''}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {row.payments.map((payment, index) =>
+                      payment.method === 'CASH' &&
+                      payment.tendered_amount !== null ? (
+                        <div
+                          className="list-card"
+                          key={'payment-cash-' + index}
+                        >
+                          <strong>Tunai</strong>
+                          <span>
+                            Uang diterima {formatIdr(payment.tendered_amount)}
+                          </span>
+                          <span>
+                            Kembalian {formatIdr(payment.change_amount ?? 0)}
+                          </span>
+                        </div>
+                      ) : null,
+                    )}
                     {row.customer_debt && (
                       <p className="muted">
                         Hutang: dibayar{' '}

@@ -36,7 +36,8 @@ class C3ASalesFrontendV2Tests(unittest.TestCase):
         api = API.read_text(encoding="utf-8")
         screen = SCREEN.read_text(encoding="utf-8")
         self.assertIn("checkout_sale_v2", api)
-        self.assertIn("items: Array<{ variant_id: string; quantity: number }>", api)
+        self.assertIn("variant_id: string; quantity: number", api)
+        self.assertIn("line_note?: string", api)
         self.assertIn("variant_id: line.item.variant_id", screen)
         self.assertNotIn("stock_item_id: line.item.stock_item_id", screen)
 

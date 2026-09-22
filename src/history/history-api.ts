@@ -4,6 +4,8 @@ import { requireOnlineAction } from '../health/online-action';
 export type HistoryPayment = {
   method: string;
   amount: number;
+  tendered_amount: number | null;
+  change_amount: number | null;
   status: string;
   created_at: string;
 };
@@ -19,6 +21,7 @@ export type HistoryItem = {
   variant_name: string | null;
   fulfillment_mode: string | null;
   category_code: string | null;
+  line_note: string | null;
   quantity: number;
   unit_price: number;
   subtotal: number;
@@ -48,7 +51,7 @@ export type HistoryCorrection = {
   original_payment_method: string;
   sale_total: number;
   inventory_reversal_movement_id: string | null;
-  money_reversal_movement_id: string;
+  money_reversal_movement_id: string | null;
   cash_adjustment_transaction_id: string | null;
   reason: string;
   created_at: string;
@@ -76,6 +79,11 @@ export type TransactionHistoryRow = {
   status: string;
   subtotal: number;
   discount_amount: number;
+  discount_type: 'NONE' | 'AMOUNT' | 'PERCENT';
+  discount_value: number;
+  discount_reason: string | null;
+  discount_approved_by: string | null;
+  discount_approved_by_name: string | null;
   total_amount: number;
   cashier_profile_id: string;
   cashier_name: string;
@@ -141,11 +149,30 @@ export async function searchTransactionHistory(
       ...row,
       subtotal: num(row.subtotal),
       discount_amount: num(row.discount_amount),
+      discount_type: String(row.discount_type ?? 'NONE') as
+        'NONE' | 'AMOUNT' | 'PERCENT',
+      discount_value: num(row.discount_value),
+      discount_reason:
+        row.discount_reason == null ? null : String(row.discount_reason),
+      discount_approved_by:
+        row.discount_approved_by == null
+          ? null
+          : String(row.discount_approved_by),
+      discount_approved_by_name:
+        row.discount_approved_by_name == null
+          ? null
+          : String(row.discount_approved_by_name),
       total_amount: num(row.total_amount),
       payments: ((row.payments ?? []) as Array<Record<string, unknown>>).map(
         (payment) => ({
           method: String(payment.method ?? ''),
           amount: num(payment.amount),
+          tendered_amount:
+            payment.tendered_amount == null
+              ? null
+              : num(payment.tendered_amount),
+          change_amount:
+            payment.change_amount == null ? null : num(payment.change_amount),
           status: String(payment.status ?? ''),
           created_at: String(payment.created_at ?? ''),
         }),
@@ -170,6 +197,7 @@ export async function searchTransactionHistory(
               : String(item.fulfillment_mode),
           category_code:
             item.category_code == null ? null : String(item.category_code),
+          line_note: item.line_note == null ? null : String(item.line_note),
           quantity: num(item.quantity),
           unit_price: num(item.unit_price),
           subtotal: num(item.subtotal),
@@ -209,9 +237,10 @@ export async function searchTransactionHistory(
               correction.inventory_reversal_movement_id == null
                 ? null
                 : String(correction.inventory_reversal_movement_id),
-            money_reversal_movement_id: String(
-              correction.money_reversal_movement_id ?? '',
-            ),
+            money_reversal_movement_id:
+              correction.money_reversal_movement_id == null
+                ? null
+                : String(correction.money_reversal_movement_id),
             cash_adjustment_transaction_id:
               correction.cash_adjustment_transaction_id == null
                 ? null
@@ -283,7 +312,7 @@ export async function correctSale(args: { saleId: string; reason: string }) {
     correction_id: string;
     sale_id: string;
     inventory_reversal_movement_id: string | null;
-    money_reversal_movement_id: string;
+    money_reversal_movement_id: string | null;
     cash_adjustment_transaction_id: string | null;
     already_posted: boolean;
   };

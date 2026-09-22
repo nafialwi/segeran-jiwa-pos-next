@@ -7,7 +7,9 @@ import {
   fetchManualQrisImage,
   fetchSaleCustomers,
   fetchSalesCatalog,
+  type CheckoutResult,
   type SaleCustomer,
+  type SaleDiscountType,
   type SalePaymentMethod,
   type SalesCatalogItem,
 } from '../sales/sales-api';
@@ -17,6 +19,25 @@ import type { Shift } from '../shift/shift-core';
 type CartLine = {
   item: SalesCatalogItem;
   quantity: number;
+  lineNote: string;
+};
+
+type ProductGroup = {
+  saleProductId: string;
+  productCode: string;
+  productName: string;
+  categoryCode: string;
+  variants: SalesCatalogItem[];
+};
+
+type SaleSuccess = {
+  result: CheckoutResult;
+  items: Array<{
+    productName: string;
+    variantName: string;
+    quantity: number;
+    lineNote: string;
+  }>;
 };
 
 function formatIdr(value: number): string {
@@ -65,11 +86,15 @@ export function SalesScreen() {
   const [qrisConfirmed, setQrisConfirmed] = useState(false);
   const [transferConfirmed, setTransferConfirmed] = useState(false);
   const [note, setNote] = useState('');
-  const [message, setMessage] = useState('');
+  const [discountType, setDiscountType] = useState<SaleDiscountType>('NONE');
+  const [discountValue, setDiscountValue] = useState(0);
+  const [discountReason, setDiscountReason] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cartOpen, setCartOpen] = useState(false);
+  const [variantPicker, setVariantPicker] = useState<ProductGroup | null>(null);
+  const [success, setSuccess] = useState<SaleSuccess | null>(null);
 
   const submitGuardRef = useRef(false);
   const pendingOperationIdRef = useRef<string | null>(null);
@@ -109,13 +134,13 @@ export function SalesScreen() {
   }, []);
 
   useEffect(() => {
-    if (!cartOpen) return;
+    if (!cartOpen && !variantPicker && !success) return;
     const original = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = original;
     };
-  }, [cartOpen]);
+  }, [cartOpen, variantPicker, success]);
 
   const categories = useMemo(
     () =>
@@ -141,12 +166,58 @@ export function SalesScreen() {
     });
   }, [catalog, search, category]);
 
-  const total = cart.reduce(
+  const productGroups = useMemo<ProductGroup[]>(() => {
+    const groups = new Map<string, ProductGroup>();
+    for (const item of visibleItems) {
+      const existing = groups.get(item.sale_product_id);
+      if (existing) {
+        existing.variants.push(item);
+      } else {
+        groups.set(item.sale_product_id, {
+          saleProductId: item.sale_product_id,
+          productCode: item.product_code,
+          productName: item.product_name,
+          categoryCode: item.category_code,
+          variants: [item],
+        });
+      }
+    }
+    return Array.from(groups.values());
+  }, [visibleItems]);
+
+  const catalogProductCount = useMemo(
+    () => new Set(catalog.map((item) => item.sale_product_id)).size,
+    [catalog],
+  );
+
+  const subtotal = cart.reduce(
     (sum, line) => sum + line.item.unit_price * line.quantity,
     0,
   );
   const cartQuantity = cart.reduce((sum, line) => sum + line.quantity, 0);
-  const change = Math.max(0, cashReceived - total);
+  const canDiscount = Boolean(
+    authority && hasPermission(authority, 'SALE_DISCOUNT'),
+  );
+  const discountValueNumber = Number.isFinite(discountValue)
+    ? discountValue
+    : 0;
+  const discountValid =
+    discountType === 'NONE' ||
+    (canDiscount &&
+      discountReason.trim().length > 0 &&
+      discountValueNumber > 0 &&
+      (discountType === 'AMOUNT'
+        ? discountValueNumber <= subtotal
+        : discountValueNumber <= 100));
+  const discountAmount =
+    discountType === 'NONE' || !discountValid
+      ? 0
+      : discountType === 'AMOUNT'
+        ? discountValueNumber
+        : Math.round((subtotal * discountValueNumber) / 100);
+  const total = Math.max(0, subtotal - discountAmount);
+  const effectiveCashReceived = total === 0 ? 0 : cashReceived;
+  const change = Math.max(0, effectiveCashReceived - total);
   const cashOptions = useMemo(() => nextCashOptions(total), [total]);
 
   function invalidatePendingOperation() {
@@ -156,7 +227,6 @@ export function SalesScreen() {
   }
 
   function add(item: SalesCatalogItem) {
-    setMessage('');
     setError('');
     invalidatePendingOperation();
     setCart((current) => {
@@ -182,7 +252,7 @@ export function SalesScreen() {
         );
       }
 
-      return [...current, { item, quantity: 1 }];
+      return [...current, { item, quantity: 1, lineNote: '' }];
     });
   }
 
@@ -203,6 +273,15 @@ export function SalesScreen() {
         }
         return [{ ...line, quantity }];
       }),
+    );
+  }
+
+  function setLineNote(variantId: string, lineNote: string) {
+    invalidatePendingOperation();
+    setCart((current) =>
+      current.map((line) =>
+        line.item.variant_id === variantId ? { ...line, lineNote } : line,
+      ),
     );
   }
 
@@ -229,10 +308,13 @@ export function SalesScreen() {
   const canPay =
     cart.length > 0 &&
     !busy &&
-    ((method === 'CASH' && cashReceived >= total) ||
-      (method === 'QRIS' && Boolean(qrisImage) && qrisConfirmed) ||
-      (method === 'TRANSFER' && transferConfirmed) ||
-      (method === 'CREDIT' && Boolean(customerId)));
+    discountValid &&
+    (total === 0
+      ? method === 'CASH'
+      : (method === 'CASH' && effectiveCashReceived >= total) ||
+        (method === 'QRIS' && Boolean(qrisImage) && qrisConfirmed) ||
+        (method === 'TRANSFER' && transferConfirmed) ||
+        (method === 'CREDIT' && Boolean(customerId)));
 
   async function submit() {
     if (!shift || !canPay || submitGuardRef.current) return;
@@ -240,34 +322,47 @@ export function SalesScreen() {
     submitGuardRef.current = true;
     setBusy(true);
     setError('');
-    setMessage('');
 
     const operationId = pendingOperationIdRef.current ?? crypto.randomUUID();
     pendingOperationIdRef.current = operationId;
 
     try {
+      const successItems = cart.map((line) => ({
+        productName: line.item.product_name,
+        variantName: line.item.variant_name,
+        quantity: line.quantity,
+        lineNote: line.lineNote,
+      }));
       const result = await checkoutSale({
         operationId,
         locationId: shift.location_id,
         items: cart.map((line) => ({
           variant_id: line.item.variant_id,
           quantity: line.quantity,
+          line_note: line.lineNote.trim() || undefined,
         })),
         method,
         total,
+        tenderedAmount: method === 'CASH' ? effectiveCashReceived : undefined,
+        discount: {
+          type: discountType,
+          value: discountType === 'NONE' ? 0 : discountValueNumber,
+          reason: discountType === 'NONE' ? undefined : discountReason.trim(),
+        },
         customerId: method === 'CREDIT' ? customerId : undefined,
         note,
       });
 
       pendingOperationIdRef.current = null;
-      setMessage(
-        'Penjualan berhasil. Invoice: ' + String(result.invoice_number ?? '-'),
-      );
+      setSuccess({ result, items: successItems });
       setCart([]);
       setCashReceived(0);
       setCustomerId('');
       setQrisConfirmed(false);
       setTransferConfirmed(false);
+      setDiscountType('NONE');
+      setDiscountValue(0);
+      setDiscountReason('');
       setNote('');
       setCartOpen(false);
       await load();
@@ -297,7 +392,6 @@ export function SalesScreen() {
       </header>
 
       {error && <p className="error-banner sales-v2-banner">{error}</p>}
-      {message && <p className="success-banner sales-v2-banner">{message}</p>}
 
       {loading ? (
         <section className="identity-card">
@@ -364,39 +458,62 @@ export function SalesScreen() {
           ) : (
             <section className="sales-v2-products" aria-label="Daftar produk">
               <div className="sales-v2-product-summary">
-                <strong>{visibleItems.length}</strong>
-                <span>dari {catalog.length} produk</span>
+                <strong>{productGroups.length}</strong>
+                <span>dari {catalogProductCount} produk</span>
               </div>
               <div className="sales-v2-product-grid">
-                {visibleItems.map((item) => {
-                  const unavailable =
-                    item.inventory_managed &&
-                    (item.available_quantity ?? 0) <= 0;
-                  const inCart =
-                    cart.find(
-                      (line) => line.item.variant_id === item.variant_id,
-                    )?.quantity ?? 0;
-                  const showVariant =
-                    item.variant_code !== 'DEFAULT' ||
-                    item.variant_name !== item.product_name;
+                {productGroups.map((group) => {
+                  const availableVariants = group.variants.filter(
+                    (item) =>
+                      !item.inventory_managed ||
+                      (item.available_quantity ?? 0) > 0,
+                  );
+                  const unavailable = availableVariants.length === 0;
+                  const inCart = cart
+                    .filter((line) =>
+                      group.variants.some(
+                        (variant) =>
+                          variant.variant_id === line.item.variant_id,
+                      ),
+                    )
+                    .reduce((sum, line) => sum + line.quantity, 0);
+                  const minPrice = Math.min(
+                    ...group.variants.map((item) => item.unit_price),
+                  );
 
                   return (
                     <button
                       className="sales-v2-product-card"
-                      key={item.variant_id}
+                      key={group.saleProductId}
                       type="button"
                       disabled={unavailable}
-                      onClick={() => add(item)}
+                      onClick={() => {
+                        if (availableVariants.length === 1) {
+                          add(availableVariants[0]);
+                        } else {
+                          setVariantPicker({
+                            ...group,
+                            variants: availableVariants,
+                          });
+                        }
+                      }}
                     >
                       <span className="sales-v2-product-name">
-                        {item.product_name}
+                        {group.productName}
                       </span>
-                      {showVariant && (
-                        <span className="sales-v2-variant-name">
-                          {item.variant_name}
-                        </span>
-                      )}
-                      <strong>{formatIdr(item.unit_price)}</strong>
+                      <span className="sales-v2-variant-name">
+                        {group.variants.length > 1
+                          ? group.variants.length + ' varian'
+                          : group.variants[0]?.variant_code !== 'DEFAULT' &&
+                              group.variants[0]?.variant_name !==
+                                group.productName
+                            ? group.variants[0]?.variant_name
+                            : group.categoryCode}
+                      </span>
+                      <strong>
+                        {group.variants.length > 1 ? 'Mulai ' : ''}
+                        {formatIdr(minPrice)}
+                      </strong>
                       <span
                         className={
                           unavailable
@@ -404,11 +521,7 @@ export function SalesScreen() {
                             : 'sales-v2-stock-badge'
                         }
                       >
-                        {item.inventory_managed
-                          ? 'Tersedia ' + String(item.available_quantity ?? 0)
-                          : item.fulfillment_mode === 'MAKE_TO_ORDER'
-                            ? 'Siap dibuat'
-                            : 'Siap dijual'}
+                        {unavailable ? 'Habis' : 'Pilih produk'}
                       </span>
                       {inCart > 0 && (
                         <span className="sales-v2-in-cart">{inCart}</span>
@@ -499,14 +612,106 @@ export function SalesScreen() {
                           +
                         </button>
                       </div>
+                      <label className="sales-v2-line-note">
+                        <span>Catatan item</span>
+                        <input
+                          value={line.lineNote}
+                          disabled={busy}
+                          maxLength={160}
+                          placeholder="Opsional"
+                          onChange={(event) =>
+                            setLineNote(
+                              line.item.variant_id,
+                              event.target.value,
+                            )
+                          }
+                        />
+                      </label>
                     </article>
                   ))}
                 </div>
 
-                <div className="sales-v2-total-row">
-                  <span>Total</span>
-                  <strong>{formatIdr(total)}</strong>
+                <div className="sales-v2-total-stack">
+                  <div>
+                    <span>Subtotal</span>
+                    <strong>{formatIdr(subtotal)}</strong>
+                  </div>
+                  {discountAmount > 0 && (
+                    <div>
+                      <span>Diskon</span>
+                      <strong>-{formatIdr(discountAmount)}</strong>
+                    </div>
+                  )}
+                  <div className="sales-v2-total-row">
+                    <span>Total</span>
+                    <strong>{formatIdr(total)}</strong>
+                  </div>
                 </div>
+
+                {canDiscount && (
+                  <details className="sales-v2-discount">
+                    <summary>Diskon</summary>
+                    <label>
+                      <span>Jenis diskon</span>
+                      <select
+                        value={discountType}
+                        disabled={busy}
+                        onChange={(event) => {
+                          invalidatePendingOperation();
+                          setDiscountType(
+                            event.target.value as SaleDiscountType,
+                          );
+                          setDiscountValue(0);
+                          setDiscountReason('');
+                        }}
+                      >
+                        <option value="NONE">Tanpa diskon</option>
+                        <option value="AMOUNT">Nominal (Rp)</option>
+                        <option value="PERCENT">Persen (%)</option>
+                      </select>
+                    </label>
+                    {discountType !== 'NONE' && (
+                      <>
+                        <label>
+                          <span>
+                            {discountType === 'AMOUNT'
+                              ? 'Nilai diskon (Rp)'
+                              : 'Persentase diskon'}
+                          </span>
+                          <input
+                            type="number"
+                            min="0"
+                            max={discountType === 'PERCENT' ? 100 : subtotal}
+                            value={discountValue}
+                            disabled={busy}
+                            onChange={(event) => {
+                              invalidatePendingOperation();
+                              setDiscountValue(Number(event.target.value));
+                            }}
+                          />
+                        </label>
+                        <label>
+                          <span>Alasan diskon</span>
+                          <input
+                            value={discountReason}
+                            disabled={busy}
+                            maxLength={200}
+                            placeholder="Wajib untuk diskon"
+                            onChange={(event) => {
+                              invalidatePendingOperation();
+                              setDiscountReason(event.target.value);
+                            }}
+                          />
+                        </label>
+                        {!discountValid && (
+                          <p className="form-error">
+                            Nilai dan alasan diskon harus valid.
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </details>
+                )}
 
                 <div className="sales-v2-payment-methods">
                   {allowedMethods.map((value) => (
@@ -545,8 +750,8 @@ export function SalesScreen() {
                         type="number"
                         min="0"
                         step="1000"
-                        value={cashReceived}
-                        disabled={busy}
+                        value={effectiveCashReceived}
+                        disabled={busy || total === 0}
                         onChange={(event) => {
                           invalidatePendingOperation();
                           setCashReceived(Number(event.target.value));
@@ -656,6 +861,139 @@ export function SalesScreen() {
             </div>
           )}
         </>
+      )}
+
+      {variantPicker && (
+        <div
+          className="sales-v2-sheet-backdrop"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              setVariantPicker(null);
+            }
+          }}
+        >
+          <section
+            className="sales-v2-sheet sales-v2-variant-sheet"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Pilih Varian"
+          >
+            <div className="sales-v2-sheet-handle" />
+            <header className="sales-v2-sheet-header">
+              <div>
+                <h2>Pilih Varian</h2>
+                <span>{variantPicker.productName}</span>
+              </div>
+              <button type="button" onClick={() => setVariantPicker(null)}>
+                Tutup
+              </button>
+            </header>
+            <div className="sales-v2-variant-options">
+              {variantPicker.variants.map((item) => {
+                const unavailable =
+                  item.inventory_managed && (item.available_quantity ?? 0) <= 0;
+                return (
+                  <button
+                    type="button"
+                    key={item.variant_id}
+                    disabled={unavailable}
+                    onClick={() => {
+                      add(item);
+                      setVariantPicker(null);
+                    }}
+                  >
+                    <span>
+                      <strong>{item.variant_name}</strong>
+                      <small>
+                        {item.inventory_managed
+                          ? 'Tersedia ' + String(item.available_quantity ?? 0)
+                          : item.fulfillment_mode === 'MAKE_TO_ORDER'
+                            ? 'Siap dibuat'
+                            : 'Siap dijual'}
+                      </small>
+                    </span>
+                    <strong>{formatIdr(item.unit_price)}</strong>
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        </div>
+      )}
+
+      {success && (
+        <div className="sales-v2-sheet-backdrop sales-v2-success-backdrop">
+          <section
+            className="sales-v2-success"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Pembayaran Berhasil"
+          >
+            <div className="sales-v2-success-mark" aria-hidden="true">
+              ✓
+            </div>
+            <p className="eyebrow">TRANSAKSI SELESAI</p>
+            <h2>Pembayaran Berhasil</h2>
+            <p className="muted">{success.result.invoice_number}</p>
+            <strong className="sales-v2-success-total">
+              {formatIdr(success.result.total_amount)}
+            </strong>
+            <div className="sales-v2-success-facts">
+              <span>
+                Metode
+                <strong>{paymentLabel(success.result.payment_method)}</strong>
+              </span>
+              {success.result.discount_amount > 0 && (
+                <span>
+                  Diskon
+                  <strong>-{formatIdr(success.result.discount_amount)}</strong>
+                </span>
+              )}
+              {success.result.payment_method === 'CASH' &&
+                success.result.tendered_amount !== null && (
+                  <>
+                    <span>
+                      Uang diterima
+                      <strong>
+                        {formatIdr(success.result.tendered_amount)}
+                      </strong>
+                    </span>
+                    <span>
+                      Kembalian
+                      <strong>
+                        {formatIdr(success.result.change_amount ?? 0)}
+                      </strong>
+                    </span>
+                  </>
+                )}
+            </div>
+            <div className="sales-v2-success-items">
+              {success.items.map((item, index) => (
+                <div key={item.productName + item.variantName + index}>
+                  <span>
+                    {item.productName}
+                    {item.variantName !== item.productName
+                      ? ' · ' + item.variantName
+                      : ''}
+                  </span>
+                  <strong>× {item.quantity}</strong>
+                </div>
+              ))}
+            </div>
+            <div className="sales-v2-success-actions">
+              <Link className="secondary-button" to="/riwayat">
+                Lihat Riwayat
+              </Link>
+              <button
+                className="primary-button"
+                type="button"
+                onClick={() => setSuccess(null)}
+              >
+                Transaksi Baru
+              </button>
+            </div>
+          </section>
+        </div>
       )}
     </main>
   );
