@@ -113,6 +113,19 @@ Transaction History:
 
 Final financial mutation was intentionally not submitted solely to satisfy UAT.
 
+## Browser-offline evidence
+
+Chrome DevTools network emulation was switched from No throttling to **Offline** while the authenticated RC4 session remained open.
+
+Observed:
+
+- global **Perlu perhatian: perangkat offline** banner appeared immediately;
+- Offline & Sync changed **Koneksi Perangkat** from ONLINE to OFFLINE;
+- the screen continued to state **Tidak ada antrean mutasi offline**;
+- the screen continued to state that server operations are online-only.
+
+This confirms the browser connectivity state and global attention path in the real authenticated UI. A final critical business submit was not executed solely to prove the guard; source-level offline-boundary regression remains PASS and no mutation queue exists.
+
 ## Remaining acceptance work
 
 RC4 has cleared the two P1 authority defects found during RC2/RC3 and has completed the authenticated mobile visual route matrix.
@@ -120,7 +133,7 @@ RC4 has cleared the two P1 authority defects found during RC2/RC3 and has comple
 Before final UAT PASS and cutover readiness, the remaining acceptance work is deliberately non-destructive:
 
 1. checkout sheet/payment-method presentation and pre-submit guards;
-2. explicit browser-offline behavior and proof that final critical submit is blocked with no silent replay;
+2. final critical-submit offline guard confirmation; actual browser OFFLINE banner/state already PASS;
 3. final post-UAT canonical regression after the Human UAT evidence is closed.
 
 Current status: **RC4_MOBILE_ROUTE_MATRIX_PASS_REMAINING_INTERACTION_UAT**.

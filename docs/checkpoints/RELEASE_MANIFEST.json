@@ -159,5 +159,8 @@
   "c10_sales_local_cart_interaction": "PASS_NO_SERVER_MUTATION",
   "c10_history_mobile_existing_records": "PASS",
   "c10_remaining_checkout_interaction": "PENDING",
-  "c10_remaining_offline_interaction": "PENDING"
+  "c10_remaining_offline_interaction": "FINAL_CRITICAL_SUBMIT_GUARD_PENDING",
+  "c10_browser_offline_state": "PASS_AUTHENTICATED_DEVTOOLS_OFFLINE",
+  "c10_offline_attention_banner": "PASS",
+  "c10_offline_mutation_queue": "NONE"
 }

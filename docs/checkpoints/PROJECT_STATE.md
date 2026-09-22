@@ -334,7 +334,7 @@ See:
 Remaining RC4 acceptance:
 
 - checkout sheet/payment-method presentation and pre-submit guards;
-- explicit browser-offline fail-closed behavior with no silent replay;
+- authenticated browser OFFLINE state/banner is PASS; only final critical-submit guard confirmation remains;
 - close Human UAT evidence;
 - final canonical regression before cutover readiness.
 
