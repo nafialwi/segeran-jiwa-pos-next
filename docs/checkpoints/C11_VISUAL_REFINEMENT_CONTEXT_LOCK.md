@@ -303,3 +303,27 @@ Canonical verification: **96/96 JS + 394/394 Python PASS**, plus repo guard,
 Prettier, ESLint, TypeScript, production build, and diff-check.
 
 See: docs/checkpoints/C11F3_DAILY_NAVIGATION_REPORTS_SAFEPOINT.md
+
+## C11-F4 safe checkpoint — responsive reports & mobile readability
+
+C11-F4 closes the real-device report readability defect found after C11-F3.
+
+- phone report rows now render as readable cards instead of crushed wide tables;
+- Product cards prioritize Product / Category / Code and Sales cards prioritize
+  Transaction Number / Status / Date;
+- other report families receive a bounded generic mobile-card fallback;
+- tablet/desktop tables preserve minimum geometry and no longer collapse labels into
+  near-vertical fragments;
+- loaded results support display-only search, Product category filtering,
+  Sales payment-method filtering, and safe Qty/Value ordering where columns exist;
+- display filters do not redefine report summary facts or Excel export content;
+- report dates render in human-readable Indonesian form;
+- odd final KPI cards span the mobile row and report content reserves bottom-nav safe area;
+- `report_run`, report permissions, database/schema, and all business writers are unchanged;
+- Production remains untouched.
+
+Focused C11-F4 regression: **6/6 PASS**.
+Canonical verification: **96/96 JS + 400/400 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+See: `docs/checkpoints/C11F4_RESPONSIVE_REPORTS_SAFEPOINT.md`

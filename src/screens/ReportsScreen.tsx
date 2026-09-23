@@ -5,8 +5,10 @@ import { hasPermission } from '../auth/permission';
 import {
   runReport,
   type ReportCode,
+  type ReportColumn,
   type ReportEnvelope,
   type ReportFormat,
+  type ReportSection,
 } from '../reports/report-api';
 import { exportReportExcel } from '../reports/report-excel';
 
@@ -72,6 +74,15 @@ function formatValue(value: unknown, format: ReportFormat) {
       ? new Intl.NumberFormat('id-ID', { maximumFractionDigits: 3 }).format(n)
       : String(value);
   }
+  if (format === 'date') {
+    const raw = String(value);
+    const date = /^\d{4}-\d{2}-\d{2}$/.test(raw)
+      ? new Date(`${raw}T00:00:00`)
+      : new Date(raw);
+    return Number.isNaN(date.getTime())
+      ? raw
+      : new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium' }).format(date);
+  }
   if (format === 'datetime') {
     const date = new Date(String(value));
     return Number.isNaN(date.getTime())
@@ -82,6 +93,123 @@ function formatValue(value: unknown, format: ReportFormat) {
         }).format(date);
   }
   return String(value);
+}
+
+function normalizedLabel(label: string) {
+  return label.trim().toLocaleLowerCase('id-ID');
+}
+
+function findColumn(section: ReportSection, labels: string[]) {
+  const wanted = new Set(labels.map(normalizedLabel));
+  return section.columns.find((column) =>
+    wanted.has(normalizedLabel(column.label)),
+  );
+}
+
+function getRowValue(
+  row: Record<string, unknown>,
+  column: ReportColumn | undefined,
+) {
+  return column ? row[column.key] : undefined;
+}
+
+function mobilePrimaryColumns(reportCode: ReportCode, section: ReportSection) {
+  const preferences: Record<ReportCode, string[][]> = {
+    PRODUCT: [['Produk'], ['Kategori'], ['Kode']],
+    SALES: [['Nomor Transaksi'], ['Status'], ['Tanggal']],
+    INVENTORY: [['Item', 'Produk', 'Nama'], ['Kategori'], ['Kode']],
+    SHIFT: [['Shift', 'Nomor Shift'], ['Status'], ['Tanggal']],
+    PURCHASE: [['Nomor Pembelian', 'Nomor'], ['Status'], ['Tanggal']],
+    FINANCE: [['Jenis', 'Akun', 'Keterangan'], ['Status'], ['Tanggal']],
+  };
+
+  const selected = preferences[reportCode]
+    .map((labels) => findColumn(section, labels))
+    .filter((column): column is ReportColumn => Boolean(column));
+
+  return selected.length ? selected : section.columns.slice(0, 3);
+}
+
+function rowSearchText(section: ReportSection, row: Record<string, unknown>) {
+  return section.columns
+    .map((column) => String(row[column.key] ?? ''))
+    .join(' ')
+    .toLocaleLowerCase('id-ID');
+}
+
+type ReportSortMode = 'DEFAULT' | 'QTY_DESC' | 'VALUE_DESC';
+
+function displayFilterColumn(reportCode: ReportCode, section: ReportSection) {
+  if (reportCode === 'PRODUCT') return findColumn(section, ['Kategori']);
+  if (reportCode === 'SALES') return findColumn(section, ['Metode']);
+  return undefined;
+}
+
+function displaySortColumn(
+  reportCode: ReportCode,
+  section: ReportSection,
+  sort: ReportSortMode,
+) {
+  if (sort === 'QTY_DESC' && reportCode === 'PRODUCT') {
+    return findColumn(section, ['Qty Bersih', 'Qty Terjual']);
+  }
+  if (sort === 'VALUE_DESC') {
+    return reportCode === 'PRODUCT'
+      ? findColumn(section, ['Nilai Bersih Item', 'Nilai Bersih'])
+      : findColumn(section, ['Nominal', 'Penjualan Bersih', 'Nilai']);
+  }
+  return undefined;
+}
+
+function MobileReportRow({
+  reportCode,
+  section,
+  row,
+}: {
+  reportCode: ReportCode;
+  section: ReportSection;
+  row: Record<string, unknown>;
+}) {
+  const primaryColumns = mobilePrimaryColumns(reportCode, section);
+  const [titleColumn, badgeColumn, metaColumn] = primaryColumns;
+  const primaryKeys = new Set(primaryColumns.map((column) => column.key));
+  const detailColumns = section.columns.filter(
+    (column) => !primaryKeys.has(column.key),
+  );
+
+  return (
+    <article className="report-mobile-card">
+      <div className="report-mobile-card-head">
+        <div className="report-mobile-card-title">
+          <strong>
+            {formatValue(
+              getRowValue(row, titleColumn),
+              titleColumn?.type ?? 'text',
+            )}
+          </strong>
+          {metaColumn && (
+            <small>
+              {metaColumn.label}:{' '}
+              {formatValue(getRowValue(row, metaColumn), metaColumn.type)}
+            </small>
+          )}
+        </div>
+        {badgeColumn && (
+          <span className="report-mobile-badge">
+            {formatValue(getRowValue(row, badgeColumn), badgeColumn.type)}
+          </span>
+        )}
+      </div>
+      <div className="report-mobile-detail-grid">
+        {detailColumns.map((column) => (
+          <div className="report-mobile-detail" key={column.key}>
+            <span>{column.label}</span>
+            <strong>{formatValue(row[column.key], column.type)}</strong>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
 }
 
 export function ReportsScreen() {
@@ -106,6 +234,9 @@ export function ReportsScreen() {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState('');
+  const [reportQuery, setReportQuery] = useState('');
+  const [reportFilter, setReportFilter] = useState('ALL');
+  const [reportSort, setReportSort] = useState<ReportSortMode>('DEFAULT');
   const resultRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -115,9 +246,60 @@ export function ReportsScreen() {
     });
   }, [report]);
 
+  const reportFilterOptions = useMemo(() => {
+    if (!report) return [];
+    const values = new Set<string>();
+    report.sections.forEach((section) => {
+      const column = displayFilterColumn(report.report_code, section);
+      if (!column) return;
+      section.rows.forEach((row) => {
+        const value = String(row[column.key] ?? '').trim();
+        if (value) values.add(value);
+      });
+    });
+    return Array.from(values).sort((a, b) => a.localeCompare(b, 'id-ID'));
+  }, [report]);
+
+  const displaySections = useMemo(() => {
+    if (!report) return [];
+    const query = reportQuery.trim().toLocaleLowerCase('id-ID');
+
+    return report.sections.map((section) => {
+      const filterColumn = displayFilterColumn(report.report_code, section);
+      const sortColumn = displaySortColumn(
+        report.report_code,
+        section,
+        reportSort,
+      );
+      const rows = section.rows
+        .filter((row) => !query || rowSearchText(section, row).includes(query))
+        .filter((row) => {
+          if (reportFilter === 'ALL' || !filterColumn) return true;
+          return String(row[filterColumn.key] ?? '') === reportFilter;
+        });
+
+      if (sortColumn) {
+        rows.sort((left, right) => {
+          const a = Number(left[sortColumn.key] ?? 0);
+          const b = Number(right[sortColumn.key] ?? 0);
+          return (Number.isFinite(b) ? b : 0) - (Number.isFinite(a) ? a : 0);
+        });
+      }
+
+      return { ...section, rows };
+    });
+  }, [report, reportFilter, reportQuery, reportSort]);
+
+  function resetDisplayControls() {
+    setReportQuery('');
+    setReportFilter('ALL');
+    setReportSort('DEFAULT');
+  }
+
   function applyPeriodPreset(preset: ReportPeriodPreset) {
     setPeriodPreset(preset);
     setReport(null);
+    resetDisplayControls();
     setError('');
     if (preset === 'CUSTOM') return;
 
@@ -130,6 +312,7 @@ export function ReportsScreen() {
     event?.preventDefault();
     setLoading(true);
     setError('');
+    resetDisplayControls();
     try {
       setReport(await runReport(code, dateFrom, dateTo));
     } catch (cause) {
@@ -209,6 +392,7 @@ export function ReportsScreen() {
               onChange={(event) => {
                 setCode(event.target.value as ReportCode);
                 setReport(null);
+                resetDisplayControls();
                 setError('');
               }}
             >
@@ -228,6 +412,7 @@ export function ReportsScreen() {
                 setDateFrom(event.target.value);
                 setPeriodPreset('CUSTOM');
                 setReport(null);
+                resetDisplayControls();
                 setError('');
               }}
             />
@@ -241,6 +426,7 @@ export function ReportsScreen() {
                 setDateTo(event.target.value);
                 setPeriodPreset('CUSTOM');
                 setReport(null);
+                resetDisplayControls();
                 setError('');
               }}
             />
@@ -281,8 +467,9 @@ export function ReportsScreen() {
               <div>
                 <h2>{report.report_title}</h2>
                 <p className="muted">
-                  {report.business_name} · {report.period.date_from} s.d.{' '}
-                  {report.period.date_to}
+                  {report.business_name} ·{' '}
+                  {formatValue(report.period.date_from, 'date')} s.d.{' '}
+                  {formatValue(report.period.date_to, 'date')}
                 </p>
               </div>
             </div>
@@ -301,7 +488,118 @@ export function ReportsScreen() {
             ))}
           </section>
 
-          {report.sections.map((section) => (
+          <section className="identity-card report-display-tools">
+            <label className="report-search-field">
+              <span>Cari dalam laporan</span>
+              <input
+                type="search"
+                value={reportQuery}
+                placeholder={
+                  report.report_code === 'PRODUCT'
+                    ? 'Cari produk, kode, atau kategori…'
+                    : report.report_code === 'SALES'
+                      ? 'Cari transaksi, pengguna, atau metode…'
+                      : 'Cari data laporan…'
+                }
+                onChange={(event) => setReportQuery(event.target.value)}
+              />
+            </label>
+
+            {reportFilterOptions.length > 0 && (
+              <div
+                className="report-display-chips"
+                role="group"
+                aria-label="Filter tampilan"
+              >
+                <button
+                  type="button"
+                  className={
+                    reportFilter === 'ALL'
+                      ? 'report-display-chip active'
+                      : 'report-display-chip'
+                  }
+                  aria-pressed={reportFilter === 'ALL'}
+                  onClick={() => setReportFilter('ALL')}
+                >
+                  Semua
+                </button>
+                {reportFilterOptions.map((option) => (
+                  <button
+                    type="button"
+                    className={
+                      reportFilter === option
+                        ? 'report-display-chip active'
+                        : 'report-display-chip'
+                    }
+                    aria-pressed={reportFilter === option}
+                    onClick={() => setReportFilter(option)}
+                    key={option}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {(report.report_code === 'PRODUCT' ||
+              report.report_code === 'SALES') && (
+              <div
+                className="report-display-chips"
+                role="group"
+                aria-label="Urutan tampilan"
+              >
+                <button
+                  type="button"
+                  className={
+                    reportSort === 'DEFAULT'
+                      ? 'report-display-chip active'
+                      : 'report-display-chip'
+                  }
+                  aria-pressed={reportSort === 'DEFAULT'}
+                  onClick={() => setReportSort('DEFAULT')}
+                >
+                  Urutan asli
+                </button>
+                {report.report_code === 'PRODUCT' && (
+                  <button
+                    type="button"
+                    className={
+                      reportSort === 'QTY_DESC'
+                        ? 'report-display-chip active'
+                        : 'report-display-chip'
+                    }
+                    aria-pressed={reportSort === 'QTY_DESC'}
+                    onClick={() => setReportSort('QTY_DESC')}
+                  >
+                    Qty terbanyak
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className={
+                    reportSort === 'VALUE_DESC'
+                      ? 'report-display-chip active'
+                      : 'report-display-chip'
+                  }
+                  aria-pressed={reportSort === 'VALUE_DESC'}
+                  onClick={() => setReportSort('VALUE_DESC')}
+                >
+                  Nilai terbesar
+                </button>
+              </div>
+            )}
+
+            {(reportQuery ||
+              reportFilter !== 'ALL' ||
+              reportSort !== 'DEFAULT') && (
+              <p className="muted report-display-note">
+                Filter dan urutan hanya mengubah tampilan. Ringkasan dan ekspor
+                tetap memuat seluruh data laporan.
+              </p>
+            )}
+          </section>
+
+          {displaySections.map((section) => (
             <section className="identity-card" key={section.key}>
               <div className="section-heading">
                 <div>
@@ -312,28 +610,40 @@ export function ReportsScreen() {
               {section.rows.length === 0 ? (
                 <p className="empty-state">Tidak ada data pada bagian ini.</p>
               ) : (
-                <div className="data-table-wrap">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        {section.columns.map((column) => (
-                          <th key={column.key}>{column.label}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {section.rows.map((row, index) => (
-                        <tr key={section.key + '-' + index}>
+                <>
+                  <div className="report-mobile-list">
+                    {section.rows.map((row, index) => (
+                      <MobileReportRow
+                        reportCode={report.report_code}
+                        section={section}
+                        row={row}
+                        key={`${section.key}-mobile-${index}`}
+                      />
+                    ))}
+                  </div>
+                  <div className="data-table-wrap report-desktop-table-wrap">
+                    <table className="data-table report-desktop-table">
+                      <thead>
+                        <tr>
                           {section.columns.map((column) => (
-                            <td key={column.key}>
-                              {formatValue(row[column.key], column.type)}
-                            </td>
+                            <th key={column.key}>{column.label}</th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {section.rows.map((row, index) => (
+                          <tr key={section.key + '-' + index}>
+                            {section.columns.map((column) => (
+                              <td key={column.key}>
+                                {formatValue(row[column.key], column.type)}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
               {(section.totals ?? []).map((total) => (
                 <p key={total.label}>
