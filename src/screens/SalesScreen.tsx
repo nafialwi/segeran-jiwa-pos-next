@@ -42,6 +42,25 @@ type SaleSuccess = {
   }>;
 };
 
+type GridDensity = 2 | 3 | 4;
+
+const GRID_DENSITY_STORAGE_KEY = 'sj.sales.gridDensity';
+
+function initialGridDensity(): GridDensity {
+  if (typeof window === 'undefined') return 3;
+
+  try {
+    const saved = Number(window.localStorage.getItem(GRID_DENSITY_STORAGE_KEY));
+    if (saved === 2 || saved === 3 || saved === 4) return saved;
+  } catch {
+    // Storage is only a per-device visual preference.
+  }
+
+  if (window.innerWidth <= 360) return 2;
+  if (window.innerWidth < 700) return 3;
+  return 4;
+}
+
 function formatIdr(value: number): string {
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
@@ -99,6 +118,8 @@ export function SalesScreen() {
   const [cartOpen, setCartOpen] = useState(false);
   const [variantPicker, setVariantPicker] = useState<ProductGroup | null>(null);
   const [success, setSuccess] = useState<SaleSuccess | null>(null);
+  const [gridDensity, setGridDensity] =
+    useState<GridDensity>(initialGridDensity);
 
   const submitGuardRef = useRef(false);
   const pendingOperationIdRef = useRef<string | null>(null);
@@ -157,6 +178,26 @@ export function SalesScreen() {
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function refreshCatalogAfterSale(locationId: string) {
+    try {
+      const items = await fetchSalesCatalog(locationId);
+      setCatalog(items);
+    } catch {
+      setError(
+        'Transaksi berhasil, tetapi stok terbaru belum dapat dimuat. Muat ulang sebelum transaksi berikutnya.',
+      );
+    }
+  }
+
+  function chooseGridDensity(value: GridDensity) {
+    setGridDensity(value);
+    try {
+      window.localStorage.setItem(GRID_DENSITY_STORAGE_KEY, String(value));
+    } catch {
+      // Keep the selected density for this page even if storage is unavailable.
     }
   }
 
@@ -288,6 +329,7 @@ export function SalesScreen() {
   }
 
   function adjust(variantId: string, delta: number) {
+    setError('');
     invalidatePendingOperation();
     setCart((current) =>
       current.flatMap((line) => {
@@ -317,6 +359,7 @@ export function SalesScreen() {
   }
 
   function chooseMethod(value: SalePaymentMethod) {
+    setError('');
     invalidatePendingOperation();
     setMethod(value);
     setQrisConfirmed(false);
@@ -389,6 +432,7 @@ export function SalesScreen() {
       pendingOperationIdRef.current = null;
       setSuccess({ result, items: successItems });
       setCart([]);
+      setMethod('CASH');
       setCashReceived(0);
       setCustomerId('');
       setQrisConfirmed(false);
@@ -398,7 +442,7 @@ export function SalesScreen() {
       setDiscountReason('');
       setNote('');
       setCartOpen(false);
-      await load();
+      void refreshCatalogAfterSale(shift.location_id);
     } catch (caught) {
       setError(
         caught instanceof Error ? caught.message : 'Penjualan gagal diproses.',
@@ -419,16 +463,37 @@ export function SalesScreen() {
           <h1>Jual</h1>
         </div>
         <div className="sales-v2-header-meta">
-          <span className="sales-v2-shift-dot" aria-hidden="true" />
-          Shift aktif
+          <span
+            className={
+              shift
+                ? 'sales-v2-shift-dot'
+                : 'sales-v2-shift-dot sales-v2-shift-dot-inactive'
+            }
+            aria-hidden="true"
+          />
+          {loading
+            ? 'Memeriksa shift…'
+            : shift
+              ? 'Shift aktif'
+              : 'Shift belum aktif'}
         </div>
       </header>
 
       {error && <p className="error-banner sales-v2-banner">{error}</p>}
 
       {loading ? (
-        <section className="identity-card">
-          <p>Memuat data penjualan...</p>
+        <section
+          className="sales-v2-loading"
+          aria-label="Memuat data penjualan"
+          aria-busy="true"
+        >
+          <div className="sales-v2-loading-search" />
+          <div className="sales-v2-loading-grid">
+            {Array.from({ length: 6 }, (_, index) => (
+              <span key={index} />
+            ))}
+          </div>
+          <p>Menyiapkan produk jual…</p>
         </section>
       ) : !shift ? (
         <section className="identity-card">
@@ -492,10 +557,30 @@ export function SalesScreen() {
           ) : (
             <section className="sales-v2-products" aria-label="Daftar produk">
               <div className="sales-v2-product-summary">
-                <strong>{productGroups.length}</strong>
-                <span>dari {catalogProductCount} produk</span>
+                <span>
+                  <strong>{productGroups.length}</strong>
+                  {' dari ' + String(catalogProductCount) + ' produk'}
+                </span>
+                <div
+                  className="sales-v2-density"
+                  aria-label="Jumlah kartu produk per baris"
+                >
+                  <span>Tampilan</span>
+                  {([2, 3, 4] as const).map((value) => (
+                    <button
+                      type="button"
+                      key={value}
+                      aria-pressed={gridDensity === value}
+                      onClick={() => chooseGridDensity(value)}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="sales-v2-product-grid">
+              <div
+                className={'sales-v2-product-grid sales-grid-' + gridDensity}
+              >
                 {productGroups.map((group) => {
                   const availableVariants = group.variants.filter(
                     (item) =>
@@ -644,6 +729,7 @@ export function SalesScreen() {
                           type="button"
                           disabled={busy}
                           onClick={() => adjust(line.item.variant_id, -1)}
+                          onPointerUp={(event) => event.currentTarget.blur()}
                         >
                           -
                         </button>
@@ -652,6 +738,7 @@ export function SalesScreen() {
                           type="button"
                           disabled={busy}
                           onClick={() => adjust(line.item.variant_id, 1)}
+                          onPointerUp={(event) => event.currentTarget.blur()}
                         >
                           +
                         </button>
@@ -765,6 +852,7 @@ export function SalesScreen() {
                       disabled={busy}
                       className={method === value ? 'active' : ''}
                       onClick={() => chooseMethod(value)}
+                      onPointerUp={(event) => event.currentTarget.blur()}
                     >
                       <Icon
                         name={
@@ -795,6 +883,7 @@ export function SalesScreen() {
                             invalidatePendingOperation();
                             setCashReceived(value);
                           }}
+                          onPointerUp={(event) => event.currentTarget.blur()}
                         >
                           {value === total ? 'Uang Pas' : formatIdr(value)}
                         </button>

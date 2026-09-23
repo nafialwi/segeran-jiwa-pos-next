@@ -207,3 +207,16 @@ The shared preview backend now has the C11-F0A Product Master mutation capabilit
 Owner user/device administration Edge Functions now support browser preflight and keep POST authorization inside the function: bearer token validation, active Segeran Jiwa session, and Owner authority are still mandatory. Raw SJ_IDENTITY_ADMIN_FAILED/SJ_DEVICE_ADMIN_FAILED frontend messages were replaced with human-readable errors.
 
 Frontend Production remains blocked. See docs/checkpoints/C11F0C1_EDITABILITY_IDENTITY_HOTFIX.md.
+
+## C11-F0D safe checkpoint — sales daily-use completion
+
+Jual now supports 2/3/4 product-card density as a per-device visual preference,
+resets completed-payment draft state back to Tunai, refreshes only the
+authoritative catalog after a successful sale instead of rerunning the whole
+screen load, uses honest progressive loading/shift text, and removes coarse
+touch/focus residue.
+
+Checkout V2 authority, idempotency, inventory validation, payment guards, and
+historical snapshots are unchanged. No C11-F0D database migration is added.
+
+See docs/checkpoints/C11F0D_SALES_DAILY_USE_SAFEPOINT.md.

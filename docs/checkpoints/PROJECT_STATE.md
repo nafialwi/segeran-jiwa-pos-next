@@ -360,17 +360,24 @@ Completed safe points:
 - C11-F0C — shift packaging Opening/Closing reconciliation through canonical Inventory Stock Count authority, immutable theoretical sale usage, stale-snapshot detection, and real physical variance; migration source prepared, Production untouched.
 
 - C11-F0C.1 editability/identity hotfix — F0A Product Master backend activated on the shared preview backend; FINISHED_GOOD invariant smoke-tested; identity/device Edge Function browser preflight fixed while retaining internal Owner authentication.
-  C11-F0C.1 canonical verification: **96/96 JavaScript + 363/363 Python PASS**, plus repo guard, format, lint, TypeScript, build, and diff-check PASS.
+- C11-F0D — Sales daily-use completion: 2/3/4 catalog density, post-sale payment reset, catalog-only refresh, honest loading/shift state, and touch-residue hardening; no database migration.
+
+C11-F0D canonical verification: **96/96 JavaScript + 370/370 Python PASS**, plus repo guard, format, lint, TypeScript, build, and diff-check PASS.
+C11-F0C.1 canonical verification: **96/96 JavaScript + 363/363 Python PASS**, plus repo guard, format, lint, TypeScript, build, and diff-check PASS.
 
 No C11 frontend source change has been released to Production. The shared preview backend now includes the F0A Product Master authority and the identity/device browser hotfix.
 
 ## NEXT ACTION
 
-**Continue C11-F0D — Sales Daily-Use Completion.**
+**Continue C11-F0E — remaining operational UX completion.**
 
-The product editor backend is now active on the shared C11 preview backend and Owner user/device administration has browser-safe Edge Function preflight. Audit and close the remaining cashier daily-use friction: fast product discovery, cart correction, stale selection/highlight residue, payment-method reset, success next-action, and narrow-screen touch/visual convergence.
+Audit remaining non-Jual state residue and unclear day-to-day flows, especially
+Shift input reset/visual residue, owner operational controls, and any mobile
+forms that still retain stale interaction state. Keep source-of-truth and
+permission boundaries unchanged.
 
-Keep frontend Production blocked. Do not weaken checkout, inventory, finance, shift, or offline fail-closed authority.
+After F0E, run C11-F final responsive matrix and full regression, then create the
+complete Owner/Kasir operating guide requested by the user.
 
 ## Cutover rule
 
