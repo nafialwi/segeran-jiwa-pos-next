@@ -355,18 +355,21 @@ Completed safe points:
 - C11-C — POS, cart, checkout, success, transaction history;
 - C11-D — Inventory, Product/Recipe, Purchase, Production, Shift, plus loading-efficiency hardening;
 - C11-E — Control Center, Finance, Users/Devices, Attention, Backup/Health/Offline, and mobile long-list usability convergence.
+- C11-F0A — permission-bounded Product Master editor and mutation authority; migration source prepared, Production untouched.
 
-C11-E canonical verification is recorded in the C11-E safe-point document.
+C11-F0A canonical verification: **96/96 JavaScript + 338/338 Python PASS**.
 No C11 source change has been released to Production.
 
 ## NEXT ACTION
 
-**Continue C11-F — final mobile/desktop QA and authenticated performance timing.**
+**Continue C11-F0B — Operational Message from Owner/authorized management to Cashier.**
 
-Required widths: 320 / 360 / 390 / 412 px plus desktop.
-Verify real Owner/Kasir flows, long-list pickers, loading/empty/error/offline states,
-visual overflow, navigation visibility, and timing for Sales/Inventory/Finance.
-Keep RC4 immutable. Do not create RC5 or release Production until C11-F passes.
+Build a narrow operational instruction channel: target, priority, validity
+window, Dashboard Cashier delivery, and read acknowledgement. Keep it
+permission-bounded and auditable; do not turn it into a general chat system.
+
+Keep RC4 immutable. Production remains blocked. C11-F final QA starts only after
+F0B/F0C/F0D/F0E known gaps are closed.
 
 ## Cutover rule
 

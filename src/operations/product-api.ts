@@ -270,6 +270,188 @@ export type BomStockOption = {
   baseUnit: string;
 };
 
+export type ProductMasterStockOption = BomStockOption;
+
+function rpcMissing(error: {
+  code?: string;
+  message?: string;
+  details?: string | null;
+}): boolean {
+  const text = [error.code ?? '', error.message ?? '', error.details ?? '']
+    .join(' ')
+    .toLowerCase();
+  return (
+    error.code === '42883' ||
+    error.code === 'PGRST202' ||
+    text.includes('product_master_capability') ||
+    text.includes('save_sale_product_master') ||
+    text.includes('save_product_variant_master')
+  );
+}
+
+function productMasterFail(
+  error: { code?: string; message?: string; details?: string | null } | null,
+): never {
+  const text = [error?.code ?? '', error?.message ?? '', error?.details ?? '']
+    .join(' ')
+    .toUpperCase();
+
+  if (rpcMissing(error ?? {})) {
+    throw new Error('Editor produk belum aktif pada backend ini.');
+  }
+  if (text.includes('SJ_PRODUCT_MANAGE_DENIED')) {
+    throw new Error('Akun ini tidak memiliki izin untuk mengelola produk.');
+  }
+  if (
+    text.includes('SJ_PRODUCT_CODE_INVALID') ||
+    text.includes('SJ_VARIANT_CODE_INVALID')
+  ) {
+    throw new Error(
+      'Kode hanya boleh berisi huruf kapital, angka, garis bawah, atau tanda hubung.',
+    );
+  }
+  if (
+    text.includes('SJ_PRODUCT_NAME_REQUIRED') ||
+    text.includes('SJ_VARIANT_NAME_REQUIRED')
+  ) {
+    throw new Error('Nama produk atau varian wajib diisi.');
+  }
+  if (text.includes('SJ_VARIANT_PRICE_INVALID')) {
+    throw new Error(
+      'Harga jual harus lebih dari Rp0 dan maksimal dua desimal.',
+    );
+  }
+  if (text.includes('SJ_VARIANT_SALE_STOCK_REQUIRED')) {
+    throw new Error('Pilih barang stok untuk varian ini.');
+  }
+  if (text.includes('SJ_MTO_COMPONENT_REQUIRED')) {
+    throw new Error(
+      'Varian yang dibuat saat dijual membutuhkan minimal satu bahan atau kemasan.',
+    );
+  }
+  if (text.includes('SJ_VARIANT_PACKAGING_KIND_INVALID')) {
+    throw new Error('Komponen kemasan harus berasal dari stok jenis Kemasan.');
+  }
+  if (text.includes('SJ_VARIANT_INGREDIENT_KIND_INVALID')) {
+    throw new Error(
+      'Komponen bahan harus berasal dari stok bahan yang sesuai.',
+    );
+  }
+  if (text.includes('SJ_STOCK_VARIANT_INGREDIENT_NOT_ALLOWED')) {
+    throw new Error(
+      'Varian stok tidak memakai bahan saat penjualan. Gunakan Kemasan atau BOM Produksi.',
+    );
+  }
+  if (error?.code === '23505' || text.includes('DUPLICATE KEY')) {
+    throw new Error('Kode tersebut sudah digunakan. Gunakan kode lain.');
+  }
+
+  throw new Error(
+    error?.message || error?.code || 'Perubahan produk gagal disimpan.',
+  );
+}
+
+export async function fetchProductMasterCapability(): Promise<boolean> {
+  const { data, error } = await supabase.rpc('product_master_capability');
+  if (error) {
+    if (rpcMissing(error)) return false;
+    fail(error);
+  }
+  return data === true;
+}
+
+export async function fetchProductMasterStockOptions(): Promise<
+  ProductMasterStockOption[]
+> {
+  const { data, error } = await supabase
+    .from('stock_items')
+    .select('id,code,display_name,item_kind,base_unit')
+    .eq('active', true)
+    .order('display_name');
+
+  if (error) fail(error);
+
+  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => ({
+    id: String(row.id),
+    code: String(row.code ?? ''),
+    displayName: String(row.display_name ?? ''),
+    itemKind: String(row.item_kind ?? ''),
+    baseUnit: String(row.base_unit ?? ''),
+  }));
+}
+
+export type ProductMasterComponentInput = {
+  stockItemId: string;
+  role: 'INGREDIENT' | 'PACKAGING';
+  quantityPerUnit: number;
+};
+
+export async function saveSaleProductMaster(args: {
+  productId: string | null;
+  code: string;
+  displayName: string;
+  categoryCode: string;
+  description: string;
+  active: boolean;
+}) {
+  requireOnlineAction('Simpan Produk');
+  const { data, error } = await supabase.rpc('save_sale_product_master', {
+    p_product_id: args.productId,
+    p_code: args.code,
+    p_display_name: args.displayName,
+    p_category_code: args.categoryCode,
+    p_description: args.description,
+    p_active: args.active,
+    p_idempotency_key: crypto.randomUUID(),
+  });
+  if (error) productMasterFail(error);
+  return data as {
+    success: boolean;
+    replay: boolean;
+    product_id: string;
+    created: boolean;
+  };
+}
+
+export async function saveProductVariantMaster(args: {
+  variantId: string | null;
+  productId: string;
+  code: string;
+  displayName: string;
+  fulfillmentMode: ProductVariantOps['fulfillmentMode'];
+  saleStockItemId: string | null;
+  salePrice: number;
+  active: boolean;
+  isDefault: boolean;
+  components: ProductMasterComponentInput[];
+}) {
+  requireOnlineAction('Simpan Varian');
+  const { data, error } = await supabase.rpc('save_product_variant_master', {
+    p_variant_id: args.variantId,
+    p_product_id: args.productId,
+    p_code: args.code,
+    p_display_name: args.displayName,
+    p_fulfillment_mode: args.fulfillmentMode,
+    p_sale_stock_item_id: args.saleStockItemId,
+    p_sale_price: args.salePrice,
+    p_active: args.active,
+    p_is_default: args.isDefault,
+    p_components: args.components.map((component) => ({
+      stock_item_id: component.stockItemId,
+      role: component.role,
+      quantity_per_unit: component.quantityPerUnit,
+    })),
+    p_idempotency_key: crypto.randomUUID(),
+  });
+  if (error) productMasterFail(error);
+  return data as {
+    success: boolean;
+    replay: boolean;
+    variant_id: string;
+    created: boolean;
+  };
+}
+
 export async function fetchBomStockOptions(): Promise<{
   finishedGoods: BomStockOption[];
   components: BomStockOption[];

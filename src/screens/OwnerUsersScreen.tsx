@@ -61,6 +61,7 @@ const OPERATIONAL_PERMISSIONS: Array<{
   { code: 'CUSTOMER_DEBT_MANAGE', label: 'Kelola Hutang Pelanggan' },
   { code: 'INVENTORY_TRANSFER', label: 'Transfer Barang' },
   { code: 'PURCHASE_MANAGE', label: 'Kelola Pembelian' },
+  { code: 'PRODUCT_MANAGE', label: 'Kelola Produk Jual' },
   { code: 'PRODUCTION_MANAGE', label: 'Kelola Produksi' },
   { code: 'CUSTOMER_MANAGE', label: 'Kelola Pelanggan' },
   { code: 'EMPLOYEE_MANAGE', label: 'Kelola Karyawan' },

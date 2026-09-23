@@ -2,13 +2,17 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import { OperationsNav } from '../components/OperationsNav';
+import { ProductMasterEditor } from '../components/ProductMasterEditor';
 import { SearchablePicker } from '../components/SearchablePicker';
 import {
   activateBom,
   fetchBomStockOptions,
+  fetchProductMasterCapability,
+  fetchProductMasterStockOptions,
   fetchProductOperations,
   saveBomDraft,
   type BomStockOption,
+  type ProductMasterStockOption,
   type ProductOperationsProduct,
   type ProductVariantOps,
 } from '../operations/product-api';
@@ -48,7 +52,19 @@ export function ProductOperationsScreen() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loadingBomOptions, setLoadingBomOptions] = useState(false);
   const [bomOptionsLoaded, setBomOptionsLoaded] = useState(false);
+  const [productMasterReady, setProductMasterReady] = useState(false);
+  const [productMasterChecked, setProductMasterChecked] = useState(false);
+  const [masterStockOptions, setMasterStockOptions] = useState<
+    ProductMasterStockOption[]
+  >([]);
+  const [masterStockLoaded, setMasterStockLoaded] = useState(false);
+  const [masterStockLoading, setMasterStockLoading] = useState(false);
+  const [masterOpen, setMasterOpen] = useState(false);
+  const [masterProductId, setMasterProductId] = useState<string | null>(null);
 
+  const canRequestProductManagement =
+    authority !== null && hasPermission(authority, 'PRODUCT_MANAGE');
+  const canManageProduct = canRequestProductManagement && productMasterReady;
   const canManageProduction =
     authority !== null && hasPermission(authority, 'PRODUCTION_MANAGE');
 
@@ -99,6 +115,52 @@ export function ProductOperationsScreen() {
       });
     }
   }, [tab, canManageProduction, ensureBomOptions]);
+
+  useEffect(() => {
+    let active = true;
+    if (!canRequestProductManagement) {
+      setProductMasterReady(false);
+      setProductMasterChecked(true);
+      return () => {
+        active = false;
+      };
+    }
+
+    setProductMasterChecked(false);
+    void fetchProductMasterCapability()
+      .then((ready) => {
+        if (!active) return;
+        setProductMasterReady(ready);
+        setProductMasterChecked(true);
+      })
+      .catch(() => {
+        if (!active) return;
+        setProductMasterReady(false);
+        setProductMasterChecked(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [canRequestProductManagement]);
+
+  useEffect(() => {
+    if (!productMasterReady || masterStockLoaded || masterStockLoading) return;
+    setMasterStockLoading(true);
+    void fetchProductMasterStockOptions()
+      .then((items) => {
+        setMasterStockOptions(items);
+        setMasterStockLoaded(true);
+      })
+      .catch((cause: unknown) => {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'Data stok untuk editor produk gagal dimuat.',
+        );
+      })
+      .finally(() => setMasterStockLoading(false));
+  }, [productMasterReady, masterStockLoaded, masterStockLoading]);
 
   const visibleProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -233,6 +295,38 @@ export function ProductOperationsScreen() {
     bomComponents.map((component) => [component.id, component]),
   );
 
+  async function openProductMaster(productId: string | null) {
+    if (!canManageProduct) return;
+    setMasterProductId(productId);
+    setMasterOpen(true);
+    if (masterStockLoaded || masterStockLoading) return;
+    setMasterStockLoading(true);
+    try {
+      setMasterStockOptions(await fetchProductMasterStockOptions());
+      setMasterStockLoaded(true);
+    } catch (cause) {
+      setMasterOpen(false);
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'Data stok untuk editor produk gagal dimuat.',
+      );
+    } finally {
+      setMasterStockLoading(false);
+    }
+  }
+
+  async function refreshAfterMasterSave(productId: string) {
+    await load();
+    setSelectedId(productId);
+    setMasterProductId(productId);
+  }
+
+  const masterProduct =
+    masterProductId === null
+      ? null
+      : (products.find((product) => product.id === masterProductId) ?? null);
+
   return (
     <main className="shell operations-shell">
       <header className="topbar operations-header">
@@ -252,15 +346,31 @@ export function ProductOperationsScreen() {
 
       <section className="product-ops-layout">
         <aside className="product-ops-list">
-          <label>
-            <span className="field-label">Cari produk</span>
-            <input
-              type="search"
-              placeholder="Nama, kode, kategori"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-            />
-          </label>
+          <div className="product-ops-list-tools">
+            <label className="product-ops-search">
+              <span className="field-label">Cari produk</span>
+              <span className="operations-search-field">
+                <Icon name="search" size={18} />
+                <input
+                  type="search"
+                  placeholder="Nama, kode, kategori"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+              </span>
+            </label>
+            {canManageProduct && (
+              <button
+                className="secondary-button product-master-add-button"
+                type="button"
+                onClick={() => void openProductMaster(null)}
+                disabled={masterStockLoading}
+              >
+                <Icon name="add" size={17} />
+                <span>Tambah Produk</span>
+              </button>
+            )}
+          </div>
 
           <div className="product-ops-list-items">
             {loadingProducts ? (
@@ -324,7 +434,10 @@ export function ProductOperationsScreen() {
           ) : (
             <>
               <header className="product-ops-detail-head">
-                <div>
+                <span className="product-ops-hero-icon" aria-hidden="true">
+                  <Icon name="product" size={28} />
+                </span>
+                <div className="product-ops-detail-copy">
                   <p className="eyebrow">{selected.categoryCode ?? 'PRODUK'}</p>
                   <h2>{selected.displayName}</h2>
                   <p className="muted">
@@ -332,9 +445,22 @@ export function ProductOperationsScreen() {
                     {selected.active ? 'Aktif dijual' : 'Nonaktif'}
                   </p>
                 </div>
-                <span className="operations-status">
-                  {selected.variants.length} Varian
-                </span>
+                <div className="product-ops-head-actions">
+                  <span className="operations-status">
+                    {selected.variants.length} Varian
+                  </span>
+                  {canManageProduct && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => void openProductMaster(selected.id)}
+                      disabled={masterStockLoading}
+                    >
+                      <Icon name="settings" size={17} />
+                      <span>Kelola Produk</span>
+                    </button>
+                  )}
+                </div>
               </header>
 
               <div className="product-ops-tabs" role="tablist">
@@ -378,8 +504,8 @@ export function ProductOperationsScreen() {
                     <span>Sumber kompatibilitas</span>
                     <strong>
                       {selected.legacyStockItemId
-                        ? 'Legacy mapped'
-                        : 'Product V2'}
+                        ? 'Terhubung stok lama'
+                        : 'Produk baru'}
                     </strong>
                   </article>
                   {selected.description && (
@@ -399,9 +525,9 @@ export function ProductOperationsScreen() {
                         <span>{variant.code}</span>
                       </div>
                       <span className="operations-mode">
-                        {variant.fulfillmentMode}
+                        {modeLabel(variant.fulfillmentMode)}
                       </span>
-                      <span>{modeLabel(variant.fulfillmentMode)}</span>
+                      <span>{variant.active ? 'Aktif' : 'Nonaktif'}</span>
                       <strong>{formatIdr(variant.salePrice)}</strong>
                     </article>
                   ))}
@@ -442,8 +568,7 @@ export function ProductOperationsScreen() {
                   <section>
                     <h3>BOM Produksi</h3>
                     <p className="muted">
-                      Authority resep produksi versioned untuk barang
-                      PREPRODUCED.
+                      Resep produksi berversi untuk barang PREPRODUCED.
                     </p>
                     {selected.variants.every(
                       (variant) => variant.boms.length === 0,
@@ -497,12 +622,10 @@ export function ProductOperationsScreen() {
                     <section className="bom-config-panel">
                       <header>
                         <div>
-                          <p className="eyebrow">OWNER / PRODUKSI</p>
+                          <p className="eyebrow">KELOLA PRODUKSI</p>
                           <h3>Konfigurasi BOM</h3>
                         </div>
-                        <span className="operations-status">
-                          PRODUCTION_MANAGE
-                        </span>
+                        <span className="operations-status">Izin Produksi</span>
                       </header>
                       <p className="muted">
                         Simpan sebagai draft versioned. Aktivasi memakai
@@ -706,6 +829,23 @@ export function ProductOperationsScreen() {
           )}
         </section>
       </section>
+
+      {masterOpen && (!masterStockLoading || masterStockLoaded) && (
+        <ProductMasterEditor
+          product={masterProduct}
+          stockOptions={masterStockOptions}
+          onClose={() => setMasterOpen(false)}
+          onSaved={refreshAfterMasterSave}
+        />
+      )}
+
+      {canRequestProductManagement &&
+        productMasterChecked &&
+        !productMasterReady && (
+          <span className="sr-only">
+            Editor produk belum aktif pada backend ini.
+          </span>
+        )}
     </main>
   );
 }

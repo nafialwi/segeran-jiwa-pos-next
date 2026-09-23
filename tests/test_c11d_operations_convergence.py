@@ -76,7 +76,7 @@ class C11DOperationsConvergenceTests(unittest.TestCase):
     def test_c11d_does_not_introduce_database_migration(self):
         migrations = ROOT / "supabase/migrations"
         names = [p.name.lower() for p in migrations.glob("*.sql")]
-        self.assertFalse(any("c11" in name for name in names))
+        self.assertFalse(any("c11d" in name for name in names))
 
 
 if __name__ == "__main__":

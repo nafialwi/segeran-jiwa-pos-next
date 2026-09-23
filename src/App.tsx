@@ -158,7 +158,11 @@ export function App() {
             path="/produk"
             element={
               <RequireAccess
-                anyPermissions={['INVENTORY_READ', 'PRODUCTION_MANAGE']}
+                anyPermissions={[
+                  'INVENTORY_READ',
+                  'PRODUCT_MANAGE',
+                  'PRODUCTION_MANAGE',
+                ]}
               >
                 <ProductOperationsScreen />
               </RequireAccess>

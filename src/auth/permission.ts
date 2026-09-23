@@ -65,7 +65,11 @@ export function canAccessRoute(
     return hasPermission(authority, 'INVENTORY_READ');
   }
   if (route === '/produk') {
-    return hasAnyPermission(authority, ['INVENTORY_READ', 'PRODUCTION_MANAGE']);
+    return hasAnyPermission(authority, [
+      'INVENTORY_READ',
+      'PRODUCT_MANAGE',
+      'PRODUCTION_MANAGE',
+    ]);
   }
   if (route === '/pembelian') {
     return hasPermission(authority, 'PURCHASE_MANAGE');

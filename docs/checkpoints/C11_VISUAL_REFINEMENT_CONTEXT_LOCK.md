@@ -139,3 +139,25 @@ Refinement 04 source convergence is complete.
 - no database migration or business-authority change was introduced.
 
 See docs/checkpoints/C11E_CONTROL_CENTER_MOBILE_USABILITY_SAFEPOINT.md
+
+## C11-F0A safe checkpoint — Product Master completion
+
+The pre-final functional gap closure has started.
+
+C11-F0A adds a permission-bounded Product Master authority and editor:
+
+- new PRODUCT_MANAGE permission;
+- create/update product metadata and active state;
+- create/update variant name/code/price/mode/active/default;
+- configure sale-stage Ingredient and Packaging components;
+- derive FINISHED_GOOD server-side for stock-backed variants;
+- keep production BOM as the separate versioned production authority;
+- preserve historical sale snapshots;
+- mutations are online-only, idempotent, audited RPCs with no client table DML;
+- editor is fail-closed behind a backend capability probe;
+- migration source is prepared but not applied to Production.
+
+Canonical source verification: **96/96 JS + 338/338 Python PASS**, plus repo guard,
+format, lint, TypeScript, production build, and diff-check.
+
+See docs/checkpoints/C11F0A_PRODUCT_MASTER_SAFEPOINT.md

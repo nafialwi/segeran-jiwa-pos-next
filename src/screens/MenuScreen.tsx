@@ -117,7 +117,13 @@ export function MenuScreen() {
       icon: 'restock',
     });
   }
-  if (hasAnyPermission(authority, ['INVENTORY_READ', 'PRODUCTION_MANAGE'])) {
+  if (
+    hasAnyPermission(authority, [
+      'INVENTORY_READ',
+      'PRODUCT_MANAGE',
+      'PRODUCTION_MANAGE',
+    ])
+  ) {
     business.push({
       label: 'Produk & Resep',
       detail: 'Varian, resep penjualan, kemasan, dan BOM',
