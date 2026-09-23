@@ -7759,3 +7759,27 @@ body,
   background: #9aa69f;
   box-shadow: none;
 }
+
+/* C11-F0E — Shift interaction state hardening */
+.shift-operations-screen button,
+.shift-operations-screen input,
+.shift-operations-screen select,
+.shift-operations-screen a {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.shift-closing-card input::placeholder {
+  color: #87938c;
+}
+
+.shift-closing-card .variance.neutral strong {
+  color: var(--sj-text-muted);
+}
+
+@media (hover: none), (pointer: coarse) {
+  .shift-operations-screen button:hover,
+  .shift-operations-screen a:hover {
+    transform: none;
+  }
+}

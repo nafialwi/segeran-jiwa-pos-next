@@ -47,8 +47,9 @@ export function ShiftManagementScreen() {
   const [openingBalance, setOpeningBalance] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
-  const [actualCash, setActualCash] = useState(0);
+  const [actualCashInput, setActualCashInput] = useState('');
   const [closing, setClosing] = useState(false);
+  const [shiftMessage, setShiftMessage] = useState('');
 
   const [expenseCategory, setExpenseCategory] = useState('');
   const [expenseDescription, setExpenseDescription] = useState('');
@@ -117,10 +118,20 @@ export function ShiftManagementScreen() {
       setPackagingReconciliation(null);
       setOpeningPackagingPhysical({});
       setClosingPackagingPhysical({});
+      setActualCashInput('');
+      setExpenseCategory('');
+      setExpenseDescription('');
+      setExpenseAmount(0);
+      setExpenseMessage('');
+      setPackagingMessage('');
       return () => {
         cancelled = true;
       };
     }
+
+    setActualCashInput('');
+    setExpenseMessage('');
+    setPackagingMessage('');
 
     void (async () => {
       try {
@@ -149,11 +160,15 @@ export function ShiftManagementScreen() {
   const handleOpen = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    setShiftMessage('');
     setSubmitting(true);
     try {
       await openShift(locationId, openingBalance);
       const updated = await fetchMyOpenShift();
+      setOpeningBalance(0);
+      setActualCashInput('');
       setShift(updated);
+      setShiftMessage('Shift berhasil dibuka. Saldo awal sudah dikunci.');
     } catch (err) {
       setError(toShiftErrorMessage(err));
     } finally {
@@ -164,12 +179,28 @@ export function ShiftManagementScreen() {
   const handleClose = async (event: React.FormEvent) => {
     event.preventDefault();
     if (!shift) return;
+
+    const actualCash = Number(actualCashInput);
+    if (
+      actualCashInput.trim() === '' ||
+      !Number.isFinite(actualCash) ||
+      actualCash < 0
+    ) {
+      setError('Uang aktual wajib diisi dari hasil hitung fisik.');
+      return;
+    }
+
     setError(null);
+    setShiftMessage('');
     setClosing(true);
     try {
       const variance = await closeShift(shift.id, actualCash);
-      alert(`Shift ditutup. Varians: ${formatVariance(variance)}`);
+      setActualCashInput('');
+      setOpeningBalance(0);
       setShift(null);
+      setShiftMessage(
+        'Shift berhasil ditutup. Varians kas: ' + formatVariance(variance),
+      );
     } catch (err) {
       setError(toShiftErrorMessage(err));
     } finally {
@@ -361,7 +392,15 @@ export function ShiftManagementScreen() {
   }
 
   const expectedCash = runningReconciliation?.expected_cash ?? 0;
-  const previewVariance = actualCash - expectedCash;
+  const parsedActualCash =
+    actualCashInput.trim() === '' ? null : Number(actualCashInput);
+  const actualCashValid =
+    parsedActualCash !== null &&
+    Number.isFinite(parsedActualCash) &&
+    parsedActualCash >= 0;
+  const previewVariance = actualCashValid
+    ? parsedActualCash - expectedCash
+    : null;
 
   return (
     <main className="shell operations-shell shift-operations-screen">
@@ -380,6 +419,11 @@ export function ShiftManagementScreen() {
       <OperationsNav />
 
       {error && <p className="error-banner">{error}</p>}
+      {shiftMessage && (
+        <p className="success-banner shift-inline-message" role="status">
+          {shiftMessage}
+        </p>
+      )}
 
       {canCloseShift(shift) && shift ? (
         <>
@@ -1079,11 +1123,15 @@ export function ShiftManagementScreen() {
               </div>
               <div>
                 <span>Uang Aktual di Laci</span>
-                <strong>{formatIdr(actualCash)}</strong>
+                <strong>
+                  {actualCashValid && parsedActualCash !== null
+                    ? formatIdr(parsedActualCash)
+                    : 'Belum diisi'}
+                </strong>
               </div>
               <div
                 className={
-                  previewVariance === 0
+                  previewVariance === null || previewVariance === 0
                     ? 'variance neutral'
                     : previewVariance > 0
                       ? 'variance positive'
@@ -1091,7 +1139,11 @@ export function ShiftManagementScreen() {
                 }
               >
                 <span>Preview Varians</span>
-                <strong>{formatVariance(previewVariance)}</strong>
+                <strong>
+                  {previewVariance === null
+                    ? '—'
+                    : formatVariance(previewVariance)}
+                </strong>
               </div>
             </div>
 
@@ -1101,8 +1153,14 @@ export function ShiftManagementScreen() {
                 <input
                   type="number"
                   step="1000"
-                  value={actualCash}
-                  onChange={(e) => setActualCash(Number(e.target.value))}
+                  min="0"
+                  inputMode="numeric"
+                  value={actualCashInput}
+                  placeholder="Masukkan hasil hitung fisik"
+                  onChange={(e) => {
+                    setError(null);
+                    setActualCashInput(e.target.value);
+                  }}
                   required
                 />
               </label>
@@ -1133,7 +1191,9 @@ export function ShiftManagementScreen() {
                 <button
                   className="primary-button"
                   type="submit"
-                  disabled={closing || !runningReconciliation}
+                  disabled={
+                    closing || !runningReconciliation || !actualCashValid
+                  }
                 >
                   {closing ? 'Menutup…' : 'Tutup Shift'}
                 </button>

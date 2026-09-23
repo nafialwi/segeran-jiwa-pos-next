@@ -118,11 +118,8 @@ class C11F0CShiftPackagingReconciliationTests(unittest.TestCase):
 
     def test_shift_close_is_not_silently_hard_blocked_by_new_packaging_feature(self):
         screen = SHIFT_SCREEN.read_text(encoding="utf-8")
-        self.assertIn("disabled={closing || !runningReconciliation}", screen)
-        self.assertNotIn(
-            "disabled={closing || !runningReconciliation || !packagingClosingComplete}",
-            screen,
-        )
+        self.assertIn("closing || !runningReconciliation || !actualCashValid", screen)
+        self.assertNotIn("!packagingClosingComplete", screen[screen.index("Tutup Shift"):])
         self.assertIn("Shift tidak mengarang angka fisik", screen)
 
     def test_human_error_mapping_handles_stale_count_and_late_opening(self):

@@ -220,3 +220,17 @@ Checkout V2 authority, idempotency, inventory validation, payment guards, and
 historical snapshots are unchanged. No C11-F0D database migration is added.
 
 See docs/checkpoints/C11F0D_SALES_DAILY_USE_SAFEPOINT.md.
+
+## C11-F0E safe checkpoint — shift state and mobile interaction
+
+Shift daily-use state is now explicit and reset-safe.
+
+- physical closing cash starts empty instead of implying zero;
+- variance is unavailable until a real physical cash value is entered;
+- successful open/close uses inline feedback instead of blocking browser alert;
+- opening, closing, expense, and packaging transient drafts are cleared across shift boundaries;
+- mobile tap residue is suppressed on Shift controls;
+- packaging reconciliation is still not a hidden hard close gate;
+- shift, reconciliation, packaging, and inventory authorities are unchanged.
+
+See: docs/checkpoints/C11F0E_SHIFT_STATE_MOBILE_INTERACTION_SAFEPOINT.md
