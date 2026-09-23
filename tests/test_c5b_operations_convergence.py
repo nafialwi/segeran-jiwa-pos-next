@@ -148,7 +148,8 @@ class C5BOperationsConvergenceTests(unittest.TestCase):
         self.assertIn("sale_item_component_snapshots", migration)
         self.assertIn("component_role = 'PACKAGING'", migration)
         self.assertIn("ready: false", api)
-        self.assertIn("Theoretical usage", screen)
+        self.assertIn("Pemakaian Teoritis", screen)
+        self.assertIn("fetchShiftPackagingReconciliation", screen)
         self.assertNotIn("record_inventory_movement", api)
 
     def test_reconciliation_is_part_of_shared_operations_workspace(self):

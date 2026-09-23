@@ -5,6 +5,10 @@ import { useAuth } from '../auth/AuthProvider';
 import { hasPermission } from '../auth/permission';
 import { Icon } from '../ui/Icon';
 import {
+  postInventoryCount,
+  recordInventoryCount,
+} from '../inventory/inventory-control-api';
+import {
   canCloseShift,
   formatIdr,
   formatVariance,
@@ -18,13 +22,15 @@ import {
   fetchShiftExpenseApprovals,
   fetchShiftExpenses,
   fetchShiftReconciliation,
-  fetchShiftPackagingUsage,
+  fetchShiftPackagingReconciliation,
+  createShiftPackagingCount,
   fetchLocations,
   fetchMyOpenShift,
   openShift,
   postShiftExpense,
   type LocationOption,
   type ShiftExpenseApproval,
+  type ShiftPackagingReconciliation,
 } from '../shift/shift-api';
 
 export function ShiftManagementScreen() {
@@ -51,20 +57,23 @@ export function ShiftManagementScreen() {
   const [expenseApprovals, setExpenseApprovals] = useState<
     ShiftExpenseApproval[]
   >([]);
-  const [packagingUsage, setPackagingUsage] = useState<{
-    ready: boolean;
-    items: Array<{
-      stockItemId: string;
-      code: string;
-      name: string;
-      theoreticalUsage: number;
-    }>;
-  }>({ ready: true, items: [] });
+  const [packagingReconciliation, setPackagingReconciliation] =
+    useState<ShiftPackagingReconciliation | null>(null);
+  const [openingPackagingPhysical, setOpeningPackagingPhysical] = useState<
+    Record<string, string>
+  >({});
+  const [closingPackagingPhysical, setClosingPackagingPhysical] = useState<
+    Record<string, string>
+  >({});
+  const [packagingBusy, setPackagingBusy] = useState(false);
+  const [packagingMessage, setPackagingMessage] = useState('');
   const [expenseMessage, setExpenseMessage] = useState('');
   const [submittingExpense, setSubmittingExpense] = useState(false);
 
   const canCreateShiftExpense =
     authority !== null && hasPermission(authority, 'EXPENSE_SHIFT_CREATE');
+  const canCountPackaging =
+    authority !== null && hasPermission(authority, 'INVENTORY_COUNT');
 
   useEffect(() => {
     let cancelled = false;
@@ -105,7 +114,9 @@ export function ShiftManagementScreen() {
       setExpenses([]);
       setExpenseApprovals([]);
       setRunningReconciliation(null);
-      setPackagingUsage({ ready: true, items: [] });
+      setPackagingReconciliation(null);
+      setOpeningPackagingPhysical({});
+      setClosingPackagingPhysical({});
       return () => {
         cancelled = true;
       };
@@ -117,13 +128,13 @@ export function ShiftManagementScreen() {
           fetchShiftExpenses(shift.id),
           fetchShiftExpenseApprovals(shift.id),
           fetchShiftReconciliation(shift.id),
-          fetchShiftPackagingUsage(shift.id),
+          fetchShiftPackagingReconciliation(shift.id),
         ]);
         if (!cancelled) {
           setExpenses(rows);
           setExpenseApprovals(approvals);
           setRunningReconciliation(reconciliation);
-          setPackagingUsage(packaging);
+          setPackagingReconciliation(packaging);
         }
       } catch (err) {
         if (!cancelled) setError(toShiftErrorMessage(err));
@@ -199,6 +210,134 @@ export function ShiftManagementScreen() {
       setSubmittingExpense(false);
     }
   };
+
+  async function refreshPackaging() {
+    if (!shift) return;
+    const next = await fetchShiftPackagingReconciliation(shift.id);
+    setPackagingReconciliation(next);
+  }
+
+  async function createPackagingCheckpoint(checkpoint: 'OPENING' | 'CLOSING') {
+    if (!shift) return;
+    setPackagingBusy(true);
+    setPackagingMessage('');
+    setError(null);
+    try {
+      await createShiftPackagingCount(shift.id, checkpoint);
+      await refreshPackaging();
+      if (checkpoint === 'OPENING') {
+        setOpeningPackagingPhysical({});
+      } else {
+        setClosingPackagingPhysical({});
+      }
+      setPackagingMessage(
+        checkpoint === 'OPENING'
+          ? 'Snapshot opening kemasan dibuat. Hitung jumlah fisik setiap item.'
+          : 'Snapshot closing kemasan dibuat. Hitung jumlah fisik setiap item.',
+      );
+    } catch (err) {
+      setError(toShiftErrorMessage(err));
+    } finally {
+      setPackagingBusy(false);
+    }
+  }
+
+  async function savePackagingPhysical(checkpoint: 'OPENING' | 'CLOSING') {
+    const reconciliation = packagingReconciliation;
+    const count =
+      checkpoint === 'OPENING'
+        ? reconciliation?.openingCount
+        : reconciliation?.closingCount;
+    if (!count || count.status !== 'DRAFT') return;
+
+    const physical =
+      checkpoint === 'OPENING'
+        ? openingPackagingPhysical
+        : closingPackagingPhysical;
+    const lines = (reconciliation?.items ?? [])
+      .filter((item) =>
+        checkpoint === 'OPENING'
+          ? item.openingExpectedQuantity !== null
+          : item.closingExpectedQuantity !== null,
+      )
+      .map((item) => {
+        const raw = physical[item.stockItemId];
+        const quantity =
+          raw === undefined || raw.trim() === '' ? NaN : Number(raw);
+        return {
+          stockItemId: item.stockItemId,
+          physicalQuantity: quantity,
+        };
+      });
+
+    if (
+      lines.length === 0 ||
+      lines.some(
+        (line) =>
+          !Number.isFinite(line.physicalQuantity) || line.physicalQuantity < 0,
+      )
+    ) {
+      setError('Semua jumlah fisik kemasan wajib diisi dengan angka valid.');
+      return;
+    }
+
+    setPackagingBusy(true);
+    setPackagingMessage('');
+    setError(null);
+    try {
+      await recordInventoryCount({
+        countId: count.id,
+        lines,
+      });
+      await refreshPackaging();
+      setPackagingMessage(
+        'Hitungan fisik tersimpan. Posting checkpoint untuk mengunci fakta inventory.',
+      );
+    } catch (err) {
+      setError(toShiftErrorMessage(err));
+    } finally {
+      setPackagingBusy(false);
+    }
+  }
+
+  async function postPackagingCheckpoint(checkpoint: 'OPENING' | 'CLOSING') {
+    const count =
+      checkpoint === 'OPENING'
+        ? packagingReconciliation?.openingCount
+        : packagingReconciliation?.closingCount;
+    if (!count || count.status !== 'COUNTED') return;
+
+    setPackagingBusy(true);
+    setPackagingMessage('');
+    setError(null);
+    try {
+      await postInventoryCount(count.id);
+      await refreshPackaging();
+      setPackagingMessage(
+        checkpoint === 'OPENING'
+          ? 'Opening kemasan terposting. Ledger inventory sekarang memakai hasil fisik sebagai baseline.'
+          : 'Closing kemasan terposting. Selisih fisik tersimpan sebagai fakta stok opname.',
+      );
+    } catch (err) {
+      setError(toShiftErrorMessage(err));
+    } finally {
+      setPackagingBusy(false);
+    }
+  }
+
+  function packagingQuantity(value: number | null, unit = '') {
+    if (value === null) return '—';
+    const formatted = value.toLocaleString('id-ID', {
+      maximumFractionDigits: 3,
+    });
+    return unit ? formatted + ' ' + unit : formatted;
+  }
+
+  const packagingClosingStale =
+    packagingReconciliation?.items.some((item) => item.closingStale) ?? false;
+  const packagingClosingComplete =
+    packagingReconciliation?.closingCount?.status === 'POSTED' &&
+    !packagingClosingStale;
 
   if (loading) {
     return (
@@ -488,56 +627,436 @@ export function ShiftManagementScreen() {
             <header className="operations-panel-header">
               <div>
                 <p className="eyebrow">KEMASAN SHIFT</p>
-                <h2>Kontrol Kemasan</h2>
+                <h2>Rekonsiliasi Kemasan</h2>
               </div>
               <Link
                 className="secondary-button link-button"
                 to="/stok/kontrol?tab=COUNT&kind=PACKAGING"
               >
-                Hitung Fisik
+                Kontrol Stok
               </Link>
             </header>
 
-            {!packagingUsage.ready ? (
-              <div className="empty-state">
-                <strong>Fakta konsumsi kemasan V2 belum dipromosikan.</strong>
-                <p>
-                  Tampilan theoretical usage akan aktif setelah schema C2
-                  Product/Variant dipromosikan pada gate RC2. Shift tetap dapat
-                  berjalan.
-                </p>
-              </div>
-            ) : packagingUsage.items.length === 0 ? (
-              <p className="operations-empty">
-                Belum ada konsumsi kemasan dari transaksi V2 pada shift ini.
+            {packagingMessage && (
+              <p className="success-banner shift-inline-message">
+                {packagingMessage}
               </p>
-            ) : (
-              <div className="shift-packaging-list">
-                {packagingUsage.items.map((item) => (
-                  <article key={item.stockItemId}>
-                    <span className="shift-packaging-icon" aria-hidden="true">
-                      <Icon name="product" size={18} />
-                    </span>
-                    <span>
-                      <strong>{item.name}</strong>
-                      <small>{item.code}</small>
-                    </span>
-                    <span>
-                      <small>Theoretical usage</small>
-                      <strong>{item.theoreticalUsage}</strong>
-                    </span>
-                  </article>
-                ))}
-              </div>
             )}
 
-            <div className="purchase-authority-note">
-              <strong>Fisik tetap melalui inventory Stock Item.</strong>
-              <span>
-                Hitung closing fisik pada Kontrol Stok. C5-B tidak membuat
-                engine cup kedua dan tidak mengubah stok dari angka theoretical.
-              </span>
-            </div>
+            {packagingReconciliation === null ? (
+              <div
+                className="operations-card-skeleton shift-packaging-loading"
+                aria-label="Memuat rekonsiliasi kemasan"
+              >
+                <span />
+                <span />
+              </div>
+            ) : !packagingReconciliation.ready ? (
+              <>
+                <div className="empty-state">
+                  <strong>
+                    Rekonsiliasi fisik per shift belum tersedia pada backend
+                    ini.
+                  </strong>
+                  <p>
+                    Preview lama tetap fail-closed. Pemakaian teoritis di bawah
+                    ini berasal dari authority C10 dan tidak dianggap sebagai
+                    hitungan fisik.
+                  </p>
+                </div>
+                {packagingReconciliation.items.length > 0 && (
+                  <div className="shift-packaging-list legacy">
+                    {packagingReconciliation.items.map((item) => (
+                      <article key={item.stockItemId}>
+                        <span
+                          className="shift-packaging-icon"
+                          aria-hidden="true"
+                        >
+                          <Icon name="product" size={18} />
+                        </span>
+                        <span>
+                          <strong>{item.name}</strong>
+                          <small>{item.code}</small>
+                        </span>
+                        <span>
+                          <small>Pemakaian teoritis</small>
+                          <strong>{item.theoreticalUsage}</strong>
+                        </span>
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </>
+            ) : packagingReconciliation.items.length === 0 ? (
+              <div className="empty-state">
+                <strong>Belum ada Stock Item jenis PACKAGING.</strong>
+                <p>
+                  Tambahkan cup/kemasan sebagai Stock Item yang dilacak
+                  inventory sebelum menggunakan rekonsiliasi shift.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="shift-packaging-checkpoints">
+                  <article
+                    className={
+                      'shift-packaging-checkpoint' +
+                      (packagingReconciliation.openingCount?.status === 'POSTED'
+                        ? ' complete'
+                        : '')
+                    }
+                  >
+                    <header>
+                      <span className="shift-packaging-icon">
+                        <Icon name="inventory" size={18} />
+                      </span>
+                      <span>
+                        <strong>Opening Fisik</strong>
+                        <small>
+                          Baseline kemasan sebelum transaksi pertama
+                        </small>
+                      </span>
+                      <span className="operations-status">
+                        {packagingReconciliation.openingCount?.status ??
+                          (packagingReconciliation.openingTooLate
+                            ? 'TERLEWAT'
+                            : 'BELUM')}
+                      </span>
+                    </header>
+
+                    {packagingReconciliation.openingTooLate && (
+                      <p className="shift-packaging-warning">
+                        Opening fisik tidak boleh direkonstruksi setelah
+                        transaksi pertama. Lakukan closing fisik pada shift ini,
+                        lalu mulai shift berikutnya dengan checkpoint opening.
+                      </p>
+                    )}
+
+                    {!packagingReconciliation.openingCount &&
+                      !packagingReconciliation.openingTooLate &&
+                      canCountPackaging && (
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          disabled={packagingBusy}
+                          onClick={() =>
+                            void createPackagingCheckpoint('OPENING')
+                          }
+                        >
+                          Mulai Hitung Opening
+                        </button>
+                      )}
+
+                    {packagingReconciliation.openingCount?.status === 'DRAFT' &&
+                      !packagingReconciliation.openingTooLate && (
+                        <div className="shift-packaging-count-form">
+                          {packagingReconciliation.items
+                            .filter(
+                              (item) => item.openingExpectedQuantity !== null,
+                            )
+                            .map((item) => (
+                              <label key={item.stockItemId}>
+                                <span>
+                                  <strong>{item.name}</strong>
+                                  <small>
+                                    Sistem{' '}
+                                    {packagingQuantity(
+                                      item.openingExpectedQuantity,
+                                      item.baseUnit,
+                                    )}
+                                  </small>
+                                </span>
+                                <input
+                                  type="number"
+                                  min="0"
+                                  step="0.001"
+                                  inputMode="decimal"
+                                  placeholder="Fisik"
+                                  value={
+                                    openingPackagingPhysical[
+                                      item.stockItemId
+                                    ] ?? ''
+                                  }
+                                  onChange={(event) =>
+                                    setOpeningPackagingPhysical((current) => ({
+                                      ...current,
+                                      [item.stockItemId]: event.target.value,
+                                    }))
+                                  }
+                                />
+                              </label>
+                            ))}
+                          <button
+                            className="primary-button"
+                            type="button"
+                            disabled={packagingBusy}
+                            onClick={() =>
+                              void savePackagingPhysical('OPENING')
+                            }
+                          >
+                            Simpan Hitungan Opening
+                          </button>
+                        </div>
+                      )}
+
+                    {packagingReconciliation.openingCount?.status ===
+                      'COUNTED' &&
+                      !packagingReconciliation.openingTooLate && (
+                        <div className="shift-packaging-post-row">
+                          <span>
+                            Fisik sudah dicatat. Posting untuk mengunci
+                            baseline.
+                          </span>
+                          <button
+                            className="primary-button"
+                            type="button"
+                            disabled={packagingBusy}
+                            onClick={() =>
+                              void postPackagingCheckpoint('OPENING')
+                            }
+                          >
+                            Posting Opening
+                          </button>
+                        </div>
+                      )}
+
+                    {packagingReconciliation.openingCount?.status ===
+                      'POSTED' && (
+                      <p className="shift-packaging-complete-note">
+                        Opening terkunci pada inventory authority.
+                      </p>
+                    )}
+                  </article>
+
+                  <article
+                    className={
+                      'shift-packaging-checkpoint' +
+                      (packagingClosingComplete ? ' complete' : '')
+                    }
+                  >
+                    <header>
+                      <span className="shift-packaging-icon">
+                        <Icon name="check" size={18} />
+                      </span>
+                      <span>
+                        <strong>Closing Fisik</strong>
+                        <small>
+                          Hitung setelah transaksi selesai, sebelum tutup shift
+                        </small>
+                      </span>
+                      <span className="operations-status">
+                        {packagingReconciliation.closingCount?.status ??
+                          'BELUM'}
+                      </span>
+                    </header>
+
+                    {(!packagingReconciliation.closingCount ||
+                      packagingClosingStale) &&
+                      canCountPackaging && (
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          disabled={packagingBusy}
+                          onClick={() =>
+                            void createPackagingCheckpoint('CLOSING')
+                          }
+                        >
+                          {packagingClosingStale
+                            ? 'Hitung Ulang Closing'
+                            : 'Mulai Hitung Closing'}
+                        </button>
+                      )}
+
+                    {packagingReconciliation.closingCount?.status ===
+                      'DRAFT' && (
+                      <div className="shift-packaging-count-form">
+                        {packagingReconciliation.items
+                          .filter(
+                            (item) => item.closingExpectedQuantity !== null,
+                          )
+                          .map((item) => (
+                            <label key={item.stockItemId}>
+                              <span>
+                                <strong>{item.name}</strong>
+                                <small>
+                                  Expected{' '}
+                                  {packagingQuantity(
+                                    item.closingExpectedQuantity,
+                                    item.baseUnit,
+                                  )}
+                                </small>
+                              </span>
+                              <input
+                                type="number"
+                                min="0"
+                                step="0.001"
+                                inputMode="decimal"
+                                placeholder="Fisik"
+                                value={
+                                  closingPackagingPhysical[item.stockItemId] ??
+                                  ''
+                                }
+                                onChange={(event) =>
+                                  setClosingPackagingPhysical((current) => ({
+                                    ...current,
+                                    [item.stockItemId]: event.target.value,
+                                  }))
+                                }
+                              />
+                            </label>
+                          ))}
+                        <button
+                          className="primary-button"
+                          type="button"
+                          disabled={packagingBusy}
+                          onClick={() => void savePackagingPhysical('CLOSING')}
+                        >
+                          Simpan Hitungan Closing
+                        </button>
+                      </div>
+                    )}
+
+                    {packagingReconciliation.closingCount?.status ===
+                      'COUNTED' && (
+                      <div className="shift-packaging-post-row">
+                        <span>
+                          Fisik sudah dicatat. Posting untuk menyimpan varians
+                          sebagai fakta inventory.
+                        </span>
+                        <button
+                          className="primary-button"
+                          type="button"
+                          disabled={packagingBusy}
+                          onClick={() =>
+                            void postPackagingCheckpoint('CLOSING')
+                          }
+                        >
+                          Posting Closing
+                        </button>
+                      </div>
+                    )}
+
+                    {packagingClosingStale && (
+                      <p className="shift-packaging-warning">
+                        Ada pergerakan stok setelah snapshot closing. Gunakan
+                        Hitung Ulang Closing agar expected dan fisik memakai
+                        snapshot terbaru.
+                      </p>
+                    )}
+
+                    {packagingClosingComplete && (
+                      <p className="shift-packaging-complete-note">
+                        Closing terposting dan tidak ada pergerakan stok sesudah
+                        snapshot.
+                      </p>
+                    )}
+                  </article>
+                </div>
+
+                <div
+                  className="shift-packaging-reconciliation-grid"
+                  aria-label="Rekonsiliasi kemasan per item"
+                >
+                  {packagingReconciliation.items.map((item) => {
+                    const expectedClosing =
+                      item.closingExpectedQuantity ??
+                      item.currentExpectedQuantity;
+                    return (
+                      <article
+                        className={
+                          'shift-packaging-reconciliation-card' +
+                          (item.closingStale ? ' stale' : '')
+                        }
+                        key={item.stockItemId}
+                      >
+                        <header>
+                          <span className="shift-packaging-icon">
+                            <Icon name="product" size={18} />
+                          </span>
+                          <span>
+                            <strong>{item.name}</strong>
+                            <small>
+                              {item.code} · {item.baseUnit}
+                            </small>
+                          </span>
+                          {!item.inventoryTracked && (
+                            <span className="operations-status warning">
+                              TIDAK DILACAK
+                            </span>
+                          )}
+                        </header>
+                        <dl>
+                          <div>
+                            <dt>Awal Fisik</dt>
+                            <dd>
+                              {packagingQuantity(
+                                item.openingPhysicalQuantity,
+                                item.baseUnit,
+                              )}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Pemakaian Teoritis</dt>
+                            <dd>
+                              {packagingQuantity(
+                                item.theoreticalUsage,
+                                item.baseUnit,
+                              )}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Expected Closing</dt>
+                            <dd>
+                              {packagingQuantity(
+                                expectedClosing,
+                                item.baseUnit,
+                              )}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Fisik Closing</dt>
+                            <dd>
+                              {packagingQuantity(
+                                item.closingPhysicalQuantity,
+                                item.baseUnit,
+                              )}
+                            </dd>
+                          </div>
+                          <div
+                            className={
+                              item.variance === null
+                                ? 'variance neutral'
+                                : item.variance === 0
+                                  ? 'variance neutral'
+                                  : item.variance > 0
+                                    ? 'variance positive'
+                                    : 'variance negative'
+                            }
+                          >
+                            <dt>Selisih</dt>
+                            <dd>
+                              {packagingQuantity(item.variance, item.baseUnit)}
+                            </dd>
+                          </div>
+                        </dl>
+                      </article>
+                    );
+                  })}
+                </div>
+
+                <div className="purchase-authority-note">
+                  <strong>
+                    Satu authority inventory, bukan engine cup kedua.
+                  </strong>
+                  <span>
+                    Opening dan closing adalah Stock Opname yang ditautkan ke
+                    shift. Pemakaian teoritis berasal dari snapshot komponen
+                    transaksi. Selisih hanya muncul setelah jumlah fisik benar
+                    benar dicatat.
+                  </span>
+                </div>
+              </>
+            )}
           </section>
 
           <section className="operations-panel shift-closing-card">
@@ -587,12 +1106,21 @@ export function ShiftManagementScreen() {
                   required
                 />
               </label>
-              <div className="shift-closing-warning">
-                <strong>Sebelum menutup shift</strong>
+              <div
+                className={
+                  'shift-closing-warning' +
+                  (packagingClosingComplete ? ' complete' : '')
+                }
+              >
+                <strong>
+                  {packagingClosingComplete
+                    ? 'Kas dan kemasan siap ditinjau'
+                    : 'Sebelum menutup shift'}
+                </strong>
                 <span>
-                  Pastikan kas fisik sudah dihitung. Untuk cup/kemasan, gunakan
-                  Kontrol Kemasan agar expected dan fisik tercatat melalui
-                  inventory authority.
+                  {packagingClosingComplete
+                    ? 'Closing kemasan sudah terposting tanpa pergerakan stok setelah snapshot. Tetap pastikan kas fisik sudah dihitung.'
+                    : 'Pastikan kas fisik sudah dihitung. Jika kemasan dilacak, selesaikan closing fisik di Rekonsiliasi Kemasan. Shift tidak mengarang angka fisik yang belum dicatat.'}
                 </span>
               </div>
               <div className="button-row">

@@ -7354,3 +7354,228 @@ body,
     padding: 11px;
   }
 }
+
+/* C11-F0C — Shift Packaging Reconciliation */
+
+.shift-packaging-checkpoints {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.shift-packaging-checkpoint {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  min-width: 0;
+  padding: 13px;
+  border: 1px solid rgb(15 81 50 / 9%);
+  border-radius: 16px;
+  background: #fff;
+}
+
+.shift-packaging-checkpoint.complete {
+  border-color: rgb(22 120 70 / 18%);
+  background: #f7fcf8;
+}
+
+.shift-packaging-checkpoint > header,
+.shift-packaging-reconciliation-card > header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 9px;
+}
+
+.shift-packaging-checkpoint > header > span:nth-child(2),
+.shift-packaging-reconciliation-card > header > span:nth-child(2) {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.shift-packaging-checkpoint small,
+.shift-packaging-reconciliation-card small {
+  color: var(--sj-text-muted);
+}
+
+.shift-packaging-warning,
+.shift-packaging-complete-note {
+  margin: 0;
+  padding: 10px 11px;
+  border-radius: 12px;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.shift-packaging-warning {
+  border: 1px solid #ecd29b;
+  background: #fff9eb;
+  color: #755719;
+}
+
+.shift-packaging-complete-note {
+  border: 1px solid rgb(22 120 70 / 12%);
+  background: #eef9f1;
+  color: #17613d;
+}
+
+.shift-packaging-count-form {
+  display: grid;
+  gap: 8px;
+}
+
+.shift-packaging-count-form label {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: 1px solid rgb(15 81 50 / 8%);
+  border-radius: 12px;
+  background: #fffdf9;
+}
+
+.shift-packaging-count-form label > span {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.shift-packaging-count-form input {
+  min-width: 0;
+  text-align: right;
+}
+
+.shift-packaging-count-form > .primary-button {
+  min-height: 46px;
+}
+
+.shift-packaging-post-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.shift-packaging-post-row > span {
+  color: var(--sj-text-muted);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.shift-packaging-reconciliation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+  margin: 12px 0;
+}
+
+.shift-packaging-reconciliation-card {
+  display: grid;
+  gap: 11px;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgb(15 81 50 / 8%);
+  border-radius: 15px;
+  background: linear-gradient(180deg, #fff, #fffdf9);
+}
+
+.shift-packaging-reconciliation-card.stale {
+  border-color: #e3a7a7;
+  background: #fff8f8;
+}
+
+.shift-packaging-reconciliation-card dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 0;
+}
+
+.shift-packaging-reconciliation-card dl > div {
+  display: grid;
+  gap: 3px;
+  padding: 8px;
+  border-radius: 10px;
+  background: var(--sj-surface);
+}
+
+.shift-packaging-reconciliation-card dl > div:last-child {
+  grid-column: 1 / -1;
+}
+
+.shift-packaging-reconciliation-card dt {
+  color: var(--sj-text-muted);
+  font-size: 0.66rem;
+}
+
+.shift-packaging-reconciliation-card dd {
+  margin: 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.shift-packaging-reconciliation-card .variance.positive {
+  background: #eef9f1;
+  color: #17613d;
+}
+
+.shift-packaging-reconciliation-card .variance.negative {
+  background: #fff0f0;
+  color: #a23a3a;
+}
+
+.shift-packaging-reconciliation-card .variance.neutral {
+  background: #f2f5f3;
+}
+
+.shift-packaging-loading {
+  min-height: 120px;
+}
+
+.shift-closing-warning.complete {
+  border-color: rgb(22 120 70 / 16%);
+  background: #eef9f1;
+  color: #17613d;
+}
+
+@media (max-width: 620px) {
+  .shift-packaging-checkpoints,
+  .shift-packaging-reconciliation-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .shift-packaging-checkpoint,
+  .shift-packaging-reconciliation-card {
+    padding: 11px;
+  }
+}
+
+@media (max-width: 390px) {
+  .shift-packaging-checkpoint > header,
+  .shift-packaging-reconciliation-card > header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .shift-packaging-checkpoint > header > .operations-status,
+  .shift-packaging-reconciliation-card > header > .operations-status {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .shift-packaging-count-form label {
+    grid-template-columns: minmax(0, 1fr) 96px;
+    padding: 8px;
+  }
+
+  .shift-packaging-post-row {
+    grid-template-columns: 1fr;
+  }
+
+  .shift-packaging-post-row .primary-button {
+    width: 100%;
+  }
+}

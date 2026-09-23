@@ -356,22 +356,24 @@ Completed safe points:
 - C11-D — Inventory, Product/Recipe, Purchase, Production, Shift, plus loading-efficiency hardening;
 - C11-E — Control Center, Finance, Users/Devices, Attention, Backup/Health/Offline, and mobile long-list usability convergence.
 - C11-F0A — permission-bounded Product Master editor and mutation authority; migration source prepared, Production untouched;
-- C11-F0B — permission-bounded operational instructions for Cashier Dashboard with target, priority, validity, acknowledgement, and management read progress; migration source prepared, Production untouched.
+- C11-F0B — permission-bounded operational instructions for Cashier Dashboard with target, priority, validity, acknowledgement, and management read progress; migration source prepared, Production untouched;
+- C11-F0C — shift packaging Opening/Closing reconciliation through canonical Inventory Stock Count authority, immutable theoretical sale usage, stale-snapshot detection, and real physical variance; migration source prepared, Production untouched.
 
-C11-F0B canonical verification: **96/96 JavaScript + 348/348 Python PASS**.
+C11-F0C canonical verification: **96/96 JavaScript + 359/359 Python PASS**.
 No C11 source change has been released to Production.
 
 ## NEXT ACTION
 
-**Continue C11-F0C — Shift Packaging Reconciliation.**
+**Continue C11-F0D — Sales Daily-Use Completion.**
 
-Close the known packaging visibility gap with one authoritative shift projection
-for opening physical quantity, theoretical usage, expected closing, physical
-closing count, and variance per packaging Stock Item. Preserve the single
-inventory engine and do not derive/fabricate physical counts.
+Audit the real cashier daily path after C11-C and close the remaining practical
+friction without changing checkout truth: fast product discovery, cart
+correction, payment selection persistence/reset behavior, success-state next
+action, and small-screen touch/visual residue. Preserve sale authority,
+payment guards, historical snapshots, and offline fail-closed behavior.
 
 Keep RC4 immutable. Production remains blocked. C11-F final QA starts only after
-F0C/F0D/F0E known gaps are closed.
+F0D/F0E known gaps are closed.
 
 ## Cutover rule
 

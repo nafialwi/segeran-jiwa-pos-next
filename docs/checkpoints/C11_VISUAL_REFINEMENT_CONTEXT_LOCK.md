@@ -179,3 +179,23 @@ source-level, permission-bounded operational instruction capability.
 
 See:
 `docs/checkpoints/C11F0B_OPERATIONAL_MESSAGE_SAFEPOINT.md`
+
+## C11-F0C safe checkpoint — shift packaging reconciliation
+
+Shift packaging is now reconciled through the canonical Inventory Stock Count
+authority instead of a second cup-specific engine.
+
+- Opening/Closing packaging checkpoints extend `inventory_counts`;
+- Opening cannot be reconstructed after the first sale;
+- theoretical use remains sourced from immutable sale component snapshots;
+- Closing physical count and variance come only from real inventory count facts;
+- stale Closing snapshots are detected after subsequent packaging movements;
+- old count facts remain immutable and can be superseded by a fresh checkpoint;
+- mobile Shift UI exposes Opening, Theoretical Usage, Expected Closing,
+  Physical Closing, and Variance;
+- older backends fall back to the existing C10 theoretical-usage authority and
+  never fabricate physical data;
+- migration source is prepared but Production remains untouched.
+
+See:
+`docs/checkpoints/C11F0C_SHIFT_PACKAGING_RECONCILIATION_SAFEPOINT.md`

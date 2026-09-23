@@ -58,6 +58,7 @@ export function toShiftErrorMessage(error: unknown): string {
     error instanceof Error &&
     (error.message.startsWith('SJ_') ||
       error.message.startsWith('FINANCE_') ||
+      error.message.startsWith('INVENTORY_') ||
       error.message.startsWith('CS05:'))
   ) {
     const code = error.message.split(':')[0];
@@ -90,6 +91,22 @@ export function toShiftErrorMessage(error: unknown): string {
         return 'Deskripsi pengeluaran wajib diisi.';
       case 'FINANCE_CASH_MOVEMENT_SOURCE_REQUIRED':
         return 'Gerakan kas manual lama dinonaktifkan. Gunakan transaksi dengan sumber dana yang jelas.';
+      case 'SJ_SHIFT_PACKAGING_COUNT_PERMISSION_DENIED':
+        return 'Akun ini belum memiliki izin Stok Opname untuk menghitung kemasan shift.';
+      case 'SJ_SHIFT_PACKAGING_COUNT_DENIED':
+        return 'Checkpoint kemasan hanya dapat dibuat oleh kasir shift ini atau Owner.';
+      case 'SJ_SHIFT_PACKAGING_LOCATION_SCOPE_DENIED':
+        return 'Akun ini tidak memiliki akses stok opname pada lokasi shift.';
+      case 'SJ_SHIFT_PACKAGING_SHIFT_NOT_OPEN':
+        return 'Checkpoint kemasan hanya dapat dibuat saat shift masih aktif.';
+      case 'SJ_SHIFT_PACKAGING_OPENING_TOO_LATE':
+        return 'Opening kemasan harus dihitung sebelum transaksi pertama pada shift.';
+      case 'SJ_SHIFT_PACKAGING_ITEMS_EMPTY':
+        return 'Belum ada Stock Item PACKAGING aktif yang dilacak inventory.';
+      case 'INVENTORY_COUNT_BALANCE_CHANGED':
+        return 'Saldo inventory berubah setelah snapshot. Buat hitungan fisik baru agar expected tetap akurat.';
+      case 'INVENTORY_COUNT_PERMISSION_DENIED':
+        return 'Akun ini tidak memiliki izin Stok Opname.';
       default:
         return `Operasi gagal (${code}).`;
     }

@@ -269,3 +269,209 @@ export async function fetchShiftPackagingUsage(
     items: items.sort((a, b) => a.name.localeCompare(b.name, 'id')),
   };
 }
+
+export type ShiftPackagingCheckpointStatus = 'DRAFT' | 'COUNTED' | 'POSTED';
+
+export type ShiftPackagingCheckpoint = {
+  id: string;
+  status: ShiftPackagingCheckpointStatus;
+  snapshotAt: string;
+  countedAt: string | null;
+  postedAt: string | null;
+};
+
+export type ShiftPackagingReconciliationItem = {
+  stockItemId: string;
+  code: string;
+  name: string;
+  baseUnit: string;
+  inventoryTracked: boolean;
+  currentExpectedQuantity: number;
+  openingExpectedQuantity: number | null;
+  openingPhysicalQuantity: number | null;
+  theoreticalUsage: number;
+  closingExpectedQuantity: number | null;
+  closingPhysicalQuantity: number | null;
+  variance: number | null;
+  closingStale: boolean;
+};
+
+export type ShiftPackagingReconciliation = {
+  ready: boolean;
+  shiftId: string;
+  shiftStatus: 'OPEN' | 'CLOSED' | '';
+  locationId: string;
+  hasSales: boolean;
+  openingTooLate: boolean;
+  openingCount: ShiftPackagingCheckpoint | null;
+  closingCount: ShiftPackagingCheckpoint | null;
+  items: ShiftPackagingReconciliationItem[];
+};
+
+function optionalNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+function parsePackagingCheckpoint(
+  value: unknown,
+): ShiftPackagingCheckpoint | null {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    return null;
+  }
+  const row = value as Record<string, unknown>;
+  if (
+    typeof row.id !== 'string' ||
+    !['DRAFT', 'COUNTED', 'POSTED'].includes(String(row.status)) ||
+    typeof row.snapshot_at !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    id: row.id,
+    status: row.status as ShiftPackagingCheckpointStatus,
+    snapshotAt: row.snapshot_at,
+    countedAt: typeof row.counted_at === 'string' ? row.counted_at : null,
+    postedAt: typeof row.posted_at === 'string' ? row.posted_at : null,
+  };
+}
+
+function isMissingShiftPackagingReconciliationRpc(error: {
+  code?: string;
+  message?: string;
+  details?: string | null;
+}): boolean {
+  const text = [error.message ?? '', error.details ?? '']
+    .join(' ')
+    .toLowerCase();
+  return (
+    error.code === '42883' ||
+    error.code === 'PGRST202' ||
+    text.includes('could not find the function') ||
+    text.includes(
+      'function public.shift_packaging_reconciliation(uuid) does not exist',
+    )
+  );
+}
+
+export async function fetchShiftPackagingReconciliation(
+  shiftId: string,
+): Promise<ShiftPackagingReconciliation> {
+  const { data, error } = await supabase.rpc('shift_packaging_reconciliation', {
+    p_shift: shiftId,
+  });
+
+  if (error) {
+    if (!isMissingShiftPackagingReconciliationRpc(error)) {
+      fail(error);
+    }
+
+    const legacy = await fetchShiftPackagingUsage(shiftId);
+    return {
+      ready: false,
+      shiftId,
+      shiftStatus: '',
+      locationId: '',
+      hasSales: legacy.items.length > 0,
+      openingTooLate: false,
+      openingCount: null,
+      closingCount: null,
+      items: legacy.items.map((item) => ({
+        stockItemId: item.stockItemId,
+        code: item.code,
+        name: item.name,
+        baseUnit: '',
+        inventoryTracked: true,
+        currentExpectedQuantity: 0,
+        openingExpectedQuantity: null,
+        openingPhysicalQuantity: null,
+        theoreticalUsage: item.theoreticalUsage,
+        closingExpectedQuantity: null,
+        closingPhysicalQuantity: null,
+        variance: null,
+        closingStale: false,
+      })),
+    };
+  }
+
+  if (typeof data !== 'object' || data === null || Array.isArray(data)) {
+    throw new Error('SJ_SHIFT_PACKAGING_RECONCILIATION_INVALID');
+  }
+
+  const payload = data as Record<string, unknown>;
+  const rawItems = Array.isArray(payload.items) ? payload.items : [];
+  const items = rawItems.flatMap((entry) => {
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+      return [];
+    }
+    const row = entry as Record<string, unknown>;
+    if (
+      typeof row.stock_item_id !== 'string' ||
+      typeof row.code !== 'string' ||
+      typeof row.name !== 'string' ||
+      typeof row.base_unit !== 'string'
+    ) {
+      return [];
+    }
+
+    return [
+      {
+        stockItemId: row.stock_item_id,
+        code: row.code,
+        name: row.name,
+        baseUnit: row.base_unit,
+        inventoryTracked: row.inventory_tracked === true,
+        currentExpectedQuantity: Number(row.current_expected_quantity ?? 0),
+        openingExpectedQuantity: optionalNumber(row.opening_expected_quantity),
+        openingPhysicalQuantity: optionalNumber(row.opening_physical_quantity),
+        theoreticalUsage: Number(row.theoretical_usage ?? 0),
+        closingExpectedQuantity: optionalNumber(row.closing_expected_quantity),
+        closingPhysicalQuantity: optionalNumber(row.closing_physical_quantity),
+        variance: optionalNumber(row.variance),
+        closingStale: row.closing_stale === true,
+      },
+    ];
+  });
+
+  return {
+    ready: payload.ready === true,
+    shiftId: typeof payload.shift_id === 'string' ? payload.shift_id : shiftId,
+    shiftStatus:
+      payload.shift_status === 'OPEN' || payload.shift_status === 'CLOSED'
+        ? payload.shift_status
+        : '',
+    locationId:
+      typeof payload.location_id === 'string' ? payload.location_id : '',
+    hasSales: payload.has_sales === true,
+    openingTooLate: payload.opening_too_late === true,
+    openingCount: parsePackagingCheckpoint(payload.opening_count),
+    closingCount: parsePackagingCheckpoint(payload.closing_count),
+    items: items.sort((a, b) => a.name.localeCompare(b.name, 'id')),
+  };
+}
+
+export async function createShiftPackagingCount(
+  shiftId: string,
+  checkpoint: 'OPENING' | 'CLOSING',
+) {
+  requireOnlineAction(
+    checkpoint === 'OPENING'
+      ? 'Hitung opening kemasan'
+      : 'Hitung closing kemasan',
+  );
+
+  const { data, error } = await supabase.rpc('create_shift_packaging_count', {
+    p_shift: shiftId,
+    p_checkpoint: checkpoint,
+    p_idempotency_key: crypto.randomUUID(),
+  });
+  if (error) fail(error);
+  return data as {
+    success: boolean;
+    replay: boolean;
+    count_id: string;
+    status: ShiftPackagingCheckpointStatus;
+    checkpoint: 'OPENING' | 'CLOSING';
+  };
+}
