@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
+import { Icon } from '../ui/Icon';
 import {
   checkoutSale,
   fetchManualQrisImage,
@@ -412,6 +413,7 @@ export function SalesScreen() {
           <section className="sales-v2-toolbar">
             <label className="sales-v2-search">
               <span className="sr-only">Cari produk</span>
+              <Icon name="search" size={18} className="sales-v2-search-icon" />
               <input
                 type="search"
                 value={search}
@@ -498,6 +500,13 @@ export function SalesScreen() {
                         }
                       }}
                     >
+                      <span
+                        className="sales-v2-product-visual"
+                        aria-hidden="true"
+                      >
+                        <Icon name="product" size={26} />
+                        <small>{group.categoryCode}</small>
+                      </span>
                       <span className="sales-v2-product-name">
                         {group.productName}
                       </span>
@@ -539,7 +548,10 @@ export function SalesScreen() {
             disabled={cart.length === 0}
             onClick={() => setCartOpen(true)}
           >
-            <span className="sales-v2-cart-count">{cartQuantity}</span>
+            <span className="sales-v2-cart-count">
+              <Icon name="cart" size={18} />
+              <strong>{cartQuantity}</strong>
+            </span>
             <span className="sales-v2-cart-total">
               <small>Keranjang</small>
               <strong>{formatIdr(total)}</strong>
@@ -722,7 +734,19 @@ export function SalesScreen() {
                       className={method === value ? 'active' : ''}
                       onClick={() => chooseMethod(value)}
                     >
-                      {paymentLabel(value)}
+                      <Icon
+                        name={
+                          value === 'CASH'
+                            ? 'cash'
+                            : value === 'QRIS'
+                              ? 'qris'
+                              : value === 'TRANSFER'
+                                ? 'transfer'
+                                : 'credit-debt'
+                        }
+                        size={20}
+                      />
+                      <span>{paymentLabel(value)}</span>
                     </button>
                   ))}
                 </div>
@@ -853,9 +877,12 @@ export function SalesScreen() {
                   disabled={!canPay}
                   onClick={() => void submit()}
                 >
-                  {busy
-                    ? 'Memproses satu transaksi...'
-                    : 'Bayar ' + formatIdr(total)}
+                  <Icon name="checkout" size={19} />
+                  <span>
+                    {busy
+                      ? 'Memproses satu transaksi...'
+                      : 'Bayar ' + formatIdr(total)}
+                  </span>
                 </button>
               </section>
             </div>
@@ -930,7 +957,7 @@ export function SalesScreen() {
             aria-label="Pembayaran Berhasil"
           >
             <div className="sales-v2-success-mark" aria-hidden="true">
-              ✓
+              <Icon name="check" size={30} />
             </div>
             <p className="eyebrow">TRANSAKSI SELESAI</p>
             <h2>Pembayaran Berhasil</h2>
@@ -982,14 +1009,16 @@ export function SalesScreen() {
             </div>
             <div className="sales-v2-success-actions">
               <Link className="secondary-button" to="/riwayat">
-                Lihat Riwayat
+                <Icon name="receipt" size={17} />
+                <span>Lihat Riwayat</span>
               </Link>
               <button
                 className="primary-button"
                 type="button"
                 onClick={() => setSuccess(null)}
               >
-                Transaksi Baru
+                <Icon name="add" size={17} />
+                <span>Transaksi Baru</span>
               </button>
             </div>
           </section>

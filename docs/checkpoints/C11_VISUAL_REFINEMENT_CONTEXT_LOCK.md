@@ -92,3 +92,18 @@ A sale variant can bind packaging requirements through `variant_sale_components`
 `shift_packaging_usage(uuid)` and the physical count continues through Inventory Stock Count.
 This preserves the expected-vs-physical basis needed to expose packaging variance by shift
 without creating a second cup-specific inventory engine.
+
+## C11-C safe checkpoint — POS, checkout, success & history
+
+Refinement 02 presentation convergence is complete at the source level.
+
+- POS/cart/checkout/history presentation converged using the locked Legacy icon family;
+- product cards use an honest branded placeholder instead of fake product photography;
+- mobile checkout remains bottom-sheet based; desktop checkout uses a right-side drawer;
+- QRIS/Transfer/Kasbon/CASH guards and checkout authority remain unchanged;
+- refund/correction behavior remains unchanged;
+- no migration or business-authority change was introduced;
+- canonical verify: **96/96 JS + 313/313 Python PASS**, plus repo guard, format, lint, TypeScript, build, and diff-check.
+
+See:
+`docs/checkpoints/C11C_POS_CHECKOUT_HISTORY_SAFEPOINT.md`

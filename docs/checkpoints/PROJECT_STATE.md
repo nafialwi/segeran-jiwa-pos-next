@@ -344,11 +344,24 @@ Official Human UAT on immutable RC4 is complete.
 
 Official UAT status: **PASS**.
 
+## C11 visual refinement program
+
+RC4 remains the immutable engineering/UAT baseline while C11 converges the four approved visual refinement boards on branch `work/c11-visual-convergence`.
+
+Completed safe points:
+
+- C11-A — canonical Legacy SVG icon family;
+- C11-B — shell, supplied Segeran Jiwa brand logo, dashboard, navigation, menu;
+- C11-C — POS, cart, checkout, success, transaction history.
+
+C11-C canonical verification: **96/96 JavaScript + 313/313 Python PASS**.
+No C11 source change has been released to Production.
+
 ## NEXT ACTION
 
-**Run the cutover-readiness gate and stop before Production release until explicit approval is given.**
+**Continue C11-D — Inventory, Product/Recipe, Purchase, Production & Shift visual convergence.**
 
-No additional source repair is currently required for RC4. Production remains fail-closed until the explicit release approval step.
+Keep RC4 immutable. Do not create RC5 and do not release Production until C11-D, C11-E, and C11-F mobile/desktop QA are complete.
 
 ## Cutover rule
 

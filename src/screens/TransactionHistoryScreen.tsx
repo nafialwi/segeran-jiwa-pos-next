@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
+import { Icon } from '../ui/Icon';
 import {
   correctSale,
   previewSaleCorrection,
@@ -241,8 +242,11 @@ export function TransactionHistoryScreen() {
 
   return (
     <main className="shell secondary-screen history-workspace">
-      <header className="topbar secondary-hero">
+      <header className="topbar secondary-hero history-hero">
         <div>
+          <span className="secondary-hero-icon" aria-hidden="true">
+            <Icon name="receipt" size={24} />
+          </span>
           <Link to="/">Beranda</Link>
           <p className="eyebrow">TRANSAKSI</p>
           <h1>Riwayat</h1>
@@ -385,7 +389,8 @@ export function TransactionHistoryScreen() {
           </label>
           <div className="button-row">
             <button className="primary-button" type="submit" disabled={loading}>
-              {loading ? 'Mencari...' : 'Cari Riwayat'}
+              <Icon name="search" size={17} />
+              <span>{loading ? 'Mencari...' : 'Cari Riwayat'}</span>
             </button>
             <button
               className="secondary-button"
@@ -393,7 +398,8 @@ export function TransactionHistoryScreen() {
               onClick={reset}
               disabled={loading}
             >
-              Reset Filter
+              <Icon name="refresh" size={17} />
+              <span>Reset Filter</span>
             </button>
           </div>
         </form>
@@ -428,9 +434,39 @@ export function TransactionHistoryScreen() {
                   </div>
                   <strong>{formatIdr(row.total_amount)}</strong>
                 </div>
-                <p>
-                  {row.payment_method || 'Metode tidak tersedia'} - {row.status}
-                </p>
+                <div className="history-meta-row">
+                  <span className="history-payment-chip">
+                    <Icon
+                      name={
+                        row.payment_method === 'CASH'
+                          ? 'cash'
+                          : row.payment_method === 'QRIS'
+                            ? 'qris'
+                            : row.payment_method === 'TRANSFER'
+                              ? 'transfer'
+                              : row.payment_method === 'CREDIT'
+                                ? 'credit-debt'
+                                : 'receipt'
+                      }
+                      size={15}
+                    />
+                    {row.payment_method || 'Metode tidak tersedia'}
+                  </span>
+                  <span
+                    className={
+                      'history-status-chip status-' +
+                      row.status.toLowerCase().replaceAll('_', '-')
+                    }
+                  >
+                    {row.status === 'COMPLETED'
+                      ? 'Selesai'
+                      : row.status === 'REFUNDED'
+                        ? 'Refund'
+                        : row.status === 'CORRECTED'
+                          ? 'Dikoreksi'
+                          : row.status}
+                  </span>
+                </div>
                 <p className="muted">
                   {row.cashier_name}
                   {row.cashier_username
@@ -449,7 +485,15 @@ export function TransactionHistoryScreen() {
                       )
                     }
                   >
-                    {expanded === row.sale_id ? 'Tutup Detail' : 'Lihat Detail'}
+                    <Icon
+                      name={expanded === row.sale_id ? 'close' : 'receipt'}
+                      size={16}
+                    />
+                    <span>
+                      {expanded === row.sale_id
+                        ? 'Tutup Detail'
+                        : 'Lihat Detail'}
+                    </span>
                   </button>
                   {canRefund &&
                     row.status === 'COMPLETED' &&
@@ -460,7 +504,8 @@ export function TransactionHistoryScreen() {
                         type="button"
                         onClick={() => openRefund(row)}
                       >
-                        Refund Transaksi
+                        <Icon name="refresh" size={16} />
+                        <span>Refund Transaksi</span>
                       </button>
                     )}
                   {canCorrect &&
@@ -472,7 +517,8 @@ export function TransactionHistoryScreen() {
                         type="button"
                         onClick={() => void openCorrection(row)}
                       >
-                        Koreksi Transaksi
+                        <Icon name="diagnostics" size={16} />
+                        <span>Koreksi Transaksi</span>
                       </button>
                     )}
                 </div>
