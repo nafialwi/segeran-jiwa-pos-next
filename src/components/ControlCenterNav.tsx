@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Icon } from '../ui/Icon';
 import type { SegeranIconName } from '../ui/iconRegistry';
 
@@ -17,8 +18,22 @@ const ENTRIES: ControlNavEntry[] = [
 ];
 
 export function ControlCenterNav() {
+  const location = useLocation();
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>(
+      '[aria-current="page"]',
+    );
+    active?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }, [location.pathname]);
+
   return (
-    <nav className="control-center-nav" aria-label="Navigasi Pusat Kontrol">
+    <nav
+      ref={navRef}
+      className="control-center-nav"
+      aria-label="Navigasi Pusat Kontrol"
+    >
       {ENTRIES.map((entry) => (
         <NavLink
           key={entry.to}

@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import { OperationsNav } from '../components/OperationsNav';
+import { SearchablePicker } from '../components/SearchablePicker';
 import {
   approveRestockRequest,
   createInventoryCount,
@@ -130,10 +131,22 @@ export function InventoryControlScreen() {
     () => new Map(items.map((item) => [item.stockItemId, item])),
     [items],
   );
+  const itemPickerOptions = useMemo(
+    () =>
+      items.map((item) => ({
+        id: item.stockItemId,
+        label: item.displayName,
+        meta: item.code + ' · ' + item.baseUnit,
+        keywords: [item.itemKind, item.saleCategory ?? ''].join(' '),
+      })),
+    [items],
+  );
   const locationMap = useMemo(
     () => new Map(locations.map((location) => [location.id, location.name])),
     [locations],
   );
+
+  const [countSearch, setCountSearch] = useState('');
 
   const countItems = useMemo(
     () =>
@@ -144,6 +157,16 @@ export function InventoryControlScreen() {
       ),
     [items, kindFilter],
   );
+  const visibleCountItems = useMemo(() => {
+    const query = countSearch.trim().toLocaleLowerCase('id');
+    if (!query) return countItems;
+    return countItems.filter((item) =>
+      [item.displayName, item.code, item.itemKind, item.baseUnit]
+        .join(' ')
+        .toLocaleLowerCase('id')
+        .includes(query),
+    );
+  }, [countItems, countSearch]);
 
   const [restockLocationId, setRestockLocationId] = useState('');
   const [restockItemId, setRestockItemId] = useState('');
@@ -477,19 +500,16 @@ export function InventoryControlScreen() {
                   ))}
                 </select>
               </label>
-              <label>
-                Barang
-                <select
-                  value={restockItemId}
-                  onChange={(event) => setRestockItemId(event.target.value)}
-                >
-                  {items.map((item) => (
-                    <option key={item.stockItemId} value={item.stockItemId}>
-                      {item.displayName} · {item.baseUnit}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SearchablePicker
+                label="Barang"
+                value={restockItemId}
+                options={itemPickerOptions}
+                onChange={setRestockItemId}
+                eyebrow="PILIH BARANG"
+                searchPlaceholder="Cari nama, kode, kategori, atau satuan…"
+                emptyLabel="Barang tidak ditemukan."
+                noun="barang"
+              />
               <label>
                 Jumlah
                 <input
@@ -636,19 +656,16 @@ export function InventoryControlScreen() {
                   ))}
                 </select>
               </label>
-              <label>
-                Barang
-                <select
-                  value={transferItemId}
-                  onChange={(event) => setTransferItemId(event.target.value)}
-                >
-                  {items.map((item) => (
-                    <option key={item.stockItemId} value={item.stockItemId}>
-                      {item.displayName}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SearchablePicker
+                label="Barang"
+                value={transferItemId}
+                options={itemPickerOptions}
+                onChange={setTransferItemId}
+                eyebrow="PILIH BARANG"
+                searchPlaceholder="Cari nama, kode, kategori, atau satuan…"
+                emptyLabel="Barang tidak ditemukan."
+                noun="barang"
+              />
               <label>
                 Jumlah
                 <input
@@ -765,12 +782,31 @@ export function InventoryControlScreen() {
                   </select>
                 </label>
 
+                <div className="inventory-count-search">
+                  <label className="operations-search-field">
+                    <span className="sr-only">
+                      Cari barang untuk stok opname
+                    </span>
+                    <Icon name="search" size={18} />
+                    <input
+                      type="search"
+                      value={countSearch}
+                      onChange={(event) => setCountSearch(event.target.value)}
+                      placeholder="Cari barang yang akan dihitung…"
+                    />
+                  </label>
+                  <span>
+                    {countItemIds.length} dipilih · {visibleCountItems.length}{' '}
+                    tampil
+                  </span>
+                </div>
+
                 <fieldset className="inventory-count-picker">
                   <legend>
                     Barang yang dihitung
                     {kindFilter === 'PACKAGING' ? ' · PACKAGING' : ''}
                   </legend>
-                  {countItems.map((item) => (
+                  {visibleCountItems.map((item) => (
                     <label key={item.stockItemId}>
                       <input
                         type="checkbox"
@@ -974,19 +1010,16 @@ export function InventoryControlScreen() {
                   ))}
                 </select>
               </label>
-              <label>
-                Barang
-                <select
-                  value={adjustItemId}
-                  onChange={(event) => setAdjustItemId(event.target.value)}
-                >
-                  {items.map((item) => (
-                    <option key={item.stockItemId} value={item.stockItemId}>
-                      {item.displayName} · {item.baseUnit}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SearchablePicker
+                label="Barang"
+                value={adjustItemId}
+                options={itemPickerOptions}
+                onChange={setAdjustItemId}
+                eyebrow="PILIH BARANG"
+                searchPlaceholder="Cari nama, kode, kategori, atau satuan…"
+                emptyLabel="Barang tidak ditemukan."
+                noun="barang"
+              />
               <label>
                 Jenis
                 <select

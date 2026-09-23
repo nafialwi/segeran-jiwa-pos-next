@@ -60,7 +60,7 @@ export function AttentionScreen() {
 
   return (
     <main className="shell attention-screen">
-      <header className="topbar">
+      <header className="topbar control-page-header attention-hero">
         <div>
           <p className="eyebrow">OPERASIONAL</p>
           <h1>Perhatian</h1>
@@ -75,14 +75,15 @@ export function AttentionScreen() {
           disabled={checking}
           onClick={() => void runProbe()}
         >
-          {checking ? 'Memeriksa...' : 'Coba Lagi'}
+          <Icon name="refresh" size={17} />
+          <span>{checking ? 'Memeriksa...' : 'Coba Lagi'}</span>
         </button>
       </header>
 
       {connectivity === 'OFFLINE' && (
         <section className="attention-card warning">
           <div className="attention-icon">
-            <Icon name="notification" />
+            <Icon name="warning" />
           </div>
           <div>
             <strong>Perangkat offline</strong>
@@ -130,7 +131,7 @@ export function AttentionScreen() {
       {noAttention && (
         <section className="attention-card">
           <div className="attention-icon">
-            <Icon name="notification" />
+            <Icon name="check" />
           </div>
           <div>
             <strong>Tidak ada perhatian aktif dari pemeriksaan tersedia</strong>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../auth/AuthProvider';
 import { currentConnectivity } from '../control/connectivity';
+import { Icon } from '../ui/Icon';
 import {
   probeBackendAuthority,
   type BackendAuthorityProbe,
@@ -33,7 +34,7 @@ export function DiagnosticsScreen() {
 
   return (
     <main className="shell control-page">
-      <header className="topbar control-page-header">
+      <header className="topbar control-page-header c11e-control-hero">
         <div>
           <p className="eyebrow">PENGATURAN · DIAGNOSTIK</p>
           <h1>Diagnostik</h1>
@@ -42,13 +43,17 @@ export function DiagnosticsScreen() {
             credential.
           </p>
         </div>
+        <span className="control-hero-icon" aria-hidden="true">
+          <Icon name="diagnostics" size={28} />
+        </span>
         <button
           className="secondary-button"
           type="button"
           disabled={checking}
           onClick={() => void refresh()}
         >
-          {checking ? 'Memeriksa...' : 'Refresh'}
+          <Icon name="refresh" size={17} />
+          <span>{checking ? 'Memeriksa...' : 'Refresh'}</span>
         </button>
       </header>
 

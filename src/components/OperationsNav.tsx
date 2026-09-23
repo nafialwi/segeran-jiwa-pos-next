@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { hasAnyPermission, hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import { Icon } from '../ui/Icon';
@@ -12,6 +13,16 @@ type OperationsNavEntry = {
 };
 
 export function OperationsNav() {
+  const location = useLocation();
+  const navRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const active = navRef.current?.querySelector<HTMLElement>(
+      '[aria-current="page"]',
+    );
+    active?.scrollIntoView({ block: 'nearest', inline: 'center' });
+  }, [location.pathname]);
+
   const { authority } = useAuth();
   if (!authority) return null;
 
@@ -63,7 +74,11 @@ export function OperationsNav() {
   ];
 
   return (
-    <nav className="operations-nav" aria-label="Navigasi operasional">
+    <nav
+      ref={navRef}
+      className="operations-nav"
+      aria-label="Navigasi operasional"
+    >
       {entries
         .filter((entry) => entry.visible)
         .map((entry) => (

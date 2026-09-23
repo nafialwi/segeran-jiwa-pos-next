@@ -5,6 +5,7 @@ import {
   type BackendAuthorityProbe,
 } from '../control/control-center-api';
 import { BACKUP_CHECKPOINT_EVIDENCE } from '../control/backup-evidence';
+import { Icon } from '../ui/Icon';
 
 function formatCheckedAt(value: string | null): string {
   if (!value) return 'Belum diperiksa';
@@ -38,7 +39,7 @@ export function SystemHealthScreen() {
 
   return (
     <main className="shell control-page">
-      <header className="topbar control-page-header">
+      <header className="topbar control-page-header c11e-control-hero">
         <div>
           <p className="eyebrow">PENGATURAN · HEALTH</p>
           <h1>Kesehatan Sistem</h1>
@@ -47,13 +48,17 @@ export function SystemHealthScreen() {
             bukan bukti kesehatan backend.
           </p>
         </div>
+        <span className="control-hero-icon" aria-hidden="true">
+          <Icon name="security-sync" size={28} />
+        </span>
         <button
           className="secondary-button"
           type="button"
           disabled={checking}
           onClick={() => void checkBackend()}
         >
-          {checking ? 'Memeriksa...' : 'Periksa Lagi'}
+          <Icon name="refresh" size={17} />
+          <span>{checking ? 'Memeriksa...' : 'Periksa Lagi'}</span>
         </button>
       </header>
 
@@ -65,6 +70,12 @@ export function SystemHealthScreen() {
               : 'control-health-card danger'
           }
         >
+          <span className="control-health-icon">
+            <Icon
+              name={connectivity === 'ONLINE' ? 'check' : 'warning'}
+              size={20}
+            />
+          </span>
           <span>Koneksi Perangkat</span>
           <strong>{connectivity}</strong>
           <p>
@@ -82,6 +93,18 @@ export function SystemHealthScreen() {
                 : 'control-health-card neutral'
           }
         >
+          <span className="control-health-icon">
+            <Icon
+              name={
+                probe?.status === 'PASS'
+                  ? 'check'
+                  : probe?.status === 'FAIL'
+                    ? 'warning'
+                    : 'security-sync'
+              }
+              size={20}
+            />
+          </span>
           <span>Backend Authority</span>
           <strong>{probe?.status ?? 'BELUM DIPERIKSA'}</strong>
           <p>{probe?.detail ?? 'Belum ada live authority probe.'}</p>
@@ -92,6 +115,9 @@ export function SystemHealthScreen() {
         </article>
 
         <article className="control-health-card neutral">
+          <span className="control-health-icon">
+            <Icon name="backup-restore" size={20} />
+          </span>
           <span>Backup / Restore</span>
           <strong>{BACKUP_CHECKPOINT_EVIDENCE.evidenceKind}</strong>
           <p>

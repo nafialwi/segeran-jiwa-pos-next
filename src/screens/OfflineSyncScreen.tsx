@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { currentConnectivity } from '../control/connectivity';
+import { Icon } from '../ui/Icon';
 
 export function OfflineSyncScreen() {
   const [connectivity, setConnectivity] = useState(currentConnectivity);
@@ -16,7 +17,7 @@ export function OfflineSyncScreen() {
 
   return (
     <main className="shell control-page">
-      <header className="topbar control-page-header">
+      <header className="topbar control-page-header c11e-control-hero">
         <div>
           <p className="eyebrow">PENGATURAN · OFFLINE</p>
           <h1>Offline & Sync</h1>
@@ -24,6 +25,9 @@ export function OfflineSyncScreen() {
             Status koneksi perangkat ditampilkan terpisah dari status backend.
           </p>
         </div>
+        <span className="control-hero-icon" aria-hidden="true">
+          <Icon name="security-sync" size={28} />
+        </span>
       </header>
 
       <section
@@ -34,6 +38,12 @@ export function OfflineSyncScreen() {
         }
       >
         <div>
+          <span className="control-evidence-icon">
+            <Icon
+              name={connectivity === 'ONLINE' ? 'check' : 'warning'}
+              size={20}
+            />
+          </span>
           <span className="control-evidence-label">Koneksi Perangkat</span>
           <strong>{connectivity}</strong>
         </div>
@@ -44,7 +54,10 @@ export function OfflineSyncScreen() {
       </section>
 
       <section className="control-settings-grid">
-        <article className="control-setting-card">
+        <article className="control-setting-card control-setting-icon-card">
+          <span className="control-setting-icon">
+            <Icon name="warning" size={20} />
+          </span>
           <h2>Tidak ada antrean mutasi offline</h2>
           <p className="muted">
             Penjualan, refund, koreksi, transfer stok, opname, produksi,
@@ -52,7 +65,10 @@ export function OfflineSyncScreen() {
             dikirim nanti.
           </p>
         </article>
-        <article className="control-setting-card">
+        <article className="control-setting-card control-setting-icon-card">
+          <span className="control-setting-icon">
+            <Icon name="security-sync" size={20} />
+          </span>
           <h2>Operasi server tetap online-only</h2>
           <p className="muted">
             Jika koneksi atau backend tidak tersedia, operasi sensitif gagal

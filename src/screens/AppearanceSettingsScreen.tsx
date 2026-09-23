@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Icon } from '../ui/Icon';
 import {
   loadControlPreferences,
   saveControlPreferences,
@@ -52,6 +53,7 @@ export function AppearanceSettingsScreen() {
               }
               onClick={() => save({ ...preferences, density: 'comfortable' })}
             >
+              <Icon name="appearance" size={22} />
               <strong>Nyaman</strong>
               <span>Ruang kartu dan panel lebih lega.</span>
             </button>
@@ -64,6 +66,7 @@ export function AppearanceSettingsScreen() {
               }
               onClick={() => save({ ...preferences, density: 'compact' })}
             >
+              <Icon name="category" size={22} />
               <strong>Ringkas</strong>
               <span>Lebih banyak informasi dalam satu layar.</span>
             </button>
@@ -88,6 +91,7 @@ export function AppearanceSettingsScreen() {
               }
               onClick={() => save({ ...preferences, fontScale: 'normal' })}
             >
+              <Icon name="settings" size={22} />
               <strong>Normal</strong>
               <span>Ukuran standar Segeran Jiwa.</span>
             </button>
@@ -100,6 +104,7 @@ export function AppearanceSettingsScreen() {
               }
               onClick={() => save({ ...preferences, fontScale: 'large' })}
             >
+              <Icon name="appearance" size={22} />
               <strong>Teks Besar</strong>
               <span>Lebih mudah dibaca pada layar kecil.</span>
             </button>

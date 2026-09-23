@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import { Icon } from '../ui/Icon';
+import { SearchablePicker } from '../components/SearchablePicker';
 import {
   checkoutSale,
   fetchManualQrisImage,
@@ -872,24 +873,24 @@ export function SalesScreen() {
                     {!customersLoaded && (
                       <p className="muted">Menyiapkan daftar pelanggan…</p>
                     )}
-                    <label>
-                      <span>Pelanggan Kasbon</span>
-                      <select
-                        value={customerId}
-                        disabled={busy}
-                        onChange={(event) => {
-                          invalidatePendingOperation();
-                          setCustomerId(event.target.value);
-                        }}
-                      >
-                        <option value="">Pilih pelanggan</option>
-                        {customers.map((customer) => (
-                          <option value={customer.id} key={customer.id}>
-                            {customer.display_name}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                    <SearchablePicker
+                      label="Pelanggan Kasbon"
+                      value={customerId}
+                      disabled={busy || !customersLoaded}
+                      options={customers.map((customer) => ({
+                        id: customer.id,
+                        label: customer.display_name,
+                      }))}
+                      onChange={(nextCustomerId) => {
+                        invalidatePendingOperation();
+                        setCustomerId(nextCustomerId);
+                      }}
+                      placeholder="Pilih pelanggan"
+                      eyebrow="PILIH PELANGGAN"
+                      searchPlaceholder="Cari nama pelanggan…"
+                      emptyLabel="Pelanggan tidak ditemukan."
+                      noun="pelanggan"
+                    />
                   </div>
                 )}
 

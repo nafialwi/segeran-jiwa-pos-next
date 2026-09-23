@@ -1,11 +1,12 @@
 import { BACKUP_CHECKPOINT_EVIDENCE } from '../control/backup-evidence';
+import { Icon } from '../ui/Icon';
 
 export function BackupRestoreScreen() {
   const evidence = BACKUP_CHECKPOINT_EVIDENCE;
 
   return (
     <main className="shell control-page">
-      <header className="topbar control-page-header">
+      <header className="topbar control-page-header c11e-control-hero">
         <div>
           <p className="eyebrow">PENGATURAN · BACKUP</p>
           <h1>Backup & Restore</h1>
@@ -14,10 +15,16 @@ export function BackupRestoreScreen() {
             asumsi konektivitas.
           </p>
         </div>
+        <span className="control-hero-icon" aria-hidden="true">
+          <Icon name="backup-restore" size={28} />
+        </span>
       </header>
 
       <section className="control-evidence-card neutral">
         <div>
+          <span className="control-evidence-icon">
+            <Icon name="backup-restore" size={20} />
+          </span>
           <span className="control-evidence-label">Bukti terakhir</span>
           <strong>{evidence.evidenceKind}</strong>
         </div>

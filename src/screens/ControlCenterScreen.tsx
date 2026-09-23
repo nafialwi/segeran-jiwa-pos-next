@@ -10,25 +10,29 @@ type ControlCard = {
   detail: string;
   to: string;
   icon: SegeranIconName;
+  group: 'Bisnis' | 'Orang' | 'Sistem';
   ownerOnly?: boolean;
 };
 
 const CONTROL_CARDS: ControlCard[] = [
   {
     label: 'Tampilan & Dashboard',
+    group: 'Sistem',
     detail: 'Kepadatan tampilan dan ukuran teks perangkat ini',
     to: '/pengaturan/tampilan',
     icon: 'settings',
   },
   {
     label: 'Keuangan',
+    group: 'Bisnis',
     detail: 'Kas, bank, QRIS, hutang, modal, dan rekonsiliasi',
     to: '/keuangan',
-    icon: 'account',
+    icon: 'cash',
     ownerOnly: true,
   },
   {
     label: 'Pengguna & Izin',
+    group: 'Orang',
     detail: 'Akun, role, dan permission operasional',
     to: '/pengguna#permissions',
     icon: 'users',
@@ -36,19 +40,22 @@ const CONTROL_CARDS: ControlCard[] = [
   },
   {
     label: 'Perangkat Aktif',
+    group: 'Orang',
     detail: 'Perangkat personal/shared, revoke, dan status akses',
     to: '/pengguna#devices',
-    icon: 'security-sync',
+    icon: 'active-device',
     ownerOnly: true,
   },
   {
     label: 'Perhatian',
+    group: 'Sistem',
     detail: 'Kondisi yang memerlukan tindakan operator',
     to: '/perhatian',
-    icon: 'notification',
+    icon: 'warning',
   },
   {
     label: 'Backup & Restore',
+    group: 'Sistem',
     detail: 'Evidence backup terakhir dan batas restore',
     to: '/pengaturan/backup',
     icon: 'backup-restore',
@@ -56,18 +63,21 @@ const CONTROL_CARDS: ControlCard[] = [
   },
   {
     label: 'Kesehatan Sistem',
+    group: 'Sistem',
     detail: 'Koneksi perangkat dan live backend authority probe',
     to: '/pengaturan/kesehatan',
     icon: 'security-sync',
   },
   {
     label: 'Offline & Sync',
+    group: 'Sistem',
     detail: 'Batas operasi online-only dan status koneksi',
     to: '/pengaturan/offline-sync',
-    icon: 'activity',
+    icon: 'security-sync',
   },
   {
     label: 'Diagnostik',
+    group: 'Sistem',
     detail: 'Evidence runtime aman tanpa credential',
     to: '/pengaturan/diagnostik',
     icon: 'diagnostics',
@@ -95,19 +105,37 @@ export function ControlCenterScreen() {
         <span className="role-badge">{authority.role_code}</span>
       </header>
 
-      <section className="control-center-grid">
-        {cards.map((card) => (
-          <Link className="control-center-card" key={card.to} to={card.to}>
-            <span className="control-center-icon">
-              <Icon name={card.icon} />
-            </span>
-            <span>
-              <strong>{card.label}</strong>
-              <small>{card.detail}</small>
-            </span>
-          </Link>
-        ))}
-      </section>
+      <div className="control-center-groups">
+        {(['Bisnis', 'Orang', 'Sistem'] as const).map((group) => {
+          const groupCards = cards.filter((card) => card.group === group);
+          if (groupCards.length === 0) return null;
+          return (
+            <section className="control-center-group" key={group}>
+              <header>
+                <h2>{group}</h2>
+              </header>
+              <div className="control-center-grid">
+                {groupCards.map((card) => (
+                  <Link
+                    className="control-center-card"
+                    key={card.to}
+                    to={card.to}
+                  >
+                    <span className="control-center-icon">
+                      <Icon name={card.icon} />
+                    </span>
+                    <span>
+                      <strong>{card.label}</strong>
+                      <small>{card.detail}</small>
+                    </span>
+                    <Icon name="chevron-right" size={16} />
+                  </Link>
+                ))}
+              </div>
+            </section>
+          );
+        })}
+      </div>
 
       <section className="control-center-evidence-strip">
         <div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { OperationsNav } from '../components/OperationsNav';
+import { SearchablePicker } from '../components/SearchablePicker';
 import { Icon } from '../ui/Icon';
 import { supabase } from '../lib/supabase';
 import {
@@ -362,19 +363,23 @@ export function PurchaseScreen() {
           </div>
 
           <div className="compact-grid-form purchase-order-fields">
-            <label>
-              Pemasok
-              <select
-                value={supplierId}
-                onChange={(event) => setSupplierId(event.target.value)}
-              >
-                {options.suppliers.map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.display_name}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <SearchablePicker
+              label="Pemasok"
+              value={supplierId}
+              options={options.suppliers.map((supplier) => ({
+                id: supplier.id,
+                label: supplier.display_name,
+                meta:
+                  supplier.code +
+                  (supplier.phone ? ' · ' + supplier.phone : ''),
+              }))}
+              onChange={setSupplierId}
+              placeholder="Pilih pemasok"
+              eyebrow="PILIH PEMASOK"
+              searchPlaceholder="Cari nama, kode, atau telepon…"
+              emptyLabel="Pemasok tidak ditemukan."
+              noun="pemasok"
+            />
             <label>
               Lokasi Penerimaan
               <select
@@ -398,19 +403,22 @@ export function PurchaseScreen() {
               </div>
             </header>
             <div className="compact-grid-form">
-              <label>
-                Barang
-                <select
-                  value={selectedItemId}
-                  onChange={(event) => setSelectedItemId(event.target.value)}
-                >
-                  {options.items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.display_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <SearchablePicker
+                label="Barang"
+                value={selectedItemId}
+                options={options.items.map((item) => ({
+                  id: item.id,
+                  label: item.display_name,
+                  meta: item.code + ' · ' + item.base_unit,
+                  keywords: item.item_kind,
+                }))}
+                onChange={setSelectedItemId}
+                placeholder="Pilih barang"
+                eyebrow="PILIH BARANG"
+                searchPlaceholder="Cari nama, kode, kategori, atau satuan…"
+                emptyLabel="Barang tidak ditemukan."
+                noun="barang"
+              />
               <label>
                 Jumlah ({selectedItem?.base_unit ?? 'satuan'})
                 <input
@@ -658,19 +666,22 @@ export function PurchaseScreen() {
           ) : (
             <div className="purchase-receipt-layout">
               <div className="compact-grid-form">
-                <label>
-                  Pesanan
-                  <select
-                    value={receiveOrderId}
-                    onChange={(event) => setReceiveOrderId(event.target.value)}
-                  >
-                    {options.receivable_orders.map((order) => (
-                      <option key={order.id} value={order.id}>
-                        {order.order_number} · {order.supplier_name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <SearchablePicker
+                  label="Pesanan"
+                  value={receiveOrderId}
+                  options={options.receivable_orders.map((order) => ({
+                    id: order.id,
+                    label: order.order_number,
+                    meta: order.supplier_name + ' · ' + order.location_name,
+                    keywords: order.status,
+                  }))}
+                  onChange={setReceiveOrderId}
+                  placeholder="Pilih pesanan pemasok"
+                  eyebrow="PILIH PESANAN"
+                  searchPlaceholder="Cari nomor PO atau pemasok…"
+                  emptyLabel="Pesanan tidak ditemukan."
+                  noun="pesanan"
+                />
                 <label>
                   Barang
                   <select

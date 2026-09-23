@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import { OperationsNav } from '../components/OperationsNav';
+import { SearchablePicker } from '../components/SearchablePicker';
 import {
   activateBom,
   fetchBomStockOptions,
@@ -562,32 +563,30 @@ export function ProductOperationsScreen() {
                           </div>
 
                           <div className="bom-config-add-line">
-                            <label>
-                              Komponen
-                              <select
-                                value={bomComponentId}
-                                onChange={(event) =>
-                                  setBomComponentId(event.target.value)
-                                }
-                              >
-                                {!bomOptionsLoaded && (
-                                  <option value="">
-                                    {loadingBomOptions
-                                      ? 'Memuat komponen…'
-                                      : 'Buka tab Resep untuk memuat komponen'}
-                                  </option>
-                                )}
-                                {bomComponents.map((component) => (
-                                  <option
-                                    key={component.id}
-                                    value={component.id}
-                                  >
-                                    {component.displayName} ·{' '}
-                                    {component.itemKind}
-                                  </option>
-                                ))}
-                              </select>
-                            </label>
+                            <SearchablePicker
+                              label="Komponen"
+                              value={bomComponentId}
+                              disabled={!bomOptionsLoaded || loadingBomOptions}
+                              options={bomComponents.map((component) => ({
+                                id: component.id,
+                                label: component.displayName,
+                                meta:
+                                  component.itemKind +
+                                  ' · ' +
+                                  component.baseUnit,
+                                keywords: component.code,
+                              }))}
+                              onChange={setBomComponentId}
+                              placeholder={
+                                loadingBomOptions
+                                  ? 'Memuat komponen…'
+                                  : 'Pilih komponen resep'
+                              }
+                              eyebrow="PILIH KOMPONEN"
+                              searchPlaceholder="Cari nama, kode, atau kategori…"
+                              emptyLabel="Komponen tidak ditemukan."
+                              noun="komponen"
+                            />
                             <label>
                               Jumlah dasar
                               <input

@@ -1,6 +1,8 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ControlCenterNav } from '../components/ControlCenterNav';
+import { Icon } from '../ui/Icon';
+import { SearchablePicker } from '../components/SearchablePicker';
 import {
   createEmployeeKasbon,
   fetchFinanceOverview,
@@ -38,6 +40,7 @@ function positiveAmount(value: string) {
 
 export function FinanceScreen() {
   const [overview, setOverview] = useState<FinanceOverview | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState('');
@@ -89,12 +92,15 @@ export function FinanceScreen() {
 
   async function load() {
     setError('');
+    setLoading(true);
     try {
       setOverview(await fetchFinanceOverview());
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : 'Gagal memuat Keuangan.',
       );
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -122,6 +128,60 @@ export function FinanceScreen() {
         (employee) => employee.role_code !== 'OWNER',
       ),
     [overview],
+  );
+
+  const accountByCode = useMemo(
+    () =>
+      new Map(
+        (overview?.accounts ?? []).map((account) => [account.code, account]),
+      ),
+    [overview],
+  );
+  const customerDebtTotal = useMemo(
+    () =>
+      (overview?.customerDebts ?? []).reduce(
+        (sum, item) => sum + item.balance,
+        0,
+      ),
+    [overview],
+  );
+  const supplierPayableTotal = useMemo(
+    () =>
+      (overview?.supplierPayables ?? []).reduce(
+        (sum, item) => sum + item.balance,
+        0,
+      ),
+    [overview],
+  );
+  const customerDebtOptions = useMemo(
+    () =>
+      (overview?.customerDebts ?? []).map((item) => ({
+        id: item.debt_id,
+        label: item.customer_name,
+        meta: 'Sisa ' + formatIdr(item.balance),
+        keywords: item.status,
+      })),
+    [overview],
+  );
+  const supplierPayableOptions = useMemo(
+    () =>
+      (overview?.supplierPayables ?? []).map((item) => ({
+        id: item.payable_id,
+        label: item.supplier_name,
+        meta: 'Sisa ' + formatIdr(item.balance),
+        keywords: item.invoice_reference ?? '',
+      })),
+    [overview],
+  );
+  const employeePickerOptions = useMemo(
+    () =>
+      employeeOptions.map((employee) => ({
+        id: employee.profile_id,
+        label: employee.display_name,
+        meta: '@' + employee.username,
+        keywords: employee.role_code,
+      })),
+    [employeeOptions],
   );
 
   async function run(label: string, action: () => Promise<unknown>) {
@@ -256,18 +316,80 @@ export function FinanceScreen() {
 
   return (
     <main className="shell secondary-screen finance-workspace">
-      <header className="topbar secondary-hero">
-        <div>
+      <header className="topbar secondary-hero finance-hero">
+        <div className="finance-hero-copy">
           <Link to="/pengaturan">Kembali ke Pusat Kontrol</Link>
           <p className="eyebrow">OWNER FINANCE</p>
           <h1>Keuangan</h1>
+          <p className="muted">
+            Pantau saldo dan jalankan tindakan keuangan dari money ledger yang
+            sama.
+          </p>
         </div>
+        <span className="finance-hero-icon" aria-hidden="true">
+          <Icon name="cash" size={30} />
+        </span>
       </header>
 
       <ControlCenterNav />
 
       {error && <div className="error-banner">{error}</div>}
       {success && <div className="success-banner">{success}</div>}
+
+      {loading && !overview ? (
+        <section
+          className="finance-summary-grid finance-loading"
+          aria-label="Memuat keuangan"
+        >
+          {Array.from({ length: 6 }).map((_, index) => (
+            <article className="operations-card-skeleton" key={index}>
+              <span />
+              <span />
+            </article>
+          ))}
+        </section>
+      ) : (
+        <section
+          className="finance-summary-grid"
+          aria-label="Ringkasan keuangan"
+        >
+          {[
+            ['Kas Utama', accountByCode.get('KAS_UTAMA')?.balance ?? 0, 'cash'],
+            [
+              'Kas Shift',
+              accountByCode.get('KAS_SHIFT')?.balance ?? 0,
+              'cash-payment',
+            ],
+            ['Bank', accountByCode.get('BANK')?.balance ?? 0, 'account'],
+            [
+              'QRIS Belum Cair',
+              accountByCode.get('QRIS_BELUM_CAIR')?.balance ?? 0,
+              'qris',
+            ],
+            ['Hutang Pelanggan', customerDebtTotal, 'credit-debt'],
+            ['Utang Pemasok', supplierPayableTotal, 'debt'],
+          ].map(([label, value, icon]) => (
+            <article key={String(label)}>
+              <span className="finance-summary-icon">
+                <Icon
+                  name={
+                    icon as
+                      | 'cash'
+                      | 'cash-payment'
+                      | 'account'
+                      | 'qris'
+                      | 'credit-debt'
+                      | 'debt'
+                  }
+                  size={20}
+                />
+              </span>
+              <span>{label}</span>
+              <strong>{formatIdr(Number(value))}</strong>
+            </article>
+          ))}
+        </section>
+      )}
 
       <nav className="secondary-workflow-nav" aria-label="Alur Keuangan">
         <a href="#finance-balances">Ringkasan</a>
@@ -626,26 +748,19 @@ export function FinanceScreen() {
           )}
         </div>
         <form className="stack-form" onSubmit={submitDebtPayment}>
-          <label className="field-label">
-            Hutang
-            <select
-              value={debtPayment.debtId}
-              onChange={(event) =>
-                setDebtPayment((value) => ({
-                  ...value,
-                  debtId: event.target.value,
-                }))
-              }
-              required
-            >
-              <option value="">Pilih hutang</option>
-              {overview?.customerDebts.map((item) => (
-                <option key={item.debt_id} value={item.debt_id}>
-                  {item.customer_name} · {formatIdr(item.balance)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchablePicker
+            label="Hutang"
+            value={debtPayment.debtId}
+            options={customerDebtOptions}
+            onChange={(debtId) =>
+              setDebtPayment((value) => ({ ...value, debtId }))
+            }
+            placeholder="Pilih hutang pelanggan"
+            eyebrow="PILIH HUTANG"
+            searchPlaceholder="Cari nama pelanggan…"
+            emptyLabel="Hutang pelanggan tidak ditemukan."
+            noun="hutang"
+          />
           <label className="field-label">
             Metode
             <select
@@ -708,26 +823,19 @@ export function FinanceScreen() {
           )}
         </div>
         <form className="stack-form" onSubmit={submitSupplierPayment}>
-          <label className="field-label">
-            Utang
-            <select
-              value={supplierPayment.payableId}
-              onChange={(event) =>
-                setSupplierPayment((value) => ({
-                  ...value,
-                  payableId: event.target.value,
-                }))
-              }
-              required
-            >
-              <option value="">Pilih utang pemasok</option>
-              {overview?.supplierPayables.map((item) => (
-                <option key={item.payable_id} value={item.payable_id}>
-                  {item.supplier_name} · {formatIdr(item.balance)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchablePicker
+            label="Utang"
+            value={supplierPayment.payableId}
+            options={supplierPayableOptions}
+            onChange={(payableId) =>
+              setSupplierPayment((value) => ({ ...value, payableId }))
+            }
+            placeholder="Pilih utang pemasok"
+            eyebrow="PILIH UTANG"
+            searchPlaceholder="Cari pemasok atau referensi…"
+            emptyLabel="Utang pemasok tidak ditemukan."
+            noun="utang"
+          />
           <label className="field-label">
             Metode
             <select
@@ -785,26 +893,19 @@ export function FinanceScreen() {
           )}
         </div>
         <form className="stack-form" onSubmit={submitKasbon}>
-          <label className="field-label">
-            Karyawan
-            <select
-              value={kasbon.employeeProfileId}
-              onChange={(event) =>
-                setKasbon((value) => ({
-                  ...value,
-                  employeeProfileId: event.target.value,
-                }))
-              }
-              required
-            >
-              <option value="">Pilih karyawan</option>
-              {employeeOptions.map((employee) => (
-                <option key={employee.profile_id} value={employee.profile_id}>
-                  {employee.display_name} (@{employee.username})
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchablePicker
+            label="Karyawan"
+            value={kasbon.employeeProfileId}
+            options={employeePickerOptions}
+            onChange={(employeeProfileId) =>
+              setKasbon((value) => ({ ...value, employeeProfileId }))
+            }
+            placeholder="Pilih karyawan"
+            eyebrow="PILIH KARYAWAN"
+            searchPlaceholder="Cari nama atau username…"
+            emptyLabel="Karyawan tidak ditemukan."
+            noun="karyawan"
+          />
           <label className="field-label">
             Sumber dana
             <select

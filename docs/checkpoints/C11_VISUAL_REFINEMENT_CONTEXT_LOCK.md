@@ -124,3 +124,18 @@ Refinement 03 source convergence is complete.
 
 See:
 `docs/checkpoints/C11D_OPERATIONS_PERFORMANCE_SAFEPOINT.md`
+
+## C11-E safe checkpoint — control center & mobile usability
+
+Refinement 04 source convergence is complete.
+
+- Control Center is grouped into Business/People/System mental models;
+- Finance, Users, Devices, Attention, Backup, Health, Offline, and Diagnostics are visually converged;
+- unbounded entity lists no longer rely on disruptive Android native selects;
+- a shared searchable mobile bottom-sheet picker is used across Stock Control,
+  Sales Kasbon, Purchase, Recipe/BOM, and Finance where lists can grow;
+- short finite enumerations remain native controls;
+- active horizontal navigation is automatically scrolled into view;
+- no database migration or business-authority change was introduced.
+
+See docs/checkpoints/C11E_CONTROL_CENTER_MOBILE_USABILITY_SAFEPOINT.md

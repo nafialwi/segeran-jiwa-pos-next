@@ -10,6 +10,7 @@ import { useAuth } from '../auth/AuthProvider';
 import type { PermissionCode, ProfileStatus } from '../auth/types';
 import { supabase } from '../lib/supabase';
 import { requireOnlineAction } from '../health/online-action';
+import { Icon } from '../ui/Icon';
 
 type PermissionEffect = 'ALLOW' | 'DENY' | 'INHERIT';
 
@@ -185,7 +186,10 @@ function formatLastSeen(value: string | null): string {
 export function OwnerUsersScreen() {
   const { refreshAuthority } = useAuth();
   const [users, setUsers] = useState<OwnerUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(true);
+  const [devicesLoading, setDevicesLoading] = useState(false);
   const [filter, setFilter] = useState<StatusFilter>('ALL');
+  const [userSearch, setUserSearch] = useState('');
   const [selectedProfileId, setSelectedProfileId] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -198,34 +202,44 @@ export function OwnerUsersScreen() {
   const [newPassword, setNewPassword] = useState('');
 
   const loadUsers = useCallback(async () => {
-    const { data, error } = await supabase.rpc('owner_list_users');
-    if (error) {
-      setMessage('Daftar pengguna tidak dapat dimuat.');
-      return;
-    }
+    setUsersLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('owner_list_users');
+      if (error) {
+        setMessage('Daftar pengguna tidak dapat dimuat.');
+        return;
+      }
 
-    const next = parseUsers(data);
-    setUsers(next);
+      const next = parseUsers(data);
+      setUsers(next);
 
-    if (
-      selectedProfileId &&
-      !next.some((user) => user.profile_id === selectedProfileId)
-    ) {
-      setSelectedProfileId('');
+      if (
+        selectedProfileId &&
+        !next.some((user) => user.profile_id === selectedProfileId)
+      ) {
+        setSelectedProfileId('');
+      }
+    } finally {
+      setUsersLoading(false);
     }
   }, [selectedProfileId]);
 
   const loadDevices = useCallback(async (profileId: string) => {
-    const { data, error } = await supabase.rpc('owner_list_devices', {
-      p_profile_id: profileId,
-    });
+    setDevicesLoading(true);
+    try {
+      const { data, error } = await supabase.rpc('owner_list_devices', {
+        p_profile_id: profileId,
+      });
 
-    if (error) {
-      setMessage('Daftar perangkat tidak dapat dimuat.');
-      return;
+      if (error) {
+        setMessage('Daftar perangkat tidak dapat dimuat.');
+        return;
+      }
+
+      setDevices(parseDevices(data));
+    } finally {
+      setDevicesLoading(false);
     }
-
-    setDevices(parseDevices(data));
   }, []);
 
   useEffect(() => {
@@ -241,11 +255,22 @@ export function OwnerUsersScreen() {
     void loadDevices(selectedProfileId);
   }, [loadDevices, selectedProfileId]);
 
-  const filteredUsers = useMemo(
-    () =>
-      filter === 'ALL' ? users : users.filter((user) => user.status === filter),
-    [filter, users],
-  );
+  const filteredUsers = useMemo(() => {
+    const query = userSearch.trim().toLocaleLowerCase('id');
+    return users.filter((user) => {
+      if (filter !== 'ALL' && user.status !== filter) return false;
+      if (!query) return true;
+      return [
+        user.display_name,
+        user.username,
+        user.role_code,
+        STATUS_LABELS[user.status],
+      ]
+        .join(' ')
+        .toLocaleLowerCase('id')
+        .includes(query);
+    });
+  }, [filter, userSearch, users]);
 
   const selected =
     users.find((user) => user.profile_id === selectedProfileId) ?? null;
@@ -528,8 +553,26 @@ export function OwnerUsersScreen() {
         </form>
       </section>
 
-      <section>
-        <h2>Daftar Pengguna</h2>
+      <section className="owner-users-list-section">
+        <div className="owner-users-section-head">
+          <div>
+            <p className="eyebrow">AKUN & ROLE</p>
+            <h2>Daftar Pengguna</h2>
+          </div>
+          <span className="owner-users-count">
+            {filteredUsers.length} pengguna
+          </span>
+        </div>
+        <label className="operations-search-field owner-users-search">
+          <span className="sr-only">Cari pengguna</span>
+          <Icon name="search" size={18} />
+          <input
+            type="search"
+            value={userSearch}
+            onChange={(event) => setUserSearch(event.target.value)}
+            placeholder="Cari nama, username, role, atau status…"
+          />
+        </label>
         <div className="chip-row" aria-label="Filter status">
           {(
             [
@@ -551,58 +594,93 @@ export function OwnerUsersScreen() {
           ))}
         </div>
 
-        <div className="stack">
-          {filteredUsers.map((user) => (
-            <article className="identity-card" key={user.profile_id}>
-              <button
-                type="button"
-                className="chip"
-                onClick={() => setSelectedProfileId(user.profile_id)}
+        <div className="stack owner-users-list">
+          {usersLoading ? (
+            <div
+              className="operations-card-skeleton owner-users-loading"
+              aria-label="Memuat pengguna"
+            >
+              <span />
+              <span />
+              <span />
+            </div>
+          ) : filteredUsers.length === 0 ? (
+            <p className="muted">Tidak ada pengguna yang sesuai filter.</p>
+          ) : (
+            filteredUsers.map((user) => (
+              <article
+                className={
+                  selectedProfileId === user.profile_id
+                    ? 'identity-card owner-user-card selected'
+                    : 'identity-card owner-user-card'
+                }
+                key={user.profile_id}
               >
-                {user.display_name} · @{user.username}
-              </button>
-              <p className="muted">
-                {user.role_code} · {STATUS_LABELS[user.status]}
-              </p>
+                <button
+                  type="button"
+                  className="owner-user-identity"
+                  onClick={() => setSelectedProfileId(user.profile_id)}
+                >
+                  <span className="owner-user-avatar">
+                    <Icon
+                      name={user.role_code === 'OWNER' ? 'profile' : 'employee'}
+                      size={21}
+                    />
+                  </span>
+                  <span>
+                    <strong>{user.display_name}</strong>
+                    <small>
+                      @{user.username} · {user.role_code}
+                    </small>
+                  </span>
+                  <span
+                    className={
+                      'owner-user-status status-' + user.status.toLowerCase()
+                    }
+                  >
+                    {STATUS_LABELS[user.status]}
+                  </span>
+                </button>
 
-              {user.role_code !== 'OWNER' && (
-                <div className="button-row">
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void resetPassword(user)}
-                  >
-                    Reset Password
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void setStatus(user, 'ACTIVE')}
-                  >
-                    Aktif
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void setStatus(user, 'LEAVE')}
-                  >
-                    Cuti
-                  </button>
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void setStatus(user, 'DISABLED')}
-                  >
-                    Dinonaktifkan
-                  </button>
-                </div>
-              )}
-            </article>
-          ))}
+                {user.role_code !== 'OWNER' && (
+                  <div className="button-row">
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void resetPassword(user)}
+                    >
+                      Reset Password
+                    </button>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void setStatus(user, 'ACTIVE')}
+                    >
+                      Aktif
+                    </button>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void setStatus(user, 'LEAVE')}
+                    >
+                      Cuti
+                    </button>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      disabled={busy}
+                      onClick={() => void setStatus(user, 'DISABLED')}
+                    >
+                      Dinonaktifkan
+                    </button>
+                  </div>
+                )}
+              </article>
+            ))
+          )}
         </div>
       </section>
 
@@ -653,73 +731,93 @@ export function OwnerUsersScreen() {
             </label>
           </div>
 
-          <div className="stack">
-            {visibleDevices.length === 0 && (
+          <div className="stack owner-device-list">
+            {devicesLoading ? (
+              <div
+                className="operations-card-skeleton owner-devices-loading"
+                aria-label="Memuat perangkat"
+              >
+                <span />
+                <span />
+              </div>
+            ) : visibleDevices.length === 0 ? (
               <p className="muted">Belum ada perangkat tercatat.</p>
-            )}
-
-            {visibleDevices.map((device) => (
-              <article className="identity-card" key={device.device_id}>
-                <strong>{device.friendly_name}</strong>
-                <p className="muted">
-                  {device.device_kind === 'SHARED' ? 'Bersama' : 'Personal'}
-                  {' · '}
-                  {device.platform_label}
-                </p>
-                <p className="muted">
-                  Terakhir terlihat: {formatLastSeen(device.last_seen_at)}
-                </p>
-                <p>
-                  Status:{' '}
-                  <strong>
-                    {device.removed
-                      ? 'Dihapus dari daftar'
-                      : device.revoked || device.retired
-                        ? 'Dicabut'
-                        : 'Aktif'}
-                  </strong>
-                </p>
-
-                {!device.removed && (
-                  <div className="button-row">
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void renameDevice(device)}
-                    >
-                      Ubah Nama
-                    </button>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={busy || device.revoked || device.retired}
-                      onClick={() => void revokeDevice(selected, device)}
-                    >
-                      Cabut Akses
-                    </button>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={busy || !device.revoked}
-                      onClick={() => void removeDevice(selected, device)}
-                    >
-                      Hapus dari Daftar
-                    </button>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={busy || device.revoked || device.retired}
-                      onClick={() =>
-                        void revokeAndRemoveDevice(selected, device)
-                      }
-                    >
-                      Cabut & Hapus
-                    </button>
+            ) : (
+              visibleDevices.map((device) => (
+                <article
+                  className="identity-card owner-device-card"
+                  key={device.device_id}
+                >
+                  <div className="owner-device-head">
+                    <span className="owner-device-icon">
+                      <Icon name="active-device" size={21} />
+                    </span>
+                    <span>
+                      <strong>{device.friendly_name}</strong>
+                      <small>
+                        {device.device_kind === 'SHARED'
+                          ? 'Bersama'
+                          : 'Personal'}
+                        {' · '}
+                        {device.platform_label}
+                      </small>
+                    </span>
                   </div>
-                )}
-              </article>
-            ))}
+                  <p className="muted owner-device-last-seen">
+                    Terakhir terlihat: {formatLastSeen(device.last_seen_at)}
+                  </p>
+                  <p>
+                    Status:{' '}
+                    <strong>
+                      {device.removed
+                        ? 'Dihapus dari daftar'
+                        : device.revoked || device.retired
+                          ? 'Dicabut'
+                          : 'Aktif'}
+                    </strong>
+                  </p>
+
+                  {!device.removed && (
+                    <div className="button-row">
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void renameDevice(device)}
+                      >
+                        Ubah Nama
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={busy || device.revoked || device.retired}
+                        onClick={() => void revokeDevice(selected, device)}
+                      >
+                        Cabut Akses
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={busy || !device.revoked}
+                        onClick={() => void removeDevice(selected, device)}
+                      >
+                        Hapus dari Daftar
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={busy || device.revoked || device.retired}
+                        onClick={() =>
+                          void revokeAndRemoveDevice(selected, device)
+                        }
+                      >
+                        Cabut & Hapus
+                      </button>
+                    </div>
+                  )}
+                </article>
+              ))
+            )}
           </div>
         </section>
       )}
