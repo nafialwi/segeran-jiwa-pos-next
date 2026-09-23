@@ -49,7 +49,14 @@ export function MenuScreen() {
 
   if (!authority) return null;
 
-  const operations: MenuEntry[] = [];
+  const operations: MenuEntry[] = [
+    {
+      label: 'Perhatian',
+      detail: 'Status koneksi dan hal yang perlu ditinjau',
+      to: '/perhatian',
+      icon: 'notification',
+    },
+  ];
   const business: MenuEntry[] = [];
   const system: MenuEntry[] = [];
 

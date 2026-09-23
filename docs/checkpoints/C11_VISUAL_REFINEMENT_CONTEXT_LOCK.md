@@ -278,3 +278,28 @@ Canonical verification: **96/96 JS + 388/388 Python PASS**, plus repo guard,
 Prettier, ESLint, TypeScript, production build, and diff-check.
 
 See: docs/checkpoints/C11F2_VISUAL_GEOMETRY_READABILITY_SAFEPOINT.md
+
+## C11-F3 safe checkpoint — daily navigation & reports
+
+C11-F3 moves the primary navigation toward daily-use work while preserving report
+authority.
+
+- Perhatian is removed from the primary bottom/sidebar navigation;
+- Laporan becomes the permission-gated primary destination for users who already
+  hold REPORT_SALES_LIMITED, REPORT_INVENTORY, or REPORT_PURCHASE;
+- Perhatian remains available under Menu -> Operasional;
+- /perhatian now belongs to the Menu primary family;
+- Reports default to Hari ini and add quick period controls for Hari ini, 7 hari,
+  Bulan ini, and Custom;
+- changing report period/date clears stale result state before a new report is run;
+- existing C11-F1 result reveal and Excel export remain intact;
+- no report permission is newly granted to KASIR in this batch because the current
+  REPORT_SALES_LIMITED projection is business-wide rather than cashier-own-only;
+- no database migration or business-authority change was added;
+- Production remains untouched.
+
+Focused regression: **6/6 C11-F3 Python + 5/5 C1 navigation PASS**.
+Canonical verification: **96/96 JS + 394/394 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+See: docs/checkpoints/C11F3_DAILY_NAVIGATION_REPORTS_SAFEPOINT.md

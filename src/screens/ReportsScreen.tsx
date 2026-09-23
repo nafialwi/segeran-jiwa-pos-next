@@ -29,9 +29,29 @@ function isoDate(date: Date) {
   return new Date(date.getTime() - offset).toISOString().slice(0, 10);
 }
 
-function defaultFrom() {
-  const now = new Date();
-  return isoDate(new Date(now.getFullYear(), now.getMonth(), 1));
+type ReportPeriodPreset = 'TODAY' | 'LAST_7_DAYS' | 'MONTH' | 'CUSTOM';
+
+const PERIOD_PRESETS: Array<{
+  id: ReportPeriodPreset;
+  label: string;
+}> = [
+  { id: 'TODAY', label: 'Hari ini' },
+  { id: 'LAST_7_DAYS', label: '7 hari' },
+  { id: 'MONTH', label: 'Bulan ini' },
+  { id: 'CUSTOM', label: 'Custom' },
+];
+
+function presetRange(preset: Exclude<ReportPeriodPreset, 'CUSTOM'>) {
+  const to = new Date();
+  let from = new Date(to);
+
+  if (preset === 'LAST_7_DAYS') {
+    from.setDate(to.getDate() - 6);
+  } else if (preset === 'MONTH') {
+    from = new Date(to.getFullYear(), to.getMonth(), 1);
+  }
+
+  return { dateFrom: isoDate(from), dateTo: isoDate(to) };
 }
 
 function formatValue(value: unknown, format: ReportFormat) {
@@ -77,9 +97,11 @@ export function ReportsScreen() {
     [authority],
   );
 
+  const today = isoDate(new Date());
   const [code, setCode] = useState<ReportCode>(available[0]?.code ?? 'SALES');
-  const [dateFrom, setDateFrom] = useState(defaultFrom());
-  const [dateTo, setDateTo] = useState(isoDate(new Date()));
+  const [periodPreset, setPeriodPreset] = useState<ReportPeriodPreset>('TODAY');
+  const [dateFrom, setDateFrom] = useState(today);
+  const [dateTo, setDateTo] = useState(today);
   const [report, setReport] = useState<ReportEnvelope | null>(null);
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
@@ -92,6 +114,17 @@ export function ReportsScreen() {
       resultRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
     });
   }, [report]);
+
+  function applyPeriodPreset(preset: ReportPeriodPreset) {
+    setPeriodPreset(preset);
+    setReport(null);
+    setError('');
+    if (preset === 'CUSTOM') return;
+
+    const range = presetRange(preset);
+    setDateFrom(range.dateFrom);
+    setDateTo(range.dateTo);
+  }
 
   async function load(event?: FormEvent) {
     event?.preventDefault();
@@ -147,7 +180,28 @@ export function ReportsScreen() {
       )}
 
       <section className="identity-card secondary-filter-panel">
-        <form className="compact-grid-form" onSubmit={load}>
+        <form className="compact-grid-form report-filter-form" onSubmit={load}>
+          <div
+            className="report-period-presets"
+            role="group"
+            aria-label="Periode cepat"
+          >
+            {PERIOD_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                className={
+                  periodPreset === preset.id
+                    ? 'report-period-chip active'
+                    : 'report-period-chip'
+                }
+                aria-pressed={periodPreset === preset.id}
+                onClick={() => applyPeriodPreset(preset.id)}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
           <label className="field-label">
             Jenis Laporan
             <select
@@ -155,6 +209,7 @@ export function ReportsScreen() {
               onChange={(event) => {
                 setCode(event.target.value as ReportCode);
                 setReport(null);
+                setError('');
               }}
             >
               {available.map((item) => (
@@ -169,7 +224,12 @@ export function ReportsScreen() {
             <input
               type="date"
               value={dateFrom}
-              onChange={(event) => setDateFrom(event.target.value)}
+              onChange={(event) => {
+                setDateFrom(event.target.value);
+                setPeriodPreset('CUSTOM');
+                setReport(null);
+                setError('');
+              }}
             />
           </label>
           <label className="field-label">
@@ -177,7 +237,12 @@ export function ReportsScreen() {
             <input
               type="date"
               value={dateTo}
-              onChange={(event) => setDateTo(event.target.value)}
+              onChange={(event) => {
+                setDateTo(event.target.value);
+                setPeriodPreset('CUSTOM');
+                setReport(null);
+                setError('');
+              }}
             />
           </label>
           <div className="button-row">

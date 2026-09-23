@@ -3,7 +3,7 @@ import type { AuthoritySnapshot } from '../auth/types';
 import type { SegeranIconName } from '../ui/iconRegistry';
 
 export type PrimaryNavigationId =
-  'home' | 'sale' | 'history' | 'attention' | 'menu';
+  'home' | 'sale' | 'history' | 'reports' | 'menu';
 
 export type PrimaryNavigationItem = {
   id: PrimaryNavigationId;
@@ -37,15 +37,22 @@ export function getPrimaryNavigation(
     });
   }
 
-  items.push(
-    {
-      id: 'attention',
-      label: 'Perhatian',
-      to: '/perhatian',
-      icon: 'notification',
-    },
-    { id: 'menu', label: 'Menu', to: '/menu', icon: 'settings' },
-  );
+  if (
+    hasAnyPermission(authority, [
+      'REPORT_SALES_LIMITED',
+      'REPORT_INVENTORY',
+      'REPORT_PURCHASE',
+    ])
+  ) {
+    items.push({
+      id: 'reports',
+      label: 'Laporan',
+      to: '/laporan',
+      icon: 'reports',
+    });
+  }
+
+  items.push({ id: 'menu', label: 'Menu', to: '/menu', icon: 'settings' });
 
   return items;
 }
@@ -57,9 +64,9 @@ export function isPrimaryNavigationActive(
   if (item.id === 'home') return pathname === '/';
   if (item.id === 'sale') return pathname === '/jual';
   if (item.id === 'history') return pathname.startsWith('/riwayat');
-  if (item.id === 'attention') return pathname.startsWith('/perhatian');
+  if (item.id === 'reports') return pathname.startsWith('/laporan');
 
-  const canonicalPrimary = ['/', '/jual', '/riwayat', '/perhatian'];
+  const canonicalPrimary = ['/', '/jual', '/riwayat', '/laporan'];
   return !canonicalPrimary.some((path) =>
     path === '/' ? pathname === '/' : pathname.startsWith(path),
   );
