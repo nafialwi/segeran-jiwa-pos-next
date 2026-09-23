@@ -161,3 +161,21 @@ Canonical source verification: **96/96 JS + 338/338 Python PASS**, plus repo gua
 format, lint, TypeScript, production build, and diff-check.
 
 See docs/checkpoints/C11F0A_PRODUCT_MASTER_SAFEPOINT.md
+
+## C11-F0B safe checkpoint — operational messages
+
+The Refinement 01 Cashier Dashboard message placeholder is now backed by a
+source-level, permission-bounded operational instruction capability.
+
+- authorized management can target all cashiers or a specific active user;
+- messages have Normal/Important priority and a bounded validity window;
+- Cashier Dashboard shows current targeted instructions and read acknowledgement;
+- management can see read progress and cancel active instructions;
+- the feature is deliberately not a general chat system;
+- direct message-table access is not granted to the client;
+- create/cancel commands are permission checked, idempotency bounded, and audited;
+- migration source is prepared but Production is untouched;
+- an older backend remains fail-closed through the capability probe.
+
+See:
+`docs/checkpoints/C11F0B_OPERATIONAL_MESSAGE_SAFEPOINT.md`

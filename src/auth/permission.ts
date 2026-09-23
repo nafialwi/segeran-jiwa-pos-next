@@ -52,6 +52,9 @@ export function canAccessRoute(
       'REPORT_PURCHASE',
     ]);
   }
+  if (route === '/pesan-operasional') {
+    return hasPermission(authority, 'OPERATIONAL_MESSAGE_MANAGE');
+  }
   if (route === '/jual') return hasPermission(authority, 'SALE_EXECUTE');
   if (route === '/stok/kontrol') {
     return hasAnyPermission(authority, [

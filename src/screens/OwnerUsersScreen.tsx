@@ -62,6 +62,7 @@ const OPERATIONAL_PERMISSIONS: Array<{
   { code: 'INVENTORY_TRANSFER', label: 'Transfer Barang' },
   { code: 'PURCHASE_MANAGE', label: 'Kelola Pembelian' },
   { code: 'PRODUCT_MANAGE', label: 'Kelola Produk Jual' },
+  { code: 'OPERATIONAL_MESSAGE_MANAGE', label: 'Kelola Pesan Operasional' },
   { code: 'PRODUCTION_MANAGE', label: 'Kelola Produksi' },
   { code: 'CUSTOMER_MANAGE', label: 'Kelola Pelanggan' },
   { code: 'EMPLOYEE_MANAGE', label: 'Kelola Karyawan' },

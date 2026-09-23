@@ -13,6 +13,11 @@ import {
   type OwnerDashboardData,
 } from '../dashboard/dashboard-api';
 import { deriveOperationalHealth } from '../health/operational-health';
+import {
+  fetchMyOperationalMessages,
+  markOperationalMessageRead,
+  type OperationalMessageInboxItem,
+} from '../operations/operational-message-api';
 import { Icon } from '../ui/Icon';
 import type { SegeranIconName } from '../ui/iconRegistry';
 
@@ -326,11 +331,157 @@ function OwnerDashboard() {
             title="Keuangan"
             detail="Kas, bank & QRIS"
           />
+          {hasPermission(authority, 'OPERATIONAL_MESSAGE_MANAGE') && (
+            <QuickAction
+              to="/pesan-operasional"
+              icon="notification"
+              title="Pesan Kasir"
+              detail="Kirim instruksi kerja"
+            />
+          )}
         </div>
       </section>
 
       <AttentionEntry />
     </>
+  );
+}
+
+function CashierOperationalMessages() {
+  const [messages, setMessages] = useState<OperationalMessageInboxItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [busyId, setBusyId] = useState('');
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    void fetchMyOperationalMessages(3)
+      .then((rows) => {
+        if (active) setMessages(rows);
+      })
+      .catch((cause: unknown) => {
+        if (!active) return;
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : 'Pesan operasional gagal dimuat.',
+        );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function markRead(messageId: string) {
+    setBusyId(messageId);
+    setError('');
+    try {
+      await markOperationalMessageRead(messageId);
+      setMessages((current) =>
+        current.map((message) =>
+          message.id === messageId
+            ? { ...message, readAt: new Date().toISOString() }
+            : message,
+        ),
+      );
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'Pesan belum dapat ditandai dibaca.',
+      );
+    } finally {
+      setBusyId('');
+    }
+  }
+
+  if (loading) {
+    return (
+      <section className="dashboard-owner-message dashboard-message-loading">
+        <span className="dashboard-section-icon">
+          <Icon name="notification" />
+        </span>
+        <div>
+          <strong>Pesan Operasional</strong>
+          <p>Memeriksa instruksi terbaru…</p>
+        </div>
+      </section>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <section className="dashboard-owner-message">
+        <span className="dashboard-section-icon">
+          <Icon name="check" />
+        </span>
+        <div>
+          <strong>Pesan Operasional</strong>
+          <p>Belum ada instruksi aktif untuk Anda.</p>
+          <small>Pesan baru akan tampil otomatis saat tersedia.</small>
+        </div>
+      </section>
+    );
+  }
+
+  return (
+    <section className="dashboard-cashier-messages">
+      <header className="dashboard-panel-header">
+        <div>
+          <p className="eyebrow">DARI PENGELOLA</p>
+          <h2>Pesan Operasional</h2>
+        </div>
+      </header>
+      {error && <p className="form-error">{error}</p>}
+      <div className="dashboard-message-list">
+        {messages.map((message) => (
+          <article
+            className={
+              message.priority === 'HIGH'
+                ? 'dashboard-owner-message high'
+                : 'dashboard-owner-message'
+            }
+            key={message.id}
+          >
+            <span className="dashboard-section-icon">
+              <Icon
+                name={message.priority === 'HIGH' ? 'warning' : 'notification'}
+              />
+            </span>
+            <div>
+              <strong>{message.title}</strong>
+              <p>{message.body}</p>
+              <small>
+                {message.authorName} · sampai{' '}
+                {formatDateTime(message.validUntil)}
+              </small>
+            </div>
+            <button
+              className={
+                message.readAt
+                  ? 'message-read-button read'
+                  : 'message-read-button'
+              }
+              type="button"
+              disabled={Boolean(message.readAt) || busyId === message.id}
+              onClick={() => void markRead(message.id)}
+            >
+              <Icon name={message.readAt ? 'check' : 'receipt'} size={16} />
+              <span>
+                {message.readAt
+                  ? 'Sudah dibaca'
+                  : busyId === message.id
+                    ? 'Menyimpan…'
+                    : 'Sudah Dibaca'}
+              </span>
+            </button>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -478,18 +629,7 @@ function CashierDashboard() {
         </div>
       </section>
 
-      <section className="dashboard-owner-message">
-        <span className="dashboard-section-icon">
-          <Icon name="notification" />
-        </span>
-        <div>
-          <strong>Pesan Owner</strong>
-          <p>Belum ada kanal pesan operasional yang aktif.</p>
-          <small>
-            Pesan Owner akan tampil di sini saat authority pesan tersedia.
-          </small>
-        </div>
-      </section>
+      <CashierOperationalMessages />
 
       <AttentionEntry />
     </>

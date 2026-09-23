@@ -20,6 +20,7 @@ import { LegacyImportScreen } from './screens/LegacyImportScreen';
 import { LoginScreen } from './screens/LoginScreen';
 import { MenuScreen } from './screens/MenuScreen';
 import { OfflineSyncScreen } from './screens/OfflineSyncScreen';
+import { OperationalMessageScreen } from './screens/OperationalMessageScreen';
 import { OwnerUsersScreen } from './screens/OwnerUsersScreen';
 import { ProductOperationsScreen } from './screens/ProductOperationsScreen';
 import { ProductionScreen } from './screens/ProductionScreen';
@@ -56,6 +57,14 @@ export function App() {
         <Route element={<AuthenticatedLayout />}>
           <Route path="/" element={<HomeScreen />} />
           <Route path="/perhatian" element={<AttentionScreen />} />
+          <Route
+            path="/pesan-operasional"
+            element={
+              <RequireAccess permission="OPERATIONAL_MESSAGE_MANAGE">
+                <OperationalMessageScreen />
+              </RequireAccess>
+            }
+          />
           <Route path="/menu" element={<MenuScreen />} />
           <Route
             path="/pengaturan"

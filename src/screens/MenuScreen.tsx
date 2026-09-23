@@ -161,6 +161,15 @@ export function MenuScreen() {
       icon: 'reports',
     });
   }
+  if (hasPermission(authority, 'OPERATIONAL_MESSAGE_MANAGE')) {
+    operations.push({
+      label: 'Pesan Operasional',
+      detail: 'Instruksi kerja untuk kasir',
+      to: '/pesan-operasional',
+      icon: 'notification',
+    });
+  }
+
   if (hasPermission(authority, 'SETTINGS_NONCRITICAL')) {
     system.push({
       label: 'Pengaturan',

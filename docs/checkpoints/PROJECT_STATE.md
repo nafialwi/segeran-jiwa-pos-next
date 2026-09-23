@@ -355,21 +355,23 @@ Completed safe points:
 - C11-C — POS, cart, checkout, success, transaction history;
 - C11-D — Inventory, Product/Recipe, Purchase, Production, Shift, plus loading-efficiency hardening;
 - C11-E — Control Center, Finance, Users/Devices, Attention, Backup/Health/Offline, and mobile long-list usability convergence.
-- C11-F0A — permission-bounded Product Master editor and mutation authority; migration source prepared, Production untouched.
+- C11-F0A — permission-bounded Product Master editor and mutation authority; migration source prepared, Production untouched;
+- C11-F0B — permission-bounded operational instructions for Cashier Dashboard with target, priority, validity, acknowledgement, and management read progress; migration source prepared, Production untouched.
 
-C11-F0A canonical verification: **96/96 JavaScript + 338/338 Python PASS**.
+C11-F0B canonical verification: **96/96 JavaScript + 348/348 Python PASS**.
 No C11 source change has been released to Production.
 
 ## NEXT ACTION
 
-**Continue C11-F0B — Operational Message from Owner/authorized management to Cashier.**
+**Continue C11-F0C — Shift Packaging Reconciliation.**
 
-Build a narrow operational instruction channel: target, priority, validity
-window, Dashboard Cashier delivery, and read acknowledgement. Keep it
-permission-bounded and auditable; do not turn it into a general chat system.
+Close the known packaging visibility gap with one authoritative shift projection
+for opening physical quantity, theoretical usage, expected closing, physical
+closing count, and variance per packaging Stock Item. Preserve the single
+inventory engine and do not derive/fabricate physical counts.
 
 Keep RC4 immutable. Production remains blocked. C11-F final QA starts only after
-F0B/F0C/F0D/F0E known gaps are closed.
+F0C/F0D/F0E known gaps are closed.
 
 ## Cutover rule
 

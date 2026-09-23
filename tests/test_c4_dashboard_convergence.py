@@ -51,7 +51,7 @@ class C4DashboardConvergenceTests(unittest.TestCase):
         ):
             self.assertIn(token, src)
 
-    def test_cashier_dashboard_has_shift_sale_cta_and_truthful_owner_message(self):
+    def test_cashier_dashboard_has_shift_sale_cta_and_operational_message_inbox(self):
         src = HOME.read_text(encoding="utf-8")
         for token in (
             "Shift Aktif",
@@ -59,10 +59,12 @@ class C4DashboardConvergenceTests(unittest.TestCase):
             "Kas Diharapkan",
             "Penjualan Shift",
             "Aksi Cepat",
-            "Pesan Owner",
-            "Belum ada kanal pesan operasional",
+            "Pesan Operasional",
+            "fetchMyOperationalMessages(3)",
+            "Sudah Dibaca",
         ):
             self.assertIn(token, src)
+        self.assertNotIn("Belum ada kanal pesan operasional", src)
 
     def test_dashboard_is_responsive_and_uses_c1_design_tokens(self):
         css = CSS.read_text(encoding="utf-8")
