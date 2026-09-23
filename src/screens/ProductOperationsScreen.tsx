@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import { OperationsNav } from '../components/OperationsNav';
@@ -61,6 +61,7 @@ export function ProductOperationsScreen() {
   const [masterStockLoading, setMasterStockLoading] = useState(false);
   const [masterOpen, setMasterOpen] = useState(false);
   const [masterProductId, setMasterProductId] = useState<string | null>(null);
+  const detailRef = useRef<HTMLElement | null>(null);
 
   const canRequestProductManagement =
     authority !== null && hasPermission(authority, 'PRODUCT_MANAGE');
@@ -295,6 +296,19 @@ export function ProductOperationsScreen() {
     bomComponents.map((component) => [component.id, component]),
   );
 
+  function selectProduct(productId: string) {
+    setSelectedId(productId);
+    setTab('INFO');
+    if (window.matchMedia('(max-width: 720px)').matches) {
+      window.requestAnimationFrame(() => {
+        detailRef.current?.scrollIntoView({
+          block: 'start',
+          behavior: 'smooth',
+        });
+      });
+    }
+  }
+
   async function openProductMaster(productId: string | null) {
     if (!canManageProduct) return;
     setMasterProductId(productId);
@@ -341,8 +355,16 @@ export function ProductOperationsScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner">{error}</p>}
-      {message && <p className="success-banner">{message}</p>}
+      {error && (
+        <p className="error-banner" role="alert">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="success-banner" role="status" aria-live="polite">
+          {message}
+        </p>
+      )}
 
       <section className="product-ops-layout">
         <aside className="product-ops-list">
@@ -394,10 +416,7 @@ export function ProductOperationsScreen() {
                       ? 'product-ops-select active'
                       : 'product-ops-select'
                   }
-                  onClick={() => {
-                    setSelectedId(product.id);
-                    setTab('INFO');
-                  }}
+                  onClick={() => selectProduct(product.id)}
                 >
                   <span className="operations-icon">
                     <Icon name="product" size={18} />
@@ -414,7 +433,11 @@ export function ProductOperationsScreen() {
           </div>
         </aside>
 
-        <section className="operations-panel product-ops-detail">
+        <section
+          className="operations-panel product-ops-detail"
+          ref={detailRef}
+          tabIndex={-1}
+        >
           {!selected ? (
             loadingProducts ? (
               <div

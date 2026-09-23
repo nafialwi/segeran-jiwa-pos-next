@@ -34,8 +34,49 @@ a {
   -webkit-tap-highlight-color: transparent;
 }
 
+button,
+a[href],
+[role='button'] {
+  touch-action: manipulation;
+}
+
+button:not(:disabled):active,
+a[href]:active,
+[role='button']:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.report-result-shell,
+.history-impact-panel,
+.product-ops-detail,
+.owner-user-detail-anchor,
+.inventory-control-grid > .operations-panel {
+  scroll-margin-top: 14px;
+}
+
+.owner-user-detail-anchor {
+  height: 1px;
+  margin-top: -1px;
+  pointer-events: none;
+}
+
 a {
   color: inherit;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html:focus-within {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
 
 .auth-page,

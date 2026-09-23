@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
@@ -67,6 +67,26 @@ export function TransactionHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const refundPanelRef = useRef<HTMLElement | null>(null);
+  const correctionPanelRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    const target = refundTarget ? refundPanelRef.current : null;
+    if (!target) return;
+    window.requestAnimationFrame(() => {
+      target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      target.focus({ preventScroll: true });
+    });
+  }, [refundTarget]);
+
+  useEffect(() => {
+    const target = correctionTarget ? correctionPanelRef.current : null;
+    if (!target) return;
+    window.requestAnimationFrame(() => {
+      target.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      target.focus({ preventScroll: true });
+    });
+  }, [correctionTarget]);
 
   async function search(next = filters) {
     setLoading(true);
@@ -256,8 +276,16 @@ export function TransactionHistoryScreen() {
         </div>
       </header>
 
-      {error && <div className="error-banner">{error}</div>}
-      {message && <div className="success-banner">{message}</div>}
+      {error && (
+        <div className="error-banner" role="alert">
+          {error}
+        </div>
+      )}
+      {message && (
+        <div className="success-banner" role="status" aria-live="polite">
+          {message}
+        </div>
+      )}
 
       <section className="identity-card history-filter-panel">
         <form className="compact-grid-form" onSubmit={submit}>
@@ -625,7 +653,11 @@ export function TransactionHistoryScreen() {
       </section>
 
       {refundTarget && refundImpact && (
-        <section className="identity-card history-impact-panel refund">
+        <section
+          className="identity-card history-impact-panel refund"
+          ref={refundPanelRef}
+          tabIndex={-1}
+        >
           <div className="section-heading">
             <div>
               <p className="eyebrow">REFUND / REVERSAL</p>
@@ -742,7 +774,11 @@ export function TransactionHistoryScreen() {
       )}
 
       {correctionTarget && correctionPreview && (
-        <section className="identity-card history-impact-panel correction">
+        <section
+          className="identity-card history-impact-panel correction"
+          ref={correctionPanelRef}
+          tabIndex={-1}
+        >
           <div className="section-heading">
             <div>
               <p className="eyebrow">KOREKSI / PEMBALIKAN</p>

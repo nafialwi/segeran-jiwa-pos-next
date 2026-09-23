@@ -35,6 +35,12 @@ export function AppShell() {
     initializeControlPreferences();
   }, []);
 
+  useEffect(() => {
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+  }, [location.pathname]);
+
   if (!authority) return <Outlet />;
 
   const navigation = getPrimaryNavigation(authority);

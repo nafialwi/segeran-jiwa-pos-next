@@ -234,3 +234,23 @@ Shift daily-use state is now explicit and reset-safe.
 - shift, reconciliation, packaging, and inventory authorities are unchanged.
 
 See: docs/checkpoints/C11F0E_SHIFT_STATE_MOBILE_INTERACTION_SAFEPOINT.md
+
+## C11-F1 safe checkpoint — interaction convergence
+
+The final human-operability hardening has started from the C11-F0E safe baseline.
+
+- normal buttons/links now provide immediate press feedback and touch-action handling;
+- primary route changes return to the visible start of the destination;
+- Reports reveals the generated result after load;
+- History reveals Refund/Correction work surfaces and focuses them;
+- mobile Product selection reveals its detail panel;
+- mobile Stock Opname history selection reveals the count workspace;
+- mobile User selection reveals permission/device detail;
+- touched success/error feedback surfaces expose status/alert semantics;
+- no transaction, inventory, finance, shift, permission, report authority, or database schema was changed;
+- Production remains untouched.
+
+Canonical verification: **96/96 JS + 381/381 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+See: docs/checkpoints/C11F1_INTERACTION_CONVERGENCE_SAFEPOINT.md

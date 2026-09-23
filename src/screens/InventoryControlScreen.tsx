@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
@@ -184,6 +184,7 @@ export function InventoryControlScreen() {
   const [countItemIds, setCountItemIds] = useState<string[]>([]);
   const [countNotes, setCountNotes] = useState('');
   const [selectedCountId, setSelectedCountId] = useState('');
+  const countWorkspaceRef = useRef<HTMLElement | null>(null);
   const [physicalValues, setPhysicalValues] = useState<Record<string, number>>(
     {},
   );
@@ -461,8 +462,16 @@ export function InventoryControlScreen() {
         </section>
       )}
 
-      {error && <p className="error-banner">{error}</p>}
-      {message && <p className="success-banner">{message}</p>}
+      {error && (
+        <p className="error-banner" role="alert">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="success-banner" role="status" aria-live="polite">
+          {message}
+        </p>
+      )}
 
       <div className="inventory-control-tabs" role="tablist">
         {tabs.map((tab) => (
@@ -758,7 +767,11 @@ export function InventoryControlScreen() {
 
       {activeTab === 'COUNT' && canCount && (
         <div className="inventory-control-grid">
-          <section className="operations-panel">
+          <section
+            className="operations-panel"
+            ref={countWorkspaceRef}
+            tabIndex={-1}
+          >
             <header className="operations-panel-header">
               <div>
                 <p className="eyebrow">FISIK VS SISTEM</p>
@@ -961,6 +974,14 @@ export function InventoryControlScreen() {
                   key={count.id}
                   onClick={() => {
                     setSelectedCountId(count.id);
+                    if (window.matchMedia('(max-width: 759px)').matches) {
+                      window.requestAnimationFrame(() => {
+                        countWorkspaceRef.current?.scrollIntoView({
+                          block: 'start',
+                          behavior: 'smooth',
+                        });
+                      });
+                    }
                     setPhysicalValues(
                       Object.fromEntries(
                         count.lines

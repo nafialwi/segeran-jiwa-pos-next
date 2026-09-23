@@ -1,4 +1,4 @@
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { hasPermission } from '../auth/permission';
@@ -84,6 +84,14 @@ export function ReportsScreen() {
   const [loading, setLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [error, setError] = useState('');
+  const resultRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!report) return;
+    window.requestAnimationFrame(() => {
+      resultRef.current?.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+  }, [report]);
 
   async function load(event?: FormEvent) {
     event?.preventDefault();
@@ -132,7 +140,11 @@ export function ReportsScreen() {
         </div>
       </header>
 
-      {error && <div className="error-banner">{error}</div>}
+      {error && (
+        <div className="error-banner" role="alert">
+          {error}
+        </div>
+      )}
 
       <section className="identity-card secondary-filter-panel">
         <form className="compact-grid-form" onSubmit={load}>
@@ -194,7 +206,12 @@ export function ReportsScreen() {
 
       {report && (
         <>
-          <section className="identity-card report-result-shell">
+          <section
+            className="identity-card report-result-shell"
+            ref={resultRef}
+            tabIndex={-1}
+            aria-live="polite"
+          >
             <div className="section-heading">
               <div>
                 <h2>{report.report_title}</h2>

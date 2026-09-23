@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from 'react';
@@ -220,6 +221,7 @@ export function OwnerUsersScreen() {
   const [filter, setFilter] = useState<StatusFilter>('ALL');
   const [userSearch, setUserSearch] = useState('');
   const [selectedProfileId, setSelectedProfileId] = useState('');
+  const userDetailAnchorRef = useRef<HTMLDivElement | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -523,6 +525,18 @@ export function OwnerUsersScreen() {
     });
   }
 
+  function selectUser(profileId: string) {
+    setSelectedProfileId(profileId);
+    if (window.matchMedia('(max-width: 759px)').matches) {
+      window.requestAnimationFrame(() => {
+        userDetailAnchorRef.current?.scrollIntoView({
+          block: 'start',
+          behavior: 'smooth',
+        });
+      });
+    }
+  }
+
   function overrideEffect(
     user: OwnerUser,
     permissionCode: PermissionCode,
@@ -658,7 +672,7 @@ export function OwnerUsersScreen() {
                 <button
                   type="button"
                   className="owner-user-identity"
-                  onClick={() => setSelectedProfileId(user.profile_id)}
+                  onClick={() => selectUser(user.profile_id)}
                 >
                   <span className="owner-user-avatar">
                     <Icon
@@ -722,6 +736,14 @@ export function OwnerUsersScreen() {
           )}
         </div>
       </section>
+
+      {selected && (
+        <div
+          ref={userDetailAnchorRef}
+          className="owner-user-detail-anchor"
+          aria-hidden="true"
+        />
+      )}
 
       {selected && selected.role_code !== 'OWNER' && (
         <section className="identity-card" id="permissions">
