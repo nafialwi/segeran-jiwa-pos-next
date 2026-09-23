@@ -75,8 +75,12 @@ export function InventoryItemScreen() {
       ) : (
         <>
           <section className="inventory-detail-hero">
-            <span className="operations-icon large">
-              <Icon name="warehouse" />
+            <span className="operations-icon large inventory-detail-icon">
+              <Icon
+                name={
+                  detail.item.itemKind === 'PACKAGING' ? 'product' : 'warehouse'
+                }
+              />
             </span>
             <div>
               <p className="eyebrow">INFORMASI BARANG</p>

@@ -3,6 +3,7 @@ import { OperationsNav } from '../components/OperationsNav';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { hasPermission } from '../auth/permission';
+import { Icon } from '../ui/Icon';
 import {
   canCloseShift,
   formatIdr,
@@ -32,6 +33,7 @@ export function ShiftManagementScreen() {
   const [runningReconciliation, setRunningReconciliation] =
     useState<Reconciliation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [locationsLoading, setLocationsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const [locationId, setLocationId] = useState('');
@@ -67,20 +69,30 @@ export function ShiftManagementScreen() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      const locationPromise = fetchLocations()
+        .then((locs) => {
+          if (cancelled) return;
+          setLocations(locs);
+          if (locs.length > 0) setLocationId(locs[0].id);
+        })
+        .catch((err) => {
+          if (!cancelled) setError(toShiftErrorMessage(err));
+        })
+        .finally(() => {
+          if (!cancelled) setLocationsLoading(false);
+        });
+
       try {
-        const [currentShift, locs] = await Promise.all([
-          fetchMyOpenShift(),
-          fetchLocations(),
-        ]);
+        const currentShift = await fetchMyOpenShift();
         if (cancelled) return;
         setShift(currentShift);
-        setLocations(locs);
-        if (locs.length > 0) setLocationId(locs[0].id);
       } catch (err) {
         if (!cancelled) setError(toShiftErrorMessage(err));
       } finally {
         if (!cancelled) setLoading(false);
       }
+
+      void locationPromise;
     })();
     return () => {
       cancelled = true;
@@ -190,8 +202,21 @@ export function ShiftManagementScreen() {
 
   if (loading) {
     return (
-      <main className="shell operations-shell">
-        <p>Memuat shift…</p>
+      <main className="shell operations-shell shift-operations-screen">
+        <header className="topbar operations-header">
+          <div>
+            <p className="eyebrow">OPERASIONAL · SHIFT</p>
+            <h1>Shift Saya</h1>
+          </div>
+        </header>
+        <div
+          className="operations-card-skeleton shift-loading"
+          aria-label="Memuat shift"
+        >
+          <span />
+          <span />
+          <span />
+        </div>
       </main>
     );
   }
@@ -232,10 +257,16 @@ export function ShiftManagementScreen() {
 
           <section className="shift-kpi-grid" aria-label="Ringkasan shift">
             <article>
+              <span className="shift-kpi-icon">
+                <Icon name="cash" size={19} />
+              </span>
               <span>Saldo Awal</span>
               <strong>{formatIdr(shift.opening_balance)}</strong>
             </article>
             <article>
+              <span className="shift-kpi-icon">
+                <Icon name="cash-payment" size={19} />
+              </span>
               <span>Kas Berjalan</span>
               <strong>
                 {runningReconciliation
@@ -244,6 +275,9 @@ export function ShiftManagementScreen() {
               </strong>
             </article>
             <article>
+              <span className="shift-kpi-icon">
+                <Icon name="sales" size={19} />
+              </span>
               <span>Penjualan Tunai</span>
               <strong>
                 {runningReconciliation
@@ -252,6 +286,9 @@ export function ShiftManagementScreen() {
               </strong>
             </article>
             <article>
+              <span className="shift-kpi-icon">
+                <Icon name="debt" size={19} />
+              </span>
               <span>Uang Keluar</span>
               <strong>
                 {runningReconciliation
@@ -263,6 +300,9 @@ export function ShiftManagementScreen() {
 
           <section className="shift-action-grid">
             <Link to="/rekonsiliasi" className="shift-action-card">
+              <span className="shift-action-icon">
+                <Icon name="cash-payment" size={22} />
+              </span>
               <strong>Rekonsiliasi</strong>
               <span>Expected, aktual, dan varians shift</span>
             </Link>
@@ -270,10 +310,16 @@ export function ShiftManagementScreen() {
               to="/stok/kontrol?tab=COUNT&kind=PACKAGING"
               className="shift-action-card"
             >
+              <span className="shift-action-icon">
+                <Icon name="inventory" size={22} />
+              </span>
               <strong>Kontrol Kemasan</strong>
               <span>Hitung fisik cup/kemasan melalui inventory Stock Item</span>
             </Link>
             <Link to="/handover" className="shift-action-card">
+              <span className="shift-action-icon">
+                <Icon name="share" size={22} />
+              </span>
               <strong>Handover</strong>
               <span>Serah terima operasional tanpa mengubah fakta shift</span>
             </Link>
@@ -469,6 +515,9 @@ export function ShiftManagementScreen() {
               <div className="shift-packaging-list">
                 {packagingUsage.items.map((item) => (
                   <article key={item.stockItemId}>
+                    <span className="shift-packaging-icon" aria-hidden="true">
+                      <Icon name="product" size={18} />
+                    </span>
                     <span>
                       <strong>{item.name}</strong>
                       <small>{item.code}</small>
@@ -581,6 +630,7 @@ export function ShiftManagementScreen() {
               <select
                 value={locationId}
                 onChange={(e) => setLocationId(e.target.value)}
+                disabled={locationsLoading}
                 required
               >
                 {locations.map((loc) => (
@@ -612,7 +662,11 @@ export function ShiftManagementScreen() {
               type="submit"
               disabled={submitting || !locationId}
             >
-              {submitting ? 'Membuka…' : 'Buka Shift'}
+              {locationsLoading
+                ? 'Menyiapkan lokasi…'
+                : submitting
+                  ? 'Membuka…'
+                  : 'Buka Shift'}
             </button>
           </form>
         </section>

@@ -6,6 +6,7 @@ import { OperationsNav } from '../components/OperationsNav';
 import {
   aggregateInventoryItems,
   fetchInventoryOverview,
+  prefetchInventoryItemDetail,
   type InventoryRow,
 } from '../inventory/inventory-api';
 import { Icon } from '../ui/Icon';
@@ -143,12 +144,16 @@ export function InventoryScreen() {
 
       <section className="operations-panel">
         <div className="operations-filter-row">
-          <input
-            type="search"
-            placeholder="Cari barang, kode, atau kategori"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-          />
+          <label className="operations-search-field">
+            <span className="sr-only">Cari barang</span>
+            <Icon name="search" size={18} />
+            <input
+              type="search"
+              placeholder="Cari barang, kode, atau kategori"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
           <select
             value={location}
             onChange={(event) => setLocation(event.target.value)}
@@ -195,6 +200,9 @@ export function InventoryScreen() {
                 className="inventory-item-card"
                 key={item.stockItemId}
                 to={'/stok/' + item.stockItemId}
+                onPointerDown={() =>
+                  prefetchInventoryItemDetail(item.stockItemId)
+                }
               >
                 <div className="inventory-item-head">
                   <span className="operations-icon">
@@ -206,9 +214,10 @@ export function InventoryScreen() {
                   </span>
                   <span>
                     <strong>{item.displayName}</strong>
-                    <small>
-                      {item.code} · {itemKindLabel(item.itemKind)}
-                    </small>
+                    <small>{item.code}</small>
+                    <span className="inventory-kind-chip">
+                      {itemKindLabel(item.itemKind)}
+                    </span>
                   </span>
                 </div>
 

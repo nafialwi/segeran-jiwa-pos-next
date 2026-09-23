@@ -128,7 +128,12 @@ export function aggregateInventoryItems(
   );
 }
 
-export async function fetchInventoryItemDetail(
+const inventoryDetailInflight: Record<
+  string,
+  Promise<InventoryItemDetail> | undefined
+> = Object.create(null);
+
+async function loadInventoryItemDetail(
   stockItemId: string,
 ): Promise<InventoryItemDetail> {
   const overview = await fetchInventoryOverview();
@@ -202,4 +207,21 @@ export async function fetchInventoryItemDetail(
     .slice(0, 40);
 
   return { item, movements: result };
+}
+
+export function fetchInventoryItemDetail(
+  stockItemId: string,
+): Promise<InventoryItemDetail> {
+  const existing = inventoryDetailInflight[stockItemId];
+  if (existing) return existing;
+
+  const pending = loadInventoryItemDetail(stockItemId).finally(() => {
+    inventoryDetailInflight[stockItemId] = undefined;
+  });
+  inventoryDetailInflight[stockItemId] = pending;
+  return pending;
+}
+
+export function prefetchInventoryItemDetail(stockItemId: string): void {
+  void fetchInventoryItemDetail(stockItemId).catch(() => undefined);
 }

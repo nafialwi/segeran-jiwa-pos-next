@@ -33,8 +33,10 @@ export function ProductionScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    setLoading(true);
     const result = await fetchProductionOverview();
     setOverview(result);
     setLocationId((current) =>
@@ -52,6 +54,7 @@ export function ProductionScreen() {
         : (result.finishedGoods.find((row) => activeFinishedIds.has(row.id))
             ?.id ?? ''),
     );
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -59,6 +62,7 @@ export function ProductionScreen() {
       setError(
         cause instanceof Error ? cause.message : 'PRODUCTION_READ_FAILED',
       );
+      setLoading(false);
     });
   }, [load]);
 
@@ -70,6 +74,9 @@ export function ProductionScreen() {
   const producibleGoods = overview.finishedGoods.filter((good) =>
     activeBomMap.has(good.id),
   );
+  const selectedGood =
+    producibleGoods.find((good) => good.id === finishedGoodId) ?? null;
+  const selectedBom = selectedGood ? activeBomMap.get(selectedGood.id) : null;
 
   async function createBatch(event: React.FormEvent) {
     event.preventDefault();
@@ -153,7 +160,15 @@ export function ProductionScreen() {
             </span>
           </header>
 
-          {producibleGoods.length === 0 ? (
+          {loading ? (
+            <div
+              className="operations-card-skeleton production-loading"
+              aria-label="Memuat produksi"
+            >
+              <span />
+              <span />
+            </div>
+          ) : producibleGoods.length === 0 ? (
             <div className="empty-state">
               <strong>Belum ada BOM Aktif.</strong>
               <p>
@@ -162,6 +177,22 @@ export function ProductionScreen() {
             </div>
           ) : (
             <form className="stack-form" onSubmit={createBatch}>
+              {selectedGood && (
+                <div className="production-selected-good">
+                  <span className="operations-icon large">
+                    <Icon name="product" size={26} />
+                  </span>
+                  <span>
+                    <small>Barang jadi terpilih</small>
+                    <strong>{selectedGood.displayName}</strong>
+                    <em>
+                      {selectedGood.code} · BOM v{selectedBom?.version ?? '-'} ·
+                      Yield {selectedBom?.yieldQuantity ?? '-'}{' '}
+                      {selectedGood.baseUnit}
+                    </em>
+                  </span>
+                </div>
+              )}
               <label>
                 Lokasi produksi
                 <select
@@ -210,7 +241,8 @@ export function ProductionScreen() {
               </label>
 
               <button className="primary-button" type="submit" disabled={busy}>
-                Buat Batch Produksi
+                <Icon name="operations" size={18} />
+                <span>Buat Batch Produksi</span>
               </button>
             </form>
           )}
@@ -224,23 +256,33 @@ export function ProductionScreen() {
             </div>
           </header>
 
-          <div className="production-bom-list">
-            {producibleGoods.map((good) => {
-              const bom = activeBomMap.get(good.id);
-              return (
-                <article key={good.id}>
-                  <span>
-                    <strong>{good.displayName}</strong>
-                    <small>{good.code}</small>
-                  </span>
-                  <span>
-                    v{bom?.version ?? '-'} · Yield {bom?.yieldQuantity ?? '-'}{' '}
-                    {good.baseUnit}
-                  </span>
-                </article>
-              );
-            })}
-          </div>
+          {loading ? (
+            <div
+              className="operations-card-skeleton production-loading"
+              aria-label="Memuat BOM"
+            >
+              <span />
+              <span />
+            </div>
+          ) : (
+            <div className="production-bom-list">
+              {producibleGoods.map((good) => {
+                const bom = activeBomMap.get(good.id);
+                return (
+                  <article key={good.id}>
+                    <span>
+                      <strong>{good.displayName}</strong>
+                      <small>{good.code}</small>
+                    </span>
+                    <span>
+                      v{bom?.version ?? '-'} · Yield {bom?.yieldQuantity ?? '-'}{' '}
+                      {good.baseUnit}
+                    </span>
+                  </article>
+                );
+              })}
+            </div>
+          )}
         </section>
       </div>
 
@@ -253,7 +295,15 @@ export function ProductionScreen() {
           <small>{overview.batches.length} batch terbaru</small>
         </header>
 
-        {overview.batches.length === 0 ? (
+        {loading ? (
+          <div
+            className="operations-card-skeleton production-loading"
+            aria-label="Memuat batch produksi"
+          >
+            <span />
+            <span />
+          </div>
+        ) : overview.batches.length === 0 ? (
           <p className="operations-empty">Belum ada batch produksi.</p>
         ) : (
           <div className="production-batch-grid">

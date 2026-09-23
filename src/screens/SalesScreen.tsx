@@ -78,6 +78,8 @@ export function SalesScreen() {
   const [catalog, setCatalog] = useState<SalesCatalogItem[]>([]);
   const [customers, setCustomers] = useState<SaleCustomer[]>([]);
   const [qrisImage, setQrisImage] = useState<string | null>(null);
+  const [customersLoaded, setCustomersLoaded] = useState(false);
+  const [qrisLoaded, setQrisLoaded] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('SEMUA');
@@ -99,6 +101,35 @@ export function SalesScreen() {
 
   const submitGuardRef = useRef(false);
   const pendingOperationIdRef = useRef<string | null>(null);
+  const customersLoadingRef = useRef(false);
+  const qrisLoadingRef = useRef(false);
+
+  async function warmCustomers() {
+    if (customersLoaded || customersLoadingRef.current) return;
+    customersLoadingRef.current = true;
+    try {
+      setCustomers(await fetchSaleCustomers());
+      setCustomersLoaded(true);
+    } catch {
+      // Customer data is checkout support, not a catalog first-paint blocker.
+    } finally {
+      customersLoadingRef.current = false;
+    }
+  }
+
+  async function warmQris() {
+    if (qrisLoaded || qrisLoadingRef.current) return;
+    qrisLoadingRef.current = true;
+    try {
+      setQrisImage(await fetchManualQrisImage());
+      setQrisLoaded(true);
+    } catch {
+      setQrisImage(null);
+      setQrisLoaded(true);
+    } finally {
+      qrisLoadingRef.current = false;
+    }
+  }
 
   async function load() {
     setLoading(true);
@@ -111,14 +142,12 @@ export function SalesScreen() {
         return;
       }
 
-      const [items, customerRows, qris] = await Promise.all([
-        fetchSalesCatalog(currentShift.location_id),
-        fetchSaleCustomers(),
-        fetchManualQrisImage().catch(() => null),
-      ]);
+      // First paint only waits for the active shift and sellable catalog.
+      // Customers and QRIS are checkout support data and warm in background.
+      const items = await fetchSalesCatalog(currentShift.location_id);
       setCatalog(items);
-      setCustomers(customerRows);
-      setQrisImage(qris);
+      void warmCustomers();
+      void warmQris();
     } catch (caught) {
       setError(
         caught instanceof Error
@@ -293,6 +322,8 @@ export function SalesScreen() {
     setTransferConfirmed(false);
     if (value !== 'CREDIT') setCustomerId('');
     if (value !== 'CASH') setCashReceived(0);
+    if (value === 'CREDIT') void warmCustomers();
+    if (value === 'QRIS') void warmQris();
   }
 
   const allowedMethods: SalePaymentMethod[] = ['CASH'];
@@ -791,7 +822,9 @@ export function SalesScreen() {
 
                 {method === 'QRIS' && (
                   <div className="sales-v2-payment-panel">
-                    {qrisImage ? (
+                    {!qrisLoaded ? (
+                      <p className="muted">Menyiapkan QRIS…</p>
+                    ) : qrisImage ? (
                       <>
                         <img
                           className="sales-v2-qris"
@@ -836,6 +869,9 @@ export function SalesScreen() {
 
                 {method === 'CREDIT' && (
                   <div className="sales-v2-payment-panel">
+                    {!customersLoaded && (
+                      <p className="muted">Menyiapkan daftar pelanggan…</p>
+                    )}
                     <label>
                       <span>Pelanggan Kasbon</span>
                       <select

@@ -44,19 +44,35 @@ export function ProductOperationsScreen() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingBomOptions, setLoadingBomOptions] = useState(false);
+  const [bomOptionsLoaded, setBomOptionsLoaded] = useState(false);
 
   const canManageProduction =
     authority !== null && hasPermission(authority, 'PRODUCTION_MANAGE');
 
   const load = useCallback(async () => {
-    const [productRows, bomOptions] = await Promise.all([
-      fetchProductOperations(),
-      fetchBomStockOptions(),
-    ]);
-    setProducts(productRows);
-    setBomComponents(bomOptions.components);
-    setSelectedId((current) => current || productRows[0]?.id || '');
+    setLoadingProducts(true);
+    try {
+      const productRows = await fetchProductOperations();
+      setProducts(productRows);
+      setSelectedId((current) => current || productRows[0]?.id || '');
+    } finally {
+      setLoadingProducts(false);
+    }
   }, []);
+
+  const ensureBomOptions = useCallback(async () => {
+    if (bomOptionsLoaded || loadingBomOptions) return;
+    setLoadingBomOptions(true);
+    try {
+      const bomOptions = await fetchBomStockOptions();
+      setBomComponents(bomOptions.components);
+      setBomOptionsLoaded(true);
+    } finally {
+      setLoadingBomOptions(false);
+    }
+  }, [bomOptionsLoaded, loadingBomOptions]);
 
   useEffect(() => {
     let active = true;
@@ -72,6 +88,16 @@ export function ProductOperationsScreen() {
       active = false;
     };
   }, [load]);
+
+  useEffect(() => {
+    if (tab === 'RECIPE' && canManageProduction) {
+      void ensureBomOptions().catch((cause: unknown) => {
+        setError(
+          cause instanceof Error ? cause.message : 'BOM_OPTIONS_READ_FAILED',
+        );
+      });
+    }
+  }, [tab, canManageProduction, ensureBomOptions]);
 
   const visibleProducts = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -236,41 +262,64 @@ export function ProductOperationsScreen() {
           </label>
 
           <div className="product-ops-list-items">
-            {visibleProducts.map((product) => (
-              <button
-                type="button"
-                key={product.id}
-                className={
-                  selected?.id === product.id
-                    ? 'product-ops-select active'
-                    : 'product-ops-select'
-                }
-                onClick={() => {
-                  setSelectedId(product.id);
-                  setTab('INFO');
-                }}
+            {loadingProducts ? (
+              <div
+                className="operations-card-skeleton product-ops-loading"
+                aria-label="Memuat produk"
               >
-                <span className="operations-icon">
-                  <Icon name="product" size={18} />
-                </span>
-                <span>
-                  <strong>{product.displayName}</strong>
-                  <small>
-                    {product.code} · {product.variants.length} varian
-                  </small>
-                </span>
-              </button>
-            ))}
+                <span />
+                <span />
+                <span />
+              </div>
+            ) : visibleProducts.length === 0 ? (
+              <p className="operations-empty">Belum ada produk jual.</p>
+            ) : (
+              visibleProducts.map((product) => (
+                <button
+                  type="button"
+                  key={product.id}
+                  className={
+                    selected?.id === product.id
+                      ? 'product-ops-select active'
+                      : 'product-ops-select'
+                  }
+                  onClick={() => {
+                    setSelectedId(product.id);
+                    setTab('INFO');
+                  }}
+                >
+                  <span className="operations-icon">
+                    <Icon name="product" size={18} />
+                  </span>
+                  <span>
+                    <strong>{product.displayName}</strong>
+                    <small>
+                      {product.code} · {product.variants.length} varian
+                    </small>
+                  </span>
+                </button>
+              ))
+            )}
           </div>
         </aside>
 
         <section className="operations-panel product-ops-detail">
           {!selected ? (
-            <p className="operations-empty">
-              {error
-                ? 'Data Product/Variant belum siap.'
-                : 'Belum ada produk jual.'}
-            </p>
+            loadingProducts ? (
+              <div
+                className="operations-card-skeleton product-detail-loading"
+                aria-label="Memuat detail produk"
+              >
+                <span />
+                <span />
+              </div>
+            ) : (
+              <p className="operations-empty">
+                {error
+                  ? 'Data Product/Variant belum siap.'
+                  : 'Belum ada produk jual.'}
+              </p>
+            )
           ) : (
             <>
               <header className="product-ops-detail-head">
@@ -521,6 +570,13 @@ export function ProductOperationsScreen() {
                                   setBomComponentId(event.target.value)
                                 }
                               >
+                                {!bomOptionsLoaded && (
+                                  <option value="">
+                                    {loadingBomOptions
+                                      ? 'Memuat komponen…'
+                                      : 'Buka tab Resep untuk memuat komponen'}
+                                  </option>
+                                )}
                                 {bomComponents.map((component) => (
                                   <option
                                     key={component.id}

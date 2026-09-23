@@ -352,16 +352,17 @@ Completed safe points:
 
 - C11-A — canonical Legacy SVG icon family;
 - C11-B — shell, supplied Segeran Jiwa brand logo, dashboard, navigation, menu;
-- C11-C — POS, cart, checkout, success, transaction history.
+- C11-C — POS, cart, checkout, success, transaction history;
+- C11-D — Inventory, Product/Recipe, Purchase, Production, Shift, plus loading-efficiency hardening.
 
-C11-C canonical verification: **96/96 JavaScript + 313/313 Python PASS**.
+C11-D canonical verification: **96/96 JavaScript + 320/320 Python PASS**.
 No C11 source change has been released to Production.
 
 ## NEXT ACTION
 
-**Continue C11-D — Inventory, Product/Recipe, Purchase, Production & Shift visual convergence.**
+**Continue C11-E — Settings, Finance, Users/Devices, Attention, Backup/Health/Offline visual convergence.**
 
-Keep RC4 immutable. Do not create RC5 and do not release Production until C11-D, C11-E, and C11-F mobile/desktop QA are complete.
+Keep RC4 immutable. Do not create RC5 and do not release Production until C11-E and C11-F mobile/desktop QA are complete.
 
 ## Cutover rule
 

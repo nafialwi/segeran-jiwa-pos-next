@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { OperationsNav } from '../components/OperationsNav';
+import { Icon } from '../ui/Icon';
 import { supabase } from '../lib/supabase';
 import {
   createGoodsReceipt,
@@ -61,6 +62,8 @@ export function PurchaseScreen() {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [loadingOptions, setLoadingOptions] = useState(true);
+  const [loadingFinance, setLoadingFinance] = useState(true);
   const [purchaseTab, setPurchaseTab] = useState<PurchaseTab>('DIRECT');
 
   const [supplierCode, setSupplierCode] = useState('');
@@ -86,42 +89,55 @@ export function PurchaseScreen() {
   const [receiveNotes, setReceiveNotes] = useState('');
 
   const load = useCallback(async () => {
-    const [frontDoor, overviewResult] = await Promise.all([
-      fetchPurchaseFrontDoorOptions(),
-      supabase.rpc('purchase_operational_overview'),
-    ]);
+    setLoadingOptions(true);
+    setLoadingFinance(true);
 
-    setOptions(frontDoor);
+    const frontDoorPromise = fetchPurchaseFrontDoorOptions()
+      .then((frontDoor) => {
+        setOptions(frontDoor);
+        setSupplierId((current) =>
+          frontDoor.suppliers.some((row) => row.id === current)
+            ? current
+            : (frontDoor.suppliers[0]?.id ?? ''),
+        );
+        setLocationId((current) =>
+          frontDoor.locations.some((row) => row.id === current)
+            ? current
+            : (frontDoor.locations[0]?.id ?? ''),
+        );
+        setSelectedItemId((current) =>
+          frontDoor.items.some((row) => row.id === current)
+            ? current
+            : (frontDoor.items[0]?.id ?? ''),
+        );
+        setItemUnitId((current) =>
+          frontDoor.units.some((row) => row.id === current)
+            ? current
+            : (frontDoor.units[0]?.id ?? ''),
+        );
+        setReceiveOrderId((current) =>
+          frontDoor.receivable_orders.some((row) => row.id === current)
+            ? current
+            : (frontDoor.receivable_orders[0]?.id ?? ''),
+        );
+      })
+      .finally(() => setLoadingOptions(false));
 
-    if (overviewResult.error) throw new Error(overviewResult.error.message);
-    const overview = (overviewResult.data ?? {}) as Partial<PurchaseOverview>;
-    setPayables(overview.payables ?? []);
+    const financePromise = (async () => {
+      try {
+        const overviewResult = await supabase.rpc(
+          'purchase_operational_overview',
+        );
+        if (overviewResult.error) throw new Error(overviewResult.error.message);
+        const overview = (overviewResult.data ??
+          {}) as Partial<PurchaseOverview>;
+        setPayables(overview.payables ?? []);
+      } finally {
+        setLoadingFinance(false);
+      }
+    })();
 
-    setSupplierId((current) =>
-      frontDoor.suppliers.some((row) => row.id === current)
-        ? current
-        : (frontDoor.suppliers[0]?.id ?? ''),
-    );
-    setLocationId((current) =>
-      frontDoor.locations.some((row) => row.id === current)
-        ? current
-        : (frontDoor.locations[0]?.id ?? ''),
-    );
-    setSelectedItemId((current) =>
-      frontDoor.items.some((row) => row.id === current)
-        ? current
-        : (frontDoor.items[0]?.id ?? ''),
-    );
-    setItemUnitId((current) =>
-      frontDoor.units.some((row) => row.id === current)
-        ? current
-        : (frontDoor.units[0]?.id ?? ''),
-    );
-    setReceiveOrderId((current) =>
-      frontDoor.receivable_orders.some((row) => row.id === current)
-        ? current
-        : (frontDoor.receivable_orders[0]?.id ?? ''),
-    );
+    await Promise.all([frontDoorPromise, financePromise]);
   }, []);
 
   useEffect(() => {
@@ -532,20 +548,34 @@ export function PurchaseScreen() {
         aria-label="Ringkasan pembelian"
       >
         <article>
+          <span className="purchase-summary-icon">
+            <Icon name="users" size={20} />
+          </span>
           <span>Pemasok</span>
-          <strong>{options.suppliers.length}</strong>
+          <strong>{loadingOptions ? '…' : options.suppliers.length}</strong>
         </article>
         <article>
+          <span className="purchase-summary-icon">
+            <Icon name="cart" size={20} />
+          </span>
           <span>PO Menunggu Barang</span>
-          <strong>{options.receivable_orders.length}</strong>
+          <strong>
+            {loadingOptions ? '…' : options.receivable_orders.length}
+          </strong>
         </article>
         <article>
+          <span className="purchase-summary-icon">
+            <Icon name="restock" size={20} />
+          </span>
           <span>Siap Diposting</span>
-          <strong>{pendingReceipts}</strong>
+          <strong>{loadingOptions ? '…' : pendingReceipts}</strong>
         </article>
         <article>
+          <span className="purchase-summary-icon">
+            <Icon name="debt" size={20} />
+          </span>
           <span>Utang Pemasok</span>
-          <strong>{formatIdr(payableBalance)}</strong>
+          <strong>{loadingFinance ? '…' : formatIdr(payableBalance)}</strong>
         </article>
       </section>
 
@@ -557,8 +587,22 @@ export function PurchaseScreen() {
             className={purchaseTab === tab.value ? 'active' : ''}
             onClick={() => setPurchaseTab(tab.value)}
           >
-            <strong>{tab.label}</strong>
-            <span>{tab.detail}</span>
+            <Icon
+              name={
+                tab.value === 'DIRECT'
+                  ? 'cart'
+                  : tab.value === 'ORDER'
+                    ? 'receipt'
+                    : tab.value === 'RECEIPT'
+                      ? 'restock'
+                      : 'category'
+              }
+              size={22}
+            />
+            <span className="purchase-tab-copy">
+              <strong>{tab.label}</strong>
+              <span>{tab.detail}</span>
+            </span>
           </button>
         ))}
       </div>

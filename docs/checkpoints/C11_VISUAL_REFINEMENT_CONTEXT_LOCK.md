@@ -107,3 +107,20 @@ Refinement 02 presentation convergence is complete at the source level.
 
 See:
 `docs/checkpoints/C11C_POS_CHECKOUT_HISTORY_SAFEPOINT.md`
+
+## C11-D safe checkpoint — operations & loading efficiency
+
+Refinement 03 source convergence is complete.
+
+- Inventory, Product/Recipe, Purchase, Production, and Shift received mobile-first visual convergence;
+- Jual first paint no longer waits for customer and QRIS support data;
+- Product initial render no longer waits for BOM picker options;
+- Purchase operational and finance reads resolve progressively;
+- Shift active state can render while locations continue loading;
+- Inventory detail navigation uses in-flight request prefetch/de-duplication without stale retained cache;
+- Production uses honest loading skeletons instead of false empty states;
+- no database migration or business-authority change was introduced;
+- canonical verify: **96/96 JS + 320/320 Python PASS**, plus repo guard, format, lint, TypeScript, build, and diff-check.
+
+See:
+`docs/checkpoints/C11D_OPERATIONS_PERFORMANCE_SAFEPOINT.md`
