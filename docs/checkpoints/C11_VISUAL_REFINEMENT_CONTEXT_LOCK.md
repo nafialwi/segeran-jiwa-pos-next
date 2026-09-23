@@ -327,3 +327,27 @@ Canonical verification: **96/96 JS + 400/400 Python PASS**, plus repo guard,
 Prettier, ESLint, TypeScript, production build, and diff-check.
 
 See: `docs/checkpoints/C11F4_RESPONSIVE_REPORTS_SAFEPOINT.md`
+
+## C11-F4.1 safe checkpoint — compact report list & drill-down
+
+C11-F4.1 refines report density after C11-F4 real-device review.
+
+- all report families now share one universal compact-list interaction pattern;
+- phone rows show only the minimum identity/supporting facts needed for scanning;
+- tapping a row opens an internal detail sheet containing every existing report column;
+- desktop table rows use the same detail-on-demand surface;
+- report sections paginate at 20 rows per page on phone and desktop;
+- search/filter/sort changes reset pagination and stale detail state;
+- phone KPI cards are tightened without dropping the readability floor;
+- long technical metadata remains searchable and available in detail rather than
+  making every list row tall;
+- pagination and drill-down operate only on the already-authorized report envelope;
+- report RPC, permissions, summaries, Excel export truth, database/schema, and
+  business writers are unchanged;
+- Production remains untouched.
+
+Focused C11-F4.1 regression: **6/6 PASS**.
+Canonical verification: **96/96 JS + 406/406 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+See: `docs/checkpoints/C11F41_COMPACT_REPORT_DRILLDOWN_SAFEPOINT.md`

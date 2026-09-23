@@ -161,54 +161,308 @@ function displaySortColumn(
   return undefined;
 }
 
-function MobileReportRow({
+const REPORT_PAGE_SIZE = 20;
+
+function compactRowPresentation(
+  reportCode: ReportCode,
+  section: ReportSection,
+) {
+  const primaryColumns = mobilePrimaryColumns(reportCode, section);
+  const titleColumn = primaryColumns[0] ?? section.columns[0];
+  const moneyColumns = section.columns.filter(
+    (column) => column.type === 'money' && column.key !== titleColumn?.key,
+  );
+  const numberColumns = section.columns.filter(
+    (column) => column.type === 'number' && column.key !== titleColumn?.key,
+  );
+  const metricColumn =
+    moneyColumns[moneyColumns.length - 1] ??
+    numberColumns[numberColumns.length - 1];
+
+  const supportingColumns: ReportColumn[] = [];
+  const addSupporting = (column: ReportColumn | undefined) => {
+    if (
+      !column ||
+      column.key === titleColumn?.key ||
+      column.key === metricColumn?.key
+    )
+      return;
+    if (normalizedLabel(column.label).includes('kode')) return;
+    if (supportingColumns.some((item) => item.key === column.key)) return;
+    supportingColumns.push(column);
+  };
+
+  primaryColumns.slice(1).forEach(addSupporting);
+  addSupporting(numberColumns[numberColumns.length - 1]);
+
+  return {
+    titleColumn,
+    metricColumn,
+    supportingColumns: supportingColumns.slice(0, 2),
+  };
+}
+
+function ReportCompactRow({
   reportCode,
   section,
   row,
+  onOpen,
 }: {
   reportCode: ReportCode;
   section: ReportSection;
   row: Record<string, unknown>;
+  onOpen: () => void;
 }) {
-  const primaryColumns = mobilePrimaryColumns(reportCode, section);
-  const [titleColumn, badgeColumn, metaColumn] = primaryColumns;
-  const primaryKeys = new Set(primaryColumns.map((column) => column.key));
-  const detailColumns = section.columns.filter(
-    (column) => !primaryKeys.has(column.key),
-  );
+  const { titleColumn, metricColumn, supportingColumns } =
+    compactRowPresentation(reportCode, section);
 
   return (
-    <article className="report-mobile-card">
-      <div className="report-mobile-card-head">
-        <div className="report-mobile-card-title">
-          <strong>
-            {formatValue(
-              getRowValue(row, titleColumn),
-              titleColumn?.type ?? 'text',
-            )}
-          </strong>
-          {metaColumn && (
-            <small>
-              {metaColumn.label}:{' '}
-              {formatValue(getRowValue(row, metaColumn), metaColumn.type)}
-            </small>
+    <button
+      className="report-compact-row"
+      type="button"
+      aria-haspopup="dialog"
+      onClick={onOpen}
+    >
+      <span className="report-compact-row-copy">
+        <strong>
+          {formatValue(
+            getRowValue(row, titleColumn),
+            titleColumn?.type ?? 'text',
           )}
+        </strong>
+        {supportingColumns.length > 0 && (
+          <small>
+            {supportingColumns.map((column) => (
+              <span key={column.key}>
+                {column.label}: {formatValue(row[column.key], column.type)}
+              </span>
+            ))}
+          </small>
+        )}
+      </span>
+      <span className="report-compact-row-trailing">
+        {metricColumn && (
+          <strong>
+            {formatValue(row[metricColumn.key], metricColumn.type)}
+          </strong>
+        )}
+        <span className="report-compact-chevron" aria-hidden="true">
+          ›
+        </span>
+      </span>
+    </button>
+  );
+}
+
+function ReportDetailDialog({
+  reportCode,
+  section,
+  row,
+  onClose,
+}: {
+  reportCode: ReportCode;
+  section: ReportSection;
+  row: Record<string, unknown>;
+  onClose: () => void;
+}) {
+  const { titleColumn } = compactRowPresentation(reportCode, section);
+
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="report-detail-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) onClose();
+      }}
+    >
+      <section
+        className="report-detail-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Detail ${section.title}`}
+      >
+        <header className="report-detail-header">
+          <div>
+            <p className="eyebrow">DETAIL LAPORAN</p>
+            <h2>
+              {formatValue(
+                getRowValue(row, titleColumn),
+                titleColumn?.type ?? 'text',
+              )}
+            </h2>
+            <p className="muted">{section.title}</p>
+          </div>
+          <button
+            className="icon-button"
+            type="button"
+            aria-label="Tutup detail laporan"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </header>
+        <div className="report-detail-grid">
+          {section.columns.map((column) => (
+            <div className="report-detail-field" key={column.key}>
+              <span>{column.label}</span>
+              <strong>{formatValue(row[column.key], column.type)}</strong>
+            </div>
+          ))}
         </div>
-        {badgeColumn && (
-          <span className="report-mobile-badge">
-            {formatValue(getRowValue(row, badgeColumn), badgeColumn.type)}
-          </span>
+      </section>
+    </div>
+  );
+}
+
+function ReportSectionView({
+  reportCode,
+  section,
+  resetKey,
+}: {
+  reportCode: ReportCode;
+  section: ReportSection;
+  resetKey: string;
+}) {
+  const [page, setPage] = useState(0);
+  const [selectedRow, setSelectedRow] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
+
+  useEffect(() => {
+    setPage(0);
+    setSelectedRow(null);
+  }, [resetKey]);
+
+  const pageCount = Math.max(
+    1,
+    Math.ceil(section.rows.length / REPORT_PAGE_SIZE),
+  );
+  const safePage = Math.min(page, pageCount - 1);
+  const pageStart = safePage * REPORT_PAGE_SIZE;
+  const pageRows = section.rows.slice(pageStart, pageStart + REPORT_PAGE_SIZE);
+  const pageEnd = Math.min(pageStart + pageRows.length, section.rows.length);
+
+  return (
+    <section className="identity-card report-section-card">
+      <div className="section-heading">
+        <div>
+          <h2>{section.title}</h2>
+          {section.note && <p className="muted">{section.note}</p>}
+        </div>
+        {section.rows.length > 0 && (
+          <span className="report-row-count">{section.rows.length} data</span>
         )}
       </div>
-      <div className="report-mobile-detail-grid">
-        {detailColumns.map((column) => (
-          <div className="report-mobile-detail" key={column.key}>
-            <span>{column.label}</span>
-            <strong>{formatValue(row[column.key], column.type)}</strong>
+      {section.rows.length === 0 ? (
+        <p className="empty-state">Tidak ada data pada bagian ini.</p>
+      ) : (
+        <>
+          <div className="report-mobile-list">
+            {pageRows.map((row, index) => (
+              <ReportCompactRow
+                reportCode={reportCode}
+                section={section}
+                row={row}
+                onOpen={() => setSelectedRow(row)}
+                key={`${section.key}-mobile-${pageStart + index}`}
+              />
+            ))}
           </div>
-        ))}
-      </div>
-    </article>
+          <div className="data-table-wrap report-desktop-table-wrap">
+            <table className="data-table report-desktop-table">
+              <thead>
+                <tr>
+                  {section.columns.map((column) => (
+                    <th key={column.key}>{column.label}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pageRows.map((row, index) => (
+                  <tr
+                    className="report-desktop-row"
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setSelectedRow(row)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setSelectedRow(row);
+                      }
+                    }}
+                    key={`${section.key}-desktop-${pageStart + index}`}
+                  >
+                    {section.columns.map((column) => (
+                      <td key={column.key}>
+                        {formatValue(row[column.key], column.type)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {section.rows.length > REPORT_PAGE_SIZE && (
+            <nav
+              className="report-pagination"
+              aria-label={`Halaman ${section.title}`}
+            >
+              <span>
+                {pageStart + 1}–{pageEnd} dari {section.rows.length}
+              </span>
+              <div>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  disabled={safePage === 0}
+                  onClick={() => setPage((current) => Math.max(0, current - 1))}
+                >
+                  Sebelumnya
+                </button>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  disabled={safePage >= pageCount - 1}
+                  onClick={() =>
+                    setPage((current) => Math.min(pageCount - 1, current + 1))
+                  }
+                >
+                  Berikutnya
+                </button>
+              </div>
+            </nav>
+          )}
+        </>
+      )}
+      {(section.totals ?? []).map((total) => (
+        <p className="report-section-total" key={total.label}>
+          <strong>{total.label}: </strong>
+          {formatValue(total.value, total.format)}
+        </p>
+      ))}
+      {selectedRow && (
+        <ReportDetailDialog
+          reportCode={reportCode}
+          section={section}
+          row={selectedRow}
+          onClose={() => setSelectedRow(null)}
+        />
+      )}
+    </section>
   );
 }
 
@@ -600,58 +854,12 @@ export function ReportsScreen() {
           </section>
 
           {displaySections.map((section) => (
-            <section className="identity-card" key={section.key}>
-              <div className="section-heading">
-                <div>
-                  <h2>{section.title}</h2>
-                  {section.note && <p className="muted">{section.note}</p>}
-                </div>
-              </div>
-              {section.rows.length === 0 ? (
-                <p className="empty-state">Tidak ada data pada bagian ini.</p>
-              ) : (
-                <>
-                  <div className="report-mobile-list">
-                    {section.rows.map((row, index) => (
-                      <MobileReportRow
-                        reportCode={report.report_code}
-                        section={section}
-                        row={row}
-                        key={`${section.key}-mobile-${index}`}
-                      />
-                    ))}
-                  </div>
-                  <div className="data-table-wrap report-desktop-table-wrap">
-                    <table className="data-table report-desktop-table">
-                      <thead>
-                        <tr>
-                          {section.columns.map((column) => (
-                            <th key={column.key}>{column.label}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {section.rows.map((row, index) => (
-                          <tr key={section.key + '-' + index}>
-                            {section.columns.map((column) => (
-                              <td key={column.key}>
-                                {formatValue(row[column.key], column.type)}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </>
-              )}
-              {(section.totals ?? []).map((total) => (
-                <p key={total.label}>
-                  <strong>{total.label}: </strong>
-                  {formatValue(total.value, total.format)}
-                </p>
-              ))}
-            </section>
+            <ReportSectionView
+              reportCode={report.report_code}
+              section={section}
+              resetKey={`${report.report_code}|${reportQuery}|${reportFilter}|${reportSort}`}
+              key={section.key}
+            />
           ))}
         </>
       )}

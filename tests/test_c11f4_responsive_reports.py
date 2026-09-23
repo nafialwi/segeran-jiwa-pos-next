@@ -11,7 +11,7 @@ class C11F4ResponsiveReportsTests(unittest.TestCase):
     def test_mobile_cards_and_desktop_table_share_report_rows(self):
         source = REPORTS.read_text(encoding="utf-8")
         self.assertIn('className="report-mobile-list"', source)
-        self.assertIn("<MobileReportRow", source)
+        self.assertIn("<ReportCompactRow", source)
         self.assertIn('className="data-table report-desktop-table"', source)
         self.assertIn("displaySections.map((section)", source)
 
