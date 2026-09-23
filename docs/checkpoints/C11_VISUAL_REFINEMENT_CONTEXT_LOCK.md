@@ -254,3 +254,27 @@ Canonical verification: **96/96 JS + 381/381 Python PASS**, plus repo guard,
 Prettier, ESLint, TypeScript, production build, and diff-check.
 
 See: docs/checkpoints/C11F1_INTERACTION_CONVERGENCE_SAFEPOINT.md
+
+## C11-F2 safe checkpoint — visual geometry & readability
+
+C11-F2 normalizes the human-facing visual layer without changing business authority.
+
+- reusable typography/readability tokens were added;
+- button/input/select/textarea typography now converges;
+- common controls use a 44px daily touch target;
+- common card/control/sheet radius families were normalized;
+- long text is overflow-safe on key flex/grid/table surfaces;
+- daily-use micro/caption text was raised or normalized across Dashboard, Inventory,
+  Product, Shift, Purchase, Control Center, Finance, Users, packaging, and search;
+- Jual product-card text remains compact at 4-column density but no longer uses the
+  earlier micro-sized product-name floor;
+- phone form controls use 1rem font size for legibility and zoom-safe input;
+- mobile bottom-sheet vs desktop-dialog corner behavior remains context-aware;
+- no database migration or authority change was added;
+- Production remains untouched.
+
+Focused C11-F2 regression: **7/7 PASS**.
+Canonical verification: **96/96 JS + 388/388 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+See: docs/checkpoints/C11F2_VISUAL_GEOMETRY_READABILITY_SAFEPOINT.md
