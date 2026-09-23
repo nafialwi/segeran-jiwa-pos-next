@@ -3,7 +3,15 @@ export type SafeErrorPayload = {
   message: string;
 };
 
+export const CORS_HEADERS = {
+  'access-control-allow-origin': '*',
+  'access-control-allow-headers':
+    'authorization, x-client-info, apikey, content-type',
+  'access-control-allow-methods': 'POST, OPTIONS',
+};
+
 const JSON_HEADERS = {
+  ...CORS_HEADERS,
   'content-type': 'application/json; charset=utf-8',
 };
 

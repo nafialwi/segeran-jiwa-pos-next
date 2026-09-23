@@ -1,0 +1,7 @@
+project_id = "segeran-jiwa-pos-next"
+
+[functions.identity-admin]
+verify_jwt = false
+
+[functions.device-admin]
+verify_jwt = false

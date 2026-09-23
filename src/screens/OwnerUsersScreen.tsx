@@ -185,6 +185,33 @@ function formatLastSeen(value: string | null): string {
   return date.toLocaleString('id-ID');
 }
 
+async function edgeFunctionErrorMessage(
+  error: unknown,
+  fallback: string,
+): Promise<string> {
+  if (typeof error !== 'object' || error === null) return fallback;
+
+  const context = (error as { context?: unknown }).context;
+  if (
+    typeof context === 'object' &&
+    context !== null &&
+    'clone' in context &&
+    typeof (context as Response).clone === 'function'
+  ) {
+    try {
+      const payload = (await (context as Response).clone().json()) as {
+        error?: { message?: unknown };
+      };
+      const message = payload?.error?.message;
+      if (typeof message === 'string' && message.trim()) return message.trim();
+    } catch {
+      // Keep the user-facing fallback when the response is not JSON.
+    }
+  }
+
+  return fallback;
+}
+
 export function OwnerUsersScreen() {
   const { refreshAuthority } = useAuth();
   const [users, setUsers] = useState<OwnerUser[]>([]);
@@ -295,7 +322,12 @@ export function OwnerUsersScreen() {
       );
 
       if (error) {
-        throw new Error('SJ_IDENTITY_ADMIN_FAILED');
+        throw new Error(
+          await edgeFunctionErrorMessage(
+            error,
+            'Administrasi pengguna tidak dapat diproses. Periksa koneksi lalu coba lagi.',
+          ),
+        );
       }
 
       const envelope = data as {
@@ -335,7 +367,12 @@ export function OwnerUsersScreen() {
       });
 
       if (error) {
-        throw new Error('SJ_DEVICE_ADMIN_FAILED');
+        throw new Error(
+          await edgeFunctionErrorMessage(
+            error,
+            'Administrasi perangkat tidak dapat diproses. Periksa koneksi lalu coba lagi.',
+          ),
+        );
       }
 
       const envelope = data as {

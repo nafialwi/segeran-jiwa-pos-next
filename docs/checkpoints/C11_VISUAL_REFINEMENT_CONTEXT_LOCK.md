@@ -199,3 +199,11 @@ authority instead of a second cup-specific engine.
 
 See:
 `docs/checkpoints/C11F0C_SHIFT_PACKAGING_RECONCILIATION_SAFEPOINT.md`
+
+## C11-F0C.1 live editability / identity hotfix
+
+The shared preview backend now has the C11-F0A Product Master mutation capability applied. DIRECT_STOCK/PREPRODUCED variant saves re-establish the system FINISHED_GOOD component server-side so editor use cannot break checkout component shape.
+
+Owner user/device administration Edge Functions now support browser preflight and keep POST authorization inside the function: bearer token validation, active Segeran Jiwa session, and Owner authority are still mandatory. Raw SJ_IDENTITY_ADMIN_FAILED/SJ_DEVICE_ADMIN_FAILED frontend messages were replaced with human-readable errors.
+
+Frontend Production remains blocked. See docs/checkpoints/C11F0C1_EDITABILITY_IDENTITY_HOTFIX.md.

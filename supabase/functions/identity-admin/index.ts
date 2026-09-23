@@ -1,5 +1,10 @@
 import { requireOwnerContext } from '../_shared/auth-context.ts';
-import { okJson, safeErrorResponse, SafeHttpError } from '../_shared/http.ts';
+import {
+  CORS_HEADERS,
+  okJson,
+  safeErrorResponse,
+  SafeHttpError,
+} from '../_shared/http.ts';
 import {
   normalizeUsername,
   toInternalAuthEmail,
@@ -278,6 +283,10 @@ async function setPermission(
 }
 
 Deno.serve(async (req: Request) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: CORS_HEADERS });
+  }
+
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
   }

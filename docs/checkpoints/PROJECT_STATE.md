@@ -355,25 +355,22 @@ Completed safe points:
 - C11-C — POS, cart, checkout, success, transaction history;
 - C11-D — Inventory, Product/Recipe, Purchase, Production, Shift, plus loading-efficiency hardening;
 - C11-E — Control Center, Finance, Users/Devices, Attention, Backup/Health/Offline, and mobile long-list usability convergence.
-- C11-F0A — permission-bounded Product Master editor and mutation authority; migration source prepared, Production untouched;
+- C11-F0A — permission-bounded Product Master editor and mutation authority; backend capability is now active on the shared preview backend;
 - C11-F0B — permission-bounded operational instructions for Cashier Dashboard with target, priority, validity, acknowledgement, and management read progress; migration source prepared, Production untouched;
 - C11-F0C — shift packaging Opening/Closing reconciliation through canonical Inventory Stock Count authority, immutable theoretical sale usage, stale-snapshot detection, and real physical variance; migration source prepared, Production untouched.
 
-C11-F0C canonical verification: **96/96 JavaScript + 359/359 Python PASS**.
-No C11 source change has been released to Production.
+- C11-F0C.1 editability/identity hotfix — F0A Product Master backend activated on the shared preview backend; FINISHED_GOOD invariant smoke-tested; identity/device Edge Function browser preflight fixed while retaining internal Owner authentication.
+  C11-F0C.1 canonical verification: **96/96 JavaScript + 363/363 Python PASS**, plus repo guard, format, lint, TypeScript, build, and diff-check PASS.
+
+No C11 frontend source change has been released to Production. The shared preview backend now includes the F0A Product Master authority and the identity/device browser hotfix.
 
 ## NEXT ACTION
 
 **Continue C11-F0D — Sales Daily-Use Completion.**
 
-Audit the real cashier daily path after C11-C and close the remaining practical
-friction without changing checkout truth: fast product discovery, cart
-correction, payment selection persistence/reset behavior, success-state next
-action, and small-screen touch/visual residue. Preserve sale authority,
-payment guards, historical snapshots, and offline fail-closed behavior.
+The product editor backend is now active on the shared C11 preview backend and Owner user/device administration has browser-safe Edge Function preflight. Audit and close the remaining cashier daily-use friction: fast product discovery, cart correction, stale selection/highlight residue, payment-method reset, success next-action, and narrow-screen touch/visual convergence.
 
-Keep RC4 immutable. Production remains blocked. C11-F final QA starts only after
-F0D/F0E known gaps are closed.
+Keep frontend Production blocked. Do not weaken checkout, inventory, finance, shift, or offline fail-closed authority.
 
 ## Cutover rule
 
