@@ -121,5 +121,27 @@ class C11F0BOperationalMessageTests(unittest.TestCase):
         self.assertIn("@media (max-width: 520px)", css)
 
 
+    def test_unread_operational_messages_feed_attention_and_deep_link(self):
+        home = HOME.read_text(encoding="utf-8")
+        attention = (ROOT / "src/screens/AttentionScreen.tsx").read_text(
+            encoding="utf-8"
+        )
+        menu = MENU.read_text(encoding="utf-8")
+        css = CSS.read_text(encoding="utf-8")
+        self.assertIn("highUnreadCount", home)
+        self.assertIn("belum dibaca", home)
+        self.assertIn("message.createdAt", home)
+        self.assertIn('id="pesan-operasional"', home)
+        self.assertIn("location.hash !== '#pesan-operasional'", home)
+        self.assertIn("fetchMyOperationalMessages(20)", attention)
+        self.assertIn("operationalNeedsAttention", attention)
+        self.assertIn('to="/#pesan-operasional"', attention)
+        self.assertIn("instruksi yang perlu ditinjau", menu)
+        self.assertIn(
+            "/* C11-C1 — operational attention and instruction visibility */",
+            css,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

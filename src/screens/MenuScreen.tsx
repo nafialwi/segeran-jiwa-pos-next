@@ -110,7 +110,7 @@ export function MenuScreen() {
   const operations: MenuEntry[] = [
     {
       label: 'Perhatian',
-      detail: 'Status koneksi dan hal yang perlu ditinjau',
+      detail: 'Koneksi, sistem, dan instruksi yang perlu ditinjau',
       to: '/perhatian',
       icon: 'notification',
     },

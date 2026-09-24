@@ -9388,3 +9388,55 @@ pre {
     grid-column: 1 / -1;
   }
 }
+
+
+/* C11-C1 — operational attention and instruction visibility */
+.dashboard-cashier-messages {
+  scroll-margin-top: 18px;
+}
+
+.dashboard-message-status {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: var(--sj-surface-muted);
+  color: var(--sj-text-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.dashboard-message-status.high {
+  background: var(--sj-warning-soft);
+  color: #7b5c0b;
+}
+
+.dashboard-owner-message.unread {
+  border-color: rgb(15 81 50 / 20%);
+  box-shadow: 0 7px 24px rgb(15 81 50 / 8%);
+}
+
+.dashboard-owner-message.high.unread {
+  border-color: #e2c87d;
+  background: #fffaf0;
+}
+
+.operational-message-attention {
+  margin-top: 10px;
+}
+
+.attention-card + .attention-card {
+  margin-top: 10px;
+}
+
+@media (max-width: 520px) {
+  .dashboard-cashier-messages .dashboard-panel-header {
+    align-items: center;
+  }
+
+  .dashboard-message-status {
+    flex: 0 0 auto;
+  }
+}

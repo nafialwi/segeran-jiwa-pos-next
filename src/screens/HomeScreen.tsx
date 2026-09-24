@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import {
   canAccessOwnerArea,
@@ -106,22 +106,57 @@ function DashboardCard({
 function AttentionEntry() {
   const online = useConnectivity();
   const health = deriveOperationalHealth(online);
+  const [messages, setMessages] = useState<OperationalMessageInboxItem[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    if (!online) {
+      setMessages([]);
+      return () => {
+        active = false;
+      };
+    }
+
+    void fetchMyOperationalMessages(10)
+      .then((rows) => {
+        if (active) setMessages(rows);
+      })
+      .catch(() => {
+        if (active) setMessages([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [online]);
+
+  const unreadMessages = messages.filter((message) => !message.readAt);
+  const highUnreadCount = unreadMessages.filter(
+    (message) => message.priority === 'HIGH',
+  ).length;
+  const messageNeedsAttention = unreadMessages.length > 0;
+  const needsAttention = health.needsAttention || messageNeedsAttention;
+
+  const detail =
+    highUnreadCount > 0
+      ? highUnreadCount + ' pesan penting belum dibaca'
+      : unreadMessages.length > 0
+        ? unreadMessages.length + ' pesan operasional belum dibaca'
+        : health.needsAttention
+          ? health.title
+          : 'Tidak ada perhatian aktif dari pemeriksaan tersedia';
 
   return (
     <Link
-      className={`dashboard-attention${health.needsAttention ? ' warning' : ''}`}
+      className={'dashboard-attention' + (needsAttention ? ' warning' : '')}
       to="/perhatian"
     >
       <span className="dashboard-section-icon">
-        <Icon name={health.needsAttention ? 'warning' : 'notification'} />
+        <Icon name={needsAttention ? 'warning' : 'notification'} />
       </span>
       <span>
         <strong>Perlu Perhatian</strong>
-        <small>
-          {health.needsAttention
-            ? health.title
-            : 'Tidak ada perhatian konektivitas perangkat'}
-        </small>
+        <small>{detail}</small>
       </span>
       <span aria-hidden="true">›</span>
     </Link>
@@ -353,6 +388,11 @@ function CashierOperationalMessages() {
   const [busyId, setBusyId] = useState('');
   const [error, setError] = useState('');
 
+  const unreadCount = messages.filter((message) => !message.readAt).length;
+  const highUnreadCount = messages.filter(
+    (message) => !message.readAt && message.priority === 'HIGH',
+  ).length;
+
   useEffect(() => {
     let active = true;
     void fetchMyOperationalMessages(3)
@@ -400,7 +440,7 @@ function CashierOperationalMessages() {
 
   if (loading) {
     return (
-      <section className="dashboard-owner-message dashboard-message-loading">
+      <section id="pesan-operasional" className="dashboard-owner-message dashboard-message-loading">
         <span className="dashboard-section-icon">
           <Icon name="notification" />
         </span>
@@ -414,7 +454,7 @@ function CashierOperationalMessages() {
 
   if (messages.length === 0) {
     return (
-      <section className="dashboard-owner-message">
+      <section id="pesan-operasional" className="dashboard-owner-message">
         <span className="dashboard-section-icon">
           <Icon name="check" />
         </span>
@@ -428,22 +468,33 @@ function CashierOperationalMessages() {
   }
 
   return (
-    <section className="dashboard-cashier-messages">
+    <section id="pesan-operasional" className="dashboard-cashier-messages">
       <header className="dashboard-panel-header">
         <div>
           <p className="eyebrow">DARI PENGELOLA</p>
           <h2>Pesan Operasional</h2>
         </div>
+        <span
+          className={
+            highUnreadCount > 0
+              ? 'dashboard-message-status high'
+              : 'dashboard-message-status'
+          }
+        >
+          {unreadCount > 0 ? unreadCount + ' belum dibaca' : 'Semua dibaca'}
+        </span>
       </header>
       {error && <p className="form-error">{error}</p>}
       <div className="dashboard-message-list">
         {messages.map((message) => (
           <article
-            className={
-              message.priority === 'HIGH'
-                ? 'dashboard-owner-message high'
-                : 'dashboard-owner-message'
-            }
+            className={[
+              'dashboard-owner-message',
+              message.priority === 'HIGH' ? 'high' : '',
+              !message.readAt ? 'unread' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
             key={message.id}
           >
             <span className="dashboard-section-icon">
@@ -455,8 +506,8 @@ function CashierOperationalMessages() {
               <strong>{message.title}</strong>
               <p>{message.body}</p>
               <small>
-                {message.authorName} · sampai{' '}
-                {formatDateTime(message.validUntil)}
+                {message.authorName} · dibuat {formatDateTime(message.createdAt)}
+                {' · '}sampai {formatDateTime(message.validUntil)}
               </small>
             </div>
             <button
@@ -638,6 +689,18 @@ function CashierDashboard() {
 
 export function HomeScreen() {
   const { authority } = useAuth();
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash !== '#pesan-operasional') return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById('pesan-operasional')?.scrollIntoView({
+        block: 'start',
+        behavior: 'smooth',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash]);
 
   if (!authority) return null;
 

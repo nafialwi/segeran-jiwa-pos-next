@@ -12,12 +12,18 @@ import {
   type BackendAuthorityProbe,
 } from '../control/control-center-api';
 import { Icon } from '../ui/Icon';
+import { fetchMyOperationalMessages } from '../operations/operational-message-api';
 
 export function AttentionScreen() {
   const { authority } = useAuth();
   const [connectivity, setConnectivity] = useState(currentConnectivity);
   const [probe, setProbe] = useState<BackendAuthorityProbe | null>(null);
   const [checking, setChecking] = useState(false);
+  const [messageCheck, setMessageCheck] = useState({
+    checked: false,
+    unread: 0,
+    highUnread: 0,
+  });
 
   const runProbe = useCallback(async () => {
     if (currentConnectivity() === 'OFFLINE') {
@@ -32,30 +38,59 @@ export function AttentionScreen() {
     }
   }, []);
 
+
+  const checkOperationalMessages = useCallback(async () => {
+    if (currentConnectivity() === 'OFFLINE') {
+      setMessageCheck({ checked: false, unread: 0, highUnread: 0 });
+      return;
+    }
+
+    try {
+      const rows = await fetchMyOperationalMessages(20);
+      const unread = rows.filter((message) => !message.readAt);
+      setMessageCheck({
+        checked: true,
+        unread: unread.length,
+        highUnread: unread.filter((message) => message.priority === 'HIGH')
+          .length,
+      });
+    } catch {
+      setMessageCheck({ checked: false, unread: 0, highUnread: 0 });
+    }
+  }, []);
+
   useEffect(() => {
     const refresh = () => {
       setConnectivity(currentConnectivity());
       void runProbe();
+      void checkOperationalMessages();
     };
     window.addEventListener('online', refresh);
     window.addEventListener('offline', refresh);
     void runProbe();
+    void checkOperationalMessages();
 
     return () => {
       window.removeEventListener('online', refresh);
       window.removeEventListener('offline', refresh);
     };
-  }, [runProbe]);
+  }, [runProbe, checkOperationalMessages]);
 
   const owner = authority ? canAccessOwnerArea(authority) : false;
   const backupAge = backupEvidenceAgeDays();
   const backupNeedsAttention = owner && backupAge > 7;
   const backendNeedsAttention =
     connectivity === 'ONLINE' && probe?.status === 'FAIL';
+  const operationalUnread = owner ? 0 : messageCheck.unread;
+  const operationalHighUnread = owner ? 0 : messageCheck.highUnread;
+  const operationalNeedsAttention = operationalUnread > 0;
+  const operationalCheckReady = owner || messageCheck.checked;
   const noAttention =
     connectivity === 'ONLINE' &&
     !backendNeedsAttention &&
     !backupNeedsAttention &&
+    !operationalNeedsAttention &&
+    operationalCheckReady &&
     probe?.status === 'PASS';
 
   return (
@@ -105,6 +140,26 @@ export function AttentionScreen() {
             <strong>Backend Authority perlu perhatian</strong>
             <p>{probe?.detail}</p>
             <Link to="/pengaturan/kesehatan">Lihat Kesehatan Sistem</Link>
+          </div>
+        </section>
+      )}
+
+      {operationalNeedsAttention && (
+        <section className="attention-card warning operational-message-attention">
+          <div className="attention-icon">
+            <Icon name={operationalHighUnread > 0 ? 'warning' : 'notification'} />
+          </div>
+          <div>
+            <strong>
+              {operationalHighUnread > 0
+                ? operationalHighUnread + ' pesan penting belum dibaca'
+                : operationalUnread + ' pesan operasional belum dibaca'}
+            </strong>
+            <p>
+              Instruksi dari pengelola perlu ditinjau oleh kasir agar pekerjaan
+              shift mengikuti arahan terbaru.
+            </p>
+            <Link to="/#pesan-operasional">Buka Pesan Operasional</Link>
           </div>
         </section>
       )}
