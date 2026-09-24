@@ -443,3 +443,46 @@ Prettier, ESLint, TypeScript, production build, and diff-check.
 See: `docs/checkpoints/C11F6_DAILY_INTERACTION_CLEANUP_SAFEPOINT.md`
 
 Next planned source stage: **C11-F7 — Full Responsive & Visual Matrix**.
+
+## C11-F7 safe checkpoint — Responsive & Visual Matrix
+
+C11-F7 adds a final cross-screen responsive guardrail layer before real-device
+UAT.
+
+Reference matrix widths:
+
+- 320 / 360 / 390 / 412 px phone;
+- 768 px tablet;
+- 1024 / 1440 px desktop.
+
+Hardening includes:
+
+- bounded root/screen/panel/form/grid/control widths;
+- accidental page-level horizontal overflow containment;
+- local horizontal scrolling retained for tables and workflow/tab strips;
+- flex/header wrapping on phone and tablet;
+- shared action rows distribute safely below 760 px and stack full-width at
+  420 px and below;
+- tighter card/chip spacing at 360 px and below;
+- input/select/textarea width bounding;
+- media/preformatted content width bounding;
+- existing report phone compact-list vs desktop/table presentation remains
+  separated;
+- POS/search/Product Master/Action Dialog/report-detail sheet/modal responsive
+  contracts remain intact;
+- no inline JSX `minWidth` traps across current screen source;
+- bottom-nav safe-area reservation remains intact;
+- no F7 database migration or authority change.
+
+Focused F7 responsive matrix: **11/11 PASS**.
+Canonical verification: **96/96 JS + 438/438 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+This is a source responsive safe point. Browser chrome, soft keyboard,
+real-device touch feel, and Owner/Kasir role workflows are intentionally left
+for C11-F8 real-device UAT.
+
+See: `docs/checkpoints/C11F7_RESPONSIVE_VISUAL_MATRIX_SAFEPOINT.md`
+
+Next planned stage: controlled F5 Product Media backend activation for UAT,
+then **C11-F8 — Owner/Kasir real-device UAT**.

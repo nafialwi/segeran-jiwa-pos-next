@@ -9053,3 +9053,227 @@ p,
     outline: none;
   }
 }
+
+/* C11-F7 — full responsive & visual matrix hardening */
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+}
+
+body {
+  overflow-x: clip;
+}
+
+main,
+section,
+article,
+form,
+fieldset,
+label,
+.shell,
+.sales-v2-shell,
+.operations-shell,
+.secondary-screen,
+.control-page,
+.control-center-screen,
+.auth-page,
+.center-card,
+.identity-card,
+.operations-panel,
+.dashboard-panel,
+.dashboard-section {
+  min-width: 0;
+}
+
+input:not([type='checkbox']):not([type='radio']),
+select,
+textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+img,
+video,
+canvas {
+  max-width: 100%;
+}
+
+pre {
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.button-row,
+.chip-row,
+.section-heading,
+.topbar,
+.operations-panel-header,
+.dashboard-panel-header,
+.product-ops-detail-head,
+.owner-device-head,
+.inventory-count-row {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.stack,
+.stack-form,
+.stack-list,
+.compact-grid-form,
+.product-grid,
+.menu-card-grid,
+.dashboard-kpi-grid,
+.dashboard-quick-grid,
+.inventory-summary-grid,
+.inventory-item-grid,
+.finance-summary-grid,
+.control-center-grid,
+.control-health-grid,
+.diagnostics-grid,
+.shift-action-grid,
+.shift-kpi-grid,
+.shift-closing-summary {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.stack > *,
+.stack-form > *,
+.stack-list > *,
+.compact-grid-form > *,
+.product-grid > *,
+.menu-card-grid > *,
+.dashboard-kpi-grid > *,
+.dashboard-quick-grid > *,
+.inventory-summary-grid > *,
+.inventory-item-grid > *,
+.finance-summary-grid > *,
+.control-center-grid > *,
+.control-health-grid > *,
+.diagnostics-grid > *,
+.shift-action-grid > *,
+.shift-kpi-grid > *,
+.shift-closing-summary > * {
+  min-width: 0;
+}
+
+.operations-nav,
+.control-center-nav,
+.secondary-workflow-nav,
+.purchase-workflow-tabs,
+.inventory-control-tabs,
+.product-ops-tabs,
+.report-period-presets,
+.report-display-filters {
+  overscroll-behavior-inline: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 759px) {
+  .shell,
+  .sales-v2-shell,
+  .operations-shell,
+  .secondary-screen,
+  .control-page,
+  .control-center-screen {
+    max-width: calc(100% - 16px);
+  }
+
+  .topbar,
+  .section-heading,
+  .operations-panel-header,
+  .dashboard-panel-header,
+  .product-ops-detail-head,
+  .owner-device-head,
+  .inventory-count-row {
+    flex-wrap: wrap;
+  }
+
+  .button-row {
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .button-row > .primary-button,
+  .button-row > .secondary-button,
+  .button-row > a {
+    min-width: 0;
+    flex: 1 1 148px;
+  }
+
+  .data-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 420px) {
+  .button-row > .primary-button,
+  .button-row > .secondary-button,
+  .button-row > a {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .auth-card {
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+
+  .role-badge,
+  .operations-status,
+  .history-payment-chip,
+  .history-status-chip {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 360px) {
+  .identity-card,
+  .operations-panel,
+  .dashboard-panel,
+  .dashboard-section,
+  .secondary-filter-panel {
+    padding-right: 11px;
+    padding-left: 11px;
+  }
+
+  .chip-row {
+    gap: 6px;
+  }
+
+  .chip {
+    min-width: 0;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+}
+
+@media (min-width: 760px) and (max-width: 959px) {
+  .operations-panel-header,
+  .dashboard-panel-header,
+  .product-ops-detail-head,
+  .owner-device-head,
+  .inventory-count-row {
+    flex-wrap: wrap;
+  }
+
+  .button-row > .primary-button,
+  .button-row > .secondary-button,
+  .button-row > a {
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 960px) {
+  .button-row > .primary-button,
+  .button-row > .secondary-button,
+  .button-row > a {
+    flex: 0 0 auto;
+  }
+}
