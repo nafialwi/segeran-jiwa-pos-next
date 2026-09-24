@@ -440,7 +440,10 @@ function CashierOperationalMessages() {
 
   if (loading) {
     return (
-      <section id="pesan-operasional" className="dashboard-owner-message dashboard-message-loading">
+      <section
+        id="pesan-operasional"
+        className="dashboard-owner-message dashboard-message-loading"
+      >
         <span className="dashboard-section-icon">
           <Icon name="notification" />
         </span>
@@ -506,7 +509,8 @@ function CashierOperationalMessages() {
               <strong>{message.title}</strong>
               <p>{message.body}</p>
               <small>
-                {message.authorName} · dibuat {formatDateTime(message.createdAt)}
+                {message.authorName} · dibuat{' '}
+                {formatDateTime(message.createdAt)}
                 {' · '}sampai {formatDateTime(message.validUntil)}
               </small>
             </div>

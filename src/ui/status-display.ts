@@ -64,5 +64,7 @@ export function statusToneClass(value: string): string {
 }
 
 export function operationalStatusClass(value: string): string {
-  return ['operations-status', statusToneClass(value)].filter(Boolean).join(' ');
+  return ['operations-status', statusToneClass(value)]
+    .filter(Boolean)
+    .join(' ');
 }

@@ -4,10 +4,7 @@ import { ControlCenterNav } from '../components/ControlCenterNav';
 import { useActionDialog } from '../components/ActionDialogProvider';
 import { Icon } from '../ui/Icon';
 import { SearchablePicker } from '../components/SearchablePicker';
-import {
-  operationalStatusClass,
-  statusLabel,
-} from '../ui/status-display';
+import { operationalStatusClass, statusLabel } from '../ui/status-display';
 import {
   createEmployeeKasbon,
   fetchFinanceOverview,

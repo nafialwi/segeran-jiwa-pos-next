@@ -9278,7 +9278,6 @@ pre {
   }
 }
 
-
 /* C11-B1 — sales usability blockers */
 .sales-v2-header {
   min-height: 42px;
@@ -9354,11 +9353,9 @@ pre {
   }
 }
 
-
 /* C11-B2 — product edit discoverability */
 .product-variant-list > article {
-  grid-template-columns:
-    minmax(0, 1.2fr) auto minmax(92px, 0.7fr) auto auto;
+  grid-template-columns: minmax(0, 1.2fr) auto minmax(92px, 0.7fr) auto auto;
 }
 
 .product-variant-edit {
@@ -9388,7 +9385,6 @@ pre {
     grid-column: 1 / -1;
   }
 }
-
 
 /* C11-C1 — operational attention and instruction visibility */
 .dashboard-cashier-messages {
@@ -9440,7 +9436,6 @@ pre {
     flex: 0 0 auto;
   }
 }
-
 
 /* C11-C2 — handover, reconciliation, and approval clarity */
 .handover-loading,
@@ -9522,7 +9517,6 @@ pre {
   }
 }
 
-
 /* C11-D1 — shared operational state convergence */
 .operational-state {
   width: 100%;
@@ -9576,7 +9570,6 @@ pre {
     min-height: 96px;
   }
 }
-
 
 /* C11-D2 — operational density & alignment convergence */
 .operations-shell > .topbar.operations-header,
@@ -9701,7 +9694,6 @@ pre {
   }
 }
 
-
 /* C11-D3 — status language and tone convergence */
 .operations-status.danger {
   background: #fff0ee;
@@ -9727,7 +9719,6 @@ pre {
     text-align: center;
   }
 }
-
 
 /* C11-D4 — remaining secondary-screen state & overflow convergence */
 .owner-user-identity strong,

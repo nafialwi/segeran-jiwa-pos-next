@@ -94,5 +94,4 @@ describe('CS-03 authority payload', () => {
     expect(isTerminalAuthorityError(revoked)).toBe(true);
     expect(isTerminalAuthorityError(network)).toBe(false);
   });
-
 });

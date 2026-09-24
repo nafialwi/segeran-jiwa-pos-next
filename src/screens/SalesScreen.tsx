@@ -327,11 +327,7 @@ export function SalesScreen() {
       discountReason.length > 0;
 
     if (!meaningfulDraft) {
-      clearSalesDraft(
-        window.localStorage,
-        authority.profile_id,
-        shift.id,
-      );
+      clearSalesDraft(window.localStorage, authority.profile_id, shift.id);
       return;
     }
 
@@ -574,28 +570,25 @@ export function SalesScreen() {
     setBusy(true);
     setError('');
 
-    const request: PendingCheckoutDraft =
-      pendingCheckout ?? {
-        operationId: crypto.randomUUID(),
-        locationId: shift.location_id,
-        items: cart.map((line) => ({
-          variant_id: line.item.variant_id,
-          quantity: line.quantity,
-          line_note: line.lineNote.trim() || undefined,
-        })),
-        method,
-        total,
-        tenderedAmount:
-          method === 'CASH' ? effectiveCashReceived : undefined,
-        discount: {
-          type: discountType,
-          value: discountType === 'NONE' ? 0 : discountValueNumber,
-          reason:
-            discountType === 'NONE' ? undefined : discountReason.trim(),
-        },
-        customerId: method === 'CREDIT' ? customerId : undefined,
-        note,
-      };
+    const request: PendingCheckoutDraft = pendingCheckout ?? {
+      operationId: crypto.randomUUID(),
+      locationId: shift.location_id,
+      items: cart.map((line) => ({
+        variant_id: line.item.variant_id,
+        quantity: line.quantity,
+        line_note: line.lineNote.trim() || undefined,
+      })),
+      method,
+      total,
+      tenderedAmount: method === 'CASH' ? effectiveCashReceived : undefined,
+      discount: {
+        type: discountType,
+        value: discountType === 'NONE' ? 0 : discountValueNumber,
+        reason: discountType === 'NONE' ? undefined : discountReason.trim(),
+      },
+      customerId: method === 'CREDIT' ? customerId : undefined,
+      note,
+    };
 
     if (!pendingCheckout) {
       setPendingCheckout(request);
@@ -630,11 +623,7 @@ export function SalesScreen() {
       const result = await checkoutSale(request);
 
       if (authority) {
-        clearSalesDraft(
-          window.localStorage,
-          authority.profile_id,
-          shift.id,
-        );
+        clearSalesDraft(window.localStorage, authority.profile_id, shift.id);
       }
       setPendingCheckout(null);
       setSuccess({ result, items: successItems });

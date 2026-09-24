@@ -176,7 +176,7 @@ export function ExpenseApprovalScreen() {
         </div>
       </header>
 
-            {feedback && (
+      {feedback && (
         <p
           className={
             feedback.kind === 'success' ? 'success-banner' : 'error-banner'

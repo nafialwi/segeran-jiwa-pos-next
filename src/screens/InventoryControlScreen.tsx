@@ -25,10 +25,7 @@ import {
   type InventoryRow,
 } from '../inventory/inventory-api';
 import { Icon } from '../ui/Icon';
-import {
-  operationalStatusClass,
-  statusLabel,
-} from '../ui/status-display';
+import { operationalStatusClass, statusLabel } from '../ui/status-display';
 
 type ControlTab = 'RESTOCK' | 'TRANSFER' | 'COUNT' | 'ADJUST';
 

@@ -7,10 +7,7 @@ import {
   type ProductionOverview,
 } from '../production/production-api';
 import { Icon } from '../ui/Icon';
-import {
-  operationalStatusClass,
-  statusLabel,
-} from '../ui/status-display';
+import { operationalStatusClass, statusLabel } from '../ui/status-display';
 
 const EMPTY: ProductionOverview = {
   locations: [],
@@ -149,8 +146,16 @@ export function ProductionScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner" role="alert">{error}</p>}
-      {message && <p className="success-banner" role="status" aria-live="polite">{message}</p>}
+      {error && (
+        <p className="error-banner" role="alert">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="success-banner" role="status" aria-live="polite">
+          {message}
+        </p>
+      )}
 
       <div className="production-layout">
         <section className="operations-panel">

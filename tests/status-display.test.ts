@@ -20,9 +20,7 @@ describe('status display', () => {
     expect(statusToneClass('PENDING')).toBe('warning');
     expect(statusToneClass('REJECTED')).toBe('danger');
     expect(statusToneClass('POSTED')).toBe('');
-    expect(operationalStatusClass('REJECTED')).toBe(
-      'operations-status danger',
-    );
+    expect(operationalStatusClass('REJECTED')).toBe('operations-status danger');
   });
 
   it('formats unknown enum values safely', () => {

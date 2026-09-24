@@ -38,7 +38,6 @@ export function AttentionScreen() {
     }
   }, []);
 
-
   const checkOperationalMessages = useCallback(async () => {
     if (currentConnectivity() === 'OFFLINE') {
       setMessageCheck({ checked: false, unread: 0, highUnread: 0 });
@@ -147,7 +146,9 @@ export function AttentionScreen() {
       {operationalNeedsAttention && (
         <section className="attention-card warning operational-message-attention">
           <div className="attention-icon">
-            <Icon name={operationalHighUnread > 0 ? 'warning' : 'notification'} />
+            <Icon
+              name={operationalHighUnread > 0 ? 'warning' : 'notification'}
+            />
           </div>
           <div>
             <strong>

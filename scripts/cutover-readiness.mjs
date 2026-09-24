@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 
-export function evaluateCutoverReadiness(manifest, securityEvidence) {
+export function evaluateCutoverReadiness(
+  manifest,
+  securityEvidence,
+  currentSourceCommit = null,
+) {
   const blockers = [];
 
   if (manifest.p5a_operational_attention !== 'PASS_GLOBAL_EVENT_DRIVEN') {
@@ -62,6 +67,15 @@ export function evaluateCutoverReadiness(manifest, securityEvidence) {
     blockers.push('Automatic Production deployment harus tetap disabled.');
   }
 
+  if (
+    currentSourceCommit &&
+    manifest.app_source_commit !== currentSourceCommit
+  ) {
+    blockers.push(
+      'Release manifest masih menunjuk candidate lama; source commit harus sama dengan HEAD yang akan dirilis.',
+    );
+  }
+
   return { ready: blockers.length === 0, blockers };
 }
 
@@ -72,7 +86,14 @@ function main() {
   const securityEvidence = JSON.parse(
     readFileSync('docs/checkpoints/P5D_SECURITY_EVIDENCE.json', 'utf8'),
   );
-  const result = evaluateCutoverReadiness(manifest, securityEvidence);
+  const currentSourceCommit = execFileSync('git', ['rev-parse', 'HEAD'], {
+    encoding: 'utf8',
+  }).trim();
+  const result = evaluateCutoverReadiness(
+    manifest,
+    securityEvidence,
+    currentSourceCommit,
+  );
 
   if (!result.ready) {
     console.error('CUTOVER_READY=NO');

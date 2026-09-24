@@ -12,8 +12,10 @@ class PosMobileUiV2Tests(unittest.TestCase):
         api=API.read_text(encoding="utf-8")
         self.assertIn("useRef",s)
         self.assertIn("submitGuardRef",s)
-        self.assertIn("pendingOperationIdRef",s)
-        self.assertIn("operationId,",s)
+        self.assertIn("pendingCheckout",s)
+        self.assertIn("operationId: crypto.randomUUID()",s)
+        self.assertIn("saveSalesDraft(window.localStorage",s)
+        self.assertIn("checkoutSale(request)",s)
         self.assertIn("operationId: string",api)
         self.assertIn("p_operation_id: args.operationId",api)
 

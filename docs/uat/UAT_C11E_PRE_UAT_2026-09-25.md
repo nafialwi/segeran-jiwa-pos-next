@@ -41,7 +41,13 @@ Before Human UAT begins, require:
 - targeted C11 A/B/C/D/E Python regressions: PASS;
 - production build: PASS;
 - route/permission projection parity: PASS;
-- production automatic deployment remains disabled.
+- production automatic deployment remains disabled;
+- cutover readiness fails closed if RELEASE_MANIFEST.json points to an older
+  app_source_commit than the current HEAD.
+
+A CUTOVER_READY=NO result caused only by source-candidate mismatch is expected
+during fresh C11 UAT. The manifest must not be advanced to the new HEAD until
+Human UAT and final regression for that exact candidate are complete.
 
 Full Python discovery remains a required final workstation gate. Termux has
 previously shown process-runner hangs on the monolithic discovery command, so
@@ -62,6 +68,7 @@ final workstation run.
 7. Restore connectivity and retry verification.
 
 PASS:
+
 - no false logout;
 - no unauthorized bypass;
 - terminal account/device/session revocation still signs out.
@@ -79,6 +86,7 @@ PASS:
    already verified.
 
 PASS:
+
 - no cross-user/cross-shift draft leakage;
 - no stale manual payment confirmation.
 
@@ -97,6 +105,7 @@ Use an operationally acceptable transaction or controlled test environment.
 8. Check Riwayat and stock facts.
 
 PASS:
+
 - exactly one sale fact;
 - exactly one stock effect;
 - no duplicate invoice caused by retry;
@@ -123,6 +132,7 @@ Any duplicate/lost committed sale is **P0**.
 - logout / Ganti Pengguna while active shift/draft exists.
 
 PASS:
+
 - no stale payment state carries to the next sale;
 - account exit guard is understandable;
 - no P0/P1 daily-use finding.
@@ -148,6 +158,7 @@ PASS:
 - Health / Offline & Sync / Diagnostics.
 
 PASS:
+
 - menu and direct route access match authority;
 - Owner-only routes cannot be reached by Kasir;
 - labels/statuses are human-readable;

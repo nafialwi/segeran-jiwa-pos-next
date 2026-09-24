@@ -47,7 +47,9 @@ export function HandoverScreen() {
 
   const handle = async (handover: Handover, accept: boolean) => {
     const confirmed = await confirmAction({
-      title: accept ? 'Terima serah terima shift?' : 'Tolak serah terima shift?',
+      title: accept
+        ? 'Terima serah terima shift?'
+        : 'Tolak serah terima shift?',
       description: accept
         ? 'Kas fisik yang diserahkan adalah ' +
           formatIdr(handover.actual_balance) +
@@ -87,15 +89,24 @@ export function HandoverScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner" role="alert">{error}</p>}
+      {error && (
+        <p className="error-banner" role="alert">
+          {error}
+        </p>
+      )}
 
       {loading ? (
-        <div className="operations-card-skeleton handover-loading" aria-label="Memuat serah terima">
+        <div
+          className="operations-card-skeleton handover-loading"
+          aria-label="Memuat serah terima"
+        >
           <span />
           <span />
         </div>
       ) : handovers.length === 0 ? (
-        <p className="empty-state">Tidak ada serah-terima menunggu keputusan Anda.</p>
+        <p className="empty-state">
+          Tidak ada serah-terima menunggu keputusan Anda.
+        </p>
       ) : (
         <ul className="list-cards">
           {handovers.map((h) => (

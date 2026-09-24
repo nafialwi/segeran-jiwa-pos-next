@@ -11,6 +11,7 @@ function goodManifest() {
     uat_official_status: 'PASS',
     final_regression_status: 'PASS',
     production_automatic_deployment: false,
+    app_source_commit: 'candidate-commit',
   };
 }
 
@@ -75,6 +76,25 @@ describe('P5D cutover readiness gate', () => {
     expect(result.blockers.join('\n')).toContain('UAT release candidate');
     expect(result.blockers.join('\n')).toContain('Official UAT');
     expect(result.blockers.join('\n')).toContain('Final post-UAT regression');
+  });
+
+  it('fails closed when the manifest belongs to an older source candidate', () => {
+    const result = evaluateCutoverReadiness(
+      goodManifest(),
+      goodSecurity(),
+      'newer-head',
+    );
+    expect(result.ready).toBe(false);
+    expect(result.blockers.join('\n')).toContain('candidate lama');
+  });
+
+  it('accepts exact source identity when all other evidence is current', () => {
+    const result = evaluateCutoverReadiness(
+      goodManifest(),
+      goodSecurity(),
+      'candidate-commit',
+    );
+    expect(result.ready).toBe(true);
   });
 
   it('requires automatic Production deployment to stay disabled', () => {

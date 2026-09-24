@@ -66,7 +66,10 @@ class C3ASalesFrontendV2Tests(unittest.TestCase):
         api = API.read_text(encoding="utf-8")
         screen = SCREEN.read_text(encoding="utf-8")
         self.assertIn("requireOnlineAction('Penjualan')", api)
-        self.assertIn("pendingOperationIdRef", screen)
+        self.assertIn("pendingCheckout", screen)
+        self.assertIn("operationId: crypto.randomUUID()", screen)
+        self.assertIn("saveSalesDraft(window.localStorage", screen)
+        self.assertIn("checkoutSale(request)", screen)
         self.assertIn("submitGuardRef", screen)
         self.assertIn("p_operation_id: args.operationId", api)
         for method in ("CASH", "QRIS", "TRANSFER", "CREDIT"):

@@ -1,7 +1,4 @@
-import type {
-  SaleDiscountType,
-  SalePaymentMethod,
-} from './sales-api';
+import type { SaleDiscountType, SalePaymentMethod } from './sales-api';
 
 export type SalesDraftLine = {
   variantId: string;
@@ -138,7 +135,7 @@ export function loadSalesDraft(
   profileId: string,
   shiftId: string,
 ): SalesDraft | null {
-  let raw: string | null = null;
+  let raw: string | null;
   try {
     raw = storage.getItem(storageKey(profileId, shiftId));
   } catch {
@@ -202,7 +199,6 @@ export function clearSalesDraft(
     // Clearing a stale draft must never block checkout completion.
   }
 }
-
 
 export function hasSalesDraftForProfile(
   storage: Storage,

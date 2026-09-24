@@ -965,7 +965,10 @@ export function ProductOperationsScreen() {
       {canRequestProductManagement &&
         productMasterChecked &&
         !productMasterReady && (
-          <p className="error-banner product-master-capability-note" role="alert">
+          <p
+            className="error-banner product-master-capability-note"
+            role="alert"
+          >
             Editor produk belum aktif pada backend ini. Produk masih dapat
             dilihat, tetapi perubahan nama, harga, status, dan varian belum
             dapat disimpan.

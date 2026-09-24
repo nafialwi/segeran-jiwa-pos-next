@@ -169,7 +169,8 @@ describe('C11-A sales draft continuity', () => {
     });
 
     expect(hasSalesDraftForProfile(storage as Storage, 'profile-1')).toBe(true);
-    expect(hasSalesDraftForProfile(storage as Storage, 'profile-2')).toBe(false);
+    expect(hasSalesDraftForProfile(storage as Storage, 'profile-2')).toBe(
+      false,
+    );
   });
-
 });

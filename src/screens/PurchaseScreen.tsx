@@ -2,10 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { OperationsNav } from '../components/OperationsNav';
 import { SearchablePicker } from '../components/SearchablePicker';
 import { Icon } from '../ui/Icon';
-import {
-  operationalStatusClass,
-  statusLabel,
-} from '../ui/status-display';
+import { operationalStatusClass, statusLabel } from '../ui/status-display';
 import { supabase } from '../lib/supabase';
 import {
   createGoodsReceipt,
@@ -554,8 +551,16 @@ export function PurchaseScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner" role="alert">{error}</p>}
-      {message && <p className="success-banner" role="status" aria-live="polite">{message}</p>}
+      {error && (
+        <p className="error-banner" role="alert">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className="success-banner" role="status" aria-live="polite">
+          {message}
+        </p>
+      )}
 
       <section
         className="purchase-summary-grid"
@@ -758,7 +763,9 @@ export function PurchaseScreen() {
                             {receipt.order_number} · {receipt.supplier_name}
                           </small>
                         </span>
-                        <span className={operationalStatusClass(receipt.status)}>
+                        <span
+                          className={operationalStatusClass(receipt.status)}
+                        >
                           {statusLabel(receipt.status)}
                         </span>
                       </header>

@@ -127,7 +127,11 @@ export function ReconciliationScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner" role="alert">{error}</p>}
+      {error && (
+        <p className="error-banner" role="alert">
+          {error}
+        </p>
+      )}
 
       <section className="operations-panel">
         <label>
