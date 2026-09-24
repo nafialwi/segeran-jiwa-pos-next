@@ -10,6 +10,7 @@ import {
 import { supabase } from '../lib/supabase';
 import {
   bootstrapAuthority,
+  isTerminalAuthorityError,
   loadAuthority,
   mapAuthorityError,
 } from './authority';
@@ -26,6 +27,7 @@ import { toInternalAuthEmail } from './username';
 type AuthState =
   | { kind: 'loading' }
   | { kind: 'anonymous' }
+  | { kind: 'verification_failed'; message: string }
   | { kind: 'authenticated'; authority: AuthoritySnapshot };
 
 interface AuthContextValue {
@@ -37,11 +39,15 @@ interface AuthContextValue {
     deviceKind: DeviceKind,
   ) => Promise<void>;
   refreshAuthority: () => Promise<void>;
+  retryVerification: () => Promise<void>;
   switchUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+const TRANSIENT_VERIFICATION_MESSAGE =
+  'Tidak dapat memverifikasi akses. Sambungkan internet lalu coba lagi.';
 
 function currentDeviceInput() {
   const storage = window.localStorage;
@@ -58,6 +64,56 @@ async function revokeAndLocalSignOut(): Promise<void> {
   await supabase.auth.signOut({ scope: 'local' });
 }
 
+async function resolveStoredSession(): Promise<{
+  state: AuthState;
+  clearLocalSession: boolean;
+}> {
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
+  if (error) {
+    return {
+      state: {
+        kind: 'verification_failed',
+        message: TRANSIENT_VERIFICATION_MESSAGE,
+      },
+      clearLocalSession: false,
+    };
+  }
+
+  if (!session) {
+    return { state: { kind: 'anonymous' }, clearLocalSession: false };
+  }
+
+  try {
+    const authority = await bootstrapAuthority(currentDeviceInput());
+    return {
+      state: { kind: 'authenticated', authority },
+      clearLocalSession: false,
+    };
+  } catch (caught) {
+    if (isTerminalAuthorityError(caught)) {
+      return {
+        state: { kind: 'anonymous' },
+        clearLocalSession: true,
+      };
+    }
+
+    return {
+      state: {
+        kind: 'verification_failed',
+        message:
+          caught instanceof Error
+            ? caught.message
+            : TRANSIENT_VERIFICATION_MESSAGE,
+      },
+      clearLocalSession: false,
+    };
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ kind: 'loading' });
 
@@ -66,30 +122,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut({ scope: 'local' });
   }, []);
 
+  const retryVerification = useCallback(async (): Promise<void> => {
+    setState({ kind: 'loading' });
+    const resolved = await resolveStoredSession();
+    if (resolved.clearLocalSession) {
+      await supabase.auth.signOut({ scope: 'local' });
+    }
+    setState(resolved.state);
+  }, []);
+
   useEffect(() => {
     let active = true;
 
     void (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
+      const resolved = await resolveStoredSession();
       if (!active) return;
 
-      if (!session) {
-        setState({ kind: 'anonymous' });
-        return;
+      if (resolved.clearLocalSession) {
+        await supabase.auth.signOut({ scope: 'local' });
+        if (!active) return;
       }
-
-      try {
-        const authority = await bootstrapAuthority(currentDeviceInput());
-        if (active) setState({ kind: 'authenticated', authority });
-      } catch {
-        if (active) {
-          setState({ kind: 'anonymous' });
-          await supabase.auth.signOut({ scope: 'local' });
-        }
-      }
+      setState(resolved.state);
     })();
 
     const {
@@ -127,9 +180,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const authority = await bootstrapAuthority(currentDeviceInput());
         setState({ kind: 'authenticated', authority });
-      } catch (error) {
-        await clearAndSignOut();
-        throw error;
+      } catch (caught) {
+        if (isTerminalAuthorityError(caught)) {
+          await clearAndSignOut();
+        } else {
+          setState({
+            kind: 'verification_failed',
+            message:
+              caught instanceof Error
+                ? caught.message
+                : TRANSIENT_VERIFICATION_MESSAGE,
+          });
+        }
+        throw caught;
       }
     },
     [clearAndSignOut],
@@ -139,9 +202,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const authority = await loadAuthority();
       setState({ kind: 'authenticated', authority });
-    } catch (error) {
-      await clearAndSignOut();
-      throw mapAuthorityError(error);
+    } catch (caught) {
+      const mapped = mapAuthorityError(caught);
+      if (isTerminalAuthorityError(mapped)) {
+        await clearAndSignOut();
+      } else {
+        setState({ kind: 'verification_failed', message: mapped.message });
+      }
+      throw mapped;
     }
   }, [clearAndSignOut]);
 
@@ -161,10 +229,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       authority: state.kind === 'authenticated' ? state.authority : null,
       login,
       refreshAuthority,
+      retryVerification,
       switchUser,
       logout,
     }),
-    [state, login, refreshAuthority, switchUser, logout],
+    [
+      state,
+      login,
+      refreshAuthority,
+      retryVerification,
+      switchUser,
+      logout,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

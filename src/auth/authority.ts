@@ -74,6 +74,20 @@ function authorityErrorToken(error: unknown): string {
   return `${code} ${message}`;
 }
 
+export class AuthorityVerificationError extends Error {
+  readonly terminal: boolean;
+
+  constructor(message: string, terminal: boolean) {
+    super(message);
+    this.name = 'AuthorityVerificationError';
+    this.terminal = terminal;
+  }
+}
+
+export function isTerminalAuthorityError(error: unknown): boolean {
+  return error instanceof AuthorityVerificationError && error.terminal;
+}
+
 export function mapAuthorityError(error: unknown): Error {
   const token = authorityErrorToken(error);
 
@@ -81,26 +95,39 @@ export function mapAuthorityError(error: unknown): Error {
     token.includes('SJ_ACCOUNT_NOT_ACTIVE') ||
     token.includes('SJ_PROFILE_NOT_BOUND')
   ) {
-    return new Error('Akun tidak sedang aktif. Hubungi Owner.');
+    return new AuthorityVerificationError(
+      'Akun tidak sedang aktif. Hubungi Owner.',
+      true,
+    );
   }
 
   if (token.includes('SJ_DEVICE_REVOKED')) {
-    return new Error('Akses perangkat ini telah dicabut oleh Owner.');
+    return new AuthorityVerificationError(
+      'Akses perangkat ini telah dicabut oleh Owner.',
+      true,
+    );
   }
 
   if (token.includes('SJ_DEVICE_RETIRED')) {
-    return new Error('Perangkat ini sudah tidak aktif. Hubungi Owner.');
+    return new AuthorityVerificationError(
+      'Perangkat ini sudah tidak aktif. Hubungi Owner.',
+      true,
+    );
   }
 
   if (
     token.includes('SJ_AUTH_SESSION_INVALID') ||
     token.includes('SJ_AUTHORITY_DENIED')
   ) {
-    return new Error('Sesi masuk sudah tidak berlaku. Silakan masuk kembali.');
+    return new AuthorityVerificationError(
+      'Sesi masuk sudah tidak berlaku. Silakan masuk kembali.',
+      true,
+    );
   }
 
-  return new Error(
+  return new AuthorityVerificationError(
     'Tidak dapat memverifikasi akses. Sambungkan internet lalu coba lagi.',
+    false,
   );
 }
 

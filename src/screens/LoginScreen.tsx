@@ -9,7 +9,7 @@ import {
 } from '../auth/device';
 
 export function LoginScreen() {
-  const { state, login } = useAuth();
+  const { state, login, retryVerification, switchUser } = useAuth();
   const remembered = useMemo(
     () => getRememberedUsernames(window.localStorage),
     [],
@@ -21,6 +21,42 @@ export function LoginScreen() {
   );
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  if (state.kind === 'loading') {
+    return <main className="center-card">Memulihkan sesi…</main>;
+  }
+
+  if (state.kind === 'verification_failed') {
+    return (
+      <main className="auth-page">
+        <section className="auth-card">
+          <p className="eyebrow">SEGERAN JIWA POS NEXT</p>
+          <h1>Sesi tetap tersimpan</h1>
+          <p className="muted">{state.message}</p>
+          <p className="muted">
+            Tidak perlu masuk ulang. Verifikasi akan dilanjutkan saat koneksi
+            tersedia.
+          </p>
+          <div className="button-row">
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => void retryVerification()}
+            >
+              Coba Verifikasi Lagi
+            </button>
+            <button
+              className="secondary-button"
+              type="button"
+              onClick={() => void switchUser()}
+            >
+              Ganti Pengguna
+            </button>
+          </div>
+        </section>
+      </main>
+    );
+  }
 
   if (state.kind === 'authenticated') {
     return <Navigate to="/" replace />;

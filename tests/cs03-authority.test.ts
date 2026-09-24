@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isTerminalAuthorityError,
   mapAuthorityError,
   parseAuthoritySnapshot,
 } from '../src/auth/authority';
@@ -86,4 +87,12 @@ describe('CS-03 authority payload', () => {
     );
     expect(result.message).not.toContain('postgres');
   });
+  it('distinguishes terminal authority revocation from transient verification failure', () => {
+    const revoked = mapAuthorityError({ message: 'SJ_DEVICE_REVOKED' });
+    const network = mapAuthorityError({ message: 'connection refused' });
+
+    expect(isTerminalAuthorityError(revoked)).toBe(true);
+    expect(isTerminalAuthorityError(network)).toBe(false);
+  });
+
 });

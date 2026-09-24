@@ -35,10 +35,38 @@ import { SystemHealthScreen } from './screens/SystemHealthScreen';
 import { TransactionHistoryScreen } from './screens/TransactionHistoryScreen';
 
 function AuthenticatedLayout() {
-  const { state } = useAuth();
+  const { state, retryVerification, switchUser } = useAuth();
 
   if (state.kind === 'loading') {
-    return <main className="center-card">Memverifikasi sesi…</main>;
+    return <main className="center-card">Memulihkan sesi…</main>;
+  }
+
+  if (state.kind === 'verification_failed') {
+    return (
+      <main className="center-card">
+        <h1>Sesi tetap tersimpan</h1>
+        <p className="muted">{state.message}</p>
+        <p className="muted">
+          Aplikasi tidak mengeluarkan akun karena gangguan koneksi sementara.
+        </p>
+        <div className="button-row">
+          <button
+            className="primary-button"
+            type="button"
+            onClick={() => void retryVerification()}
+          >
+            Coba Verifikasi Lagi
+          </button>
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => void switchUser()}
+          >
+            Ganti Pengguna
+          </button>
+        </div>
+      </main>
+    );
   }
 
   if (state.kind === 'anonymous') {
