@@ -69,5 +69,16 @@ class C11F0DSalesDailyUseTests(unittest.TestCase):
         self.assertNotIn(".from('sales').insert", source + api)
 
 
+    def test_sales_header_and_cart_summary_are_compact_and_unambiguous(self):
+        source = SCREEN.read_text(encoding="utf-8")
+        css = CSS.read_text(encoding="utf-8")
+        self.assertNotIn('className="sales-v2-back"', source)
+        self.assertIn("<h1>Jual</h1>", source)
+        self.assertIn("<span>Kolom</span>", source)
+        self.assertIn("jenis · {cartQuantity} item", source)
+        self.assertIn("/* C11-B1 — sales usability blockers */", css)
+        self.assertIn("min-height: 42px;", css)
+
+
 if __name__ == "__main__":
     unittest.main()

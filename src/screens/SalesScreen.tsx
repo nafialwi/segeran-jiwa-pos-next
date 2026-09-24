@@ -663,12 +663,7 @@ export function SalesScreen() {
   return (
     <main className="shell sales-shell sales-v2-shell">
       <header className="sales-v2-header">
-        <div>
-          <Link className="sales-v2-back" to="/">
-            Beranda
-          </Link>
-          <h1>Jual</h1>
-        </div>
+        <h1>Jual</h1>
         <div className="sales-v2-header-meta">
           <span
             className={
@@ -772,11 +767,12 @@ export function SalesScreen() {
                   className="sales-v2-density"
                   aria-label="Jumlah kartu produk per baris"
                 >
-                  <span>Tampilan</span>
+                  <span>Kolom</span>
                   {([2, 3, 4] as const).map((value) => (
                     <button
                       type="button"
                       key={value}
+                      aria-label={value + ' kolom produk'}
                       aria-pressed={gridDensity === value}
                       onClick={() => chooseGridDensity(value)}
                     >
@@ -890,7 +886,9 @@ export function SalesScreen() {
               <strong>{cartQuantity}</strong>
             </span>
             <span className="sales-v2-cart-total">
-              <small>Keranjang</small>
+              <small>
+                {cart.length} jenis · {cartQuantity} item
+              </small>
               <strong>{formatIdr(total)}</strong>
             </span>
             <span className="sales-v2-cart-action">
@@ -917,7 +915,9 @@ export function SalesScreen() {
                 <header className="sales-v2-sheet-header">
                   <div>
                     <h2>Keranjang</h2>
-                    <span>{cartQuantity} item</span>
+                    <span>
+                      {cart.length} jenis · {cartQuantity} item
+                    </span>
                   </div>
                   <button
                     type="button"

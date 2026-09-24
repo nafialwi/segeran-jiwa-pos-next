@@ -9277,3 +9277,79 @@ pre {
     flex: 0 0 auto;
   }
 }
+
+
+/* C11-B1 — sales usability blockers */
+.sales-v2-header {
+  min-height: 42px;
+  align-items: center;
+  padding: 5px 2px 6px;
+}
+
+.sales-v2-header h1 {
+  margin: 0;
+  font-size: clamp(1.35rem, 5vw, 1.75rem);
+  line-height: 1.05;
+}
+
+.sales-v2-header-meta {
+  min-height: 30px;
+  padding: 0 9px;
+  font-size: 0.74rem;
+}
+
+.sales-v2-toolbar {
+  margin-top: 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  border-radius: 14px;
+}
+
+.sales-v2-search input {
+  min-height: 40px;
+}
+
+.sales-v2-category-strip {
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.sales-v2-category-strip button {
+  min-height: 32px;
+  padding-inline: 11px;
+}
+
+.sales-v2-products {
+  padding-top: 6px;
+}
+
+.sales-v2-product-summary {
+  padding-bottom: 6px;
+}
+
+.sales-v2-density > span {
+  margin-right: 1px;
+}
+
+.sales-v2-cart-total small {
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .sales-v2-header {
+    min-height: 38px;
+  }
+
+  .sales-v2-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .sales-v2-toolbar {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .sales-v2-cart-total small {
+    font-size: 0.62rem;
+  }
+}
