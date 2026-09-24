@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
+import { OperationalState } from '../components/OperationalState';
 import { hasPermission } from '../auth/permission';
 import {
   runReport,
@@ -1048,11 +1049,23 @@ export function ReportsScreen() {
         </form>
       </section>
 
+      {loading && !report && (
+        <section className="identity-card report-result-shell">
+          <OperationalState
+            kind="loading"
+            message="Memuat laporan"
+            skeletonItems={2}
+          />
+        </section>
+      )}
+
       {!report && !loading && (
         <section className="identity-card report-result-shell">
-          <p className="empty-state">
-            Pilih laporan dan periode, lalu tekan Tampilkan Laporan.
-          </p>
+          <OperationalState
+            kind="empty"
+            title="Laporan belum ditampilkan"
+            message="Pilih jenis laporan dan periode, lalu tekan Tampilkan Laporan."
+          />
         </section>
       )}
 

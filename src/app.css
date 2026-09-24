@@ -9727,3 +9727,44 @@ pre {
     text-align: center;
   }
 }
+
+
+/* C11-D4 — remaining secondary-screen state & overflow convergence */
+.owner-user-identity strong,
+.owner-user-identity small,
+.owner-user-detail-anchor + .identity-card h2,
+.operational-message-card strong,
+.operational-message-card small,
+.operational-message-card p,
+.history-transaction-card strong,
+.history-transaction-card p,
+.report-summary-card strong,
+.report-summary-card span {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.operational-message-card p {
+  white-space: pre-wrap;
+}
+
+.owner-users-list .operational-state,
+.owner-device-list .operational-state,
+.history-results-panel .operational-state,
+.report-result-shell .operational-state,
+.operational-message-history .operational-state {
+  margin-top: 8px;
+}
+
+@media (max-width: 420px) {
+  .operational-message-card header,
+  .operational-message-card footer {
+    min-width: 0;
+  }
+
+  .operational-message-card header > span,
+  .operational-message-card footer > span {
+    min-width: 0;
+    max-width: 100%;
+  }
+}

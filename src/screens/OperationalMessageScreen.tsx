@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { Link } from 'react-router-dom';
 import { SearchablePicker } from '../components/SearchablePicker';
+import { OperationalState } from '../components/OperationalState';
 import { useActionDialog } from '../components/ActionDialogProvider';
 import {
   cancelOperationalMessage,
@@ -196,14 +197,25 @@ export function OperationalMessageScreen() {
         </span>
       </header>
 
-      {error && <div className="error-banner">{error}</div>}
-      {success && <div className="success-banner">{success}</div>}
+      {error && (
+        <OperationalState
+          kind="error"
+          title="Pesan operasional tidak dapat diproses"
+          message={error}
+        />
+      )}
+      {success && (
+        <div className="success-banner" role="status" aria-live="polite">
+          {success}
+        </div>
+      )}
 
       {loading ? (
-        <div className="operations-card-skeleton operational-message-loading">
-          <span />
-          <span />
-        </div>
+        <OperationalState
+          kind="loading"
+          message="Memuat pesan operasional"
+          skeletonItems={2}
+        />
       ) : capability === false ? (
         <section className="identity-card secondary-panel">
           <strong>Fitur pesan operasional belum aktif pada backend ini.</strong>
@@ -342,7 +354,11 @@ export function OperationalMessageScreen() {
             </div>
 
             {messages.length === 0 ? (
-              <p className="empty-state">Belum ada pesan operasional.</p>
+              <OperationalState
+                kind="empty"
+                title="Belum ada pesan operasional"
+                message="Instruksi yang dikirim kepada kasir akan muncul di bagian ini."
+              />
             ) : (
               <div className="operational-message-list">
                 {messages.map((message) => {

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import { useActionDialog } from '../components/ActionDialogProvider';
+import { OperationalState } from '../components/OperationalState';
 import { Icon } from '../ui/Icon';
 import {
   correctSale,
@@ -454,9 +455,17 @@ export function TransactionHistoryScreen() {
         </div>
 
         {loading && rows.length === 0 ? (
-          <p className="muted">Memuat Riwayat...</p>
+          <OperationalState
+            kind="loading"
+            message="Memuat riwayat transaksi"
+            skeletonItems={2}
+          />
         ) : rows.length === 0 ? (
-          <p className="empty-state">Tidak ada transaksi sesuai filter.</p>
+          <OperationalState
+            kind="empty"
+            title="Transaksi tidak ditemukan"
+            message="Tidak ada transaksi yang sesuai dengan filter saat ini."
+          />
         ) : (
           <div className="stack-list">
             {rows.map((row) => (

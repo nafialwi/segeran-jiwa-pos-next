@@ -11,7 +11,7 @@ class C11CPosHistoryTests(unittest.TestCase):
     def test_sales_keeps_checkout_authority_and_adds_semantic_visuals(self):
         src = SALES.read_text(encoding="utf-8")
         for token in [
-            "checkoutSale({",
+            "checkoutSale(request)",
             "fetchMyOpenShift()",
             "hasPermission(authority, 'SALE_DISCOUNT')",
             "PAYMENT_QRIS",
@@ -34,7 +34,10 @@ class C11CPosHistoryTests(unittest.TestCase):
         src = SALES.read_text(encoding="utf-8")
         self.assertIn("disabled={!canPay}", src)
         self.assertIn("if (!shift || !canPay || submitGuardRef.current) return;", src)
-        self.assertIn("pendingOperationIdRef.current ?? crypto.randomUUID()", src)
+        self.assertIn("pendingCheckout ?? {", src)
+        self.assertIn("operationId: crypto.randomUUID()", src)
+        self.assertIn("saveSalesDraft(window.localStorage", src)
+        self.assertIn("checkoutSale(request)", src)
 
     def test_history_keeps_refund_correction_guards_and_adds_status_ui(self):
         src = HISTORY.read_text(encoding="utf-8")

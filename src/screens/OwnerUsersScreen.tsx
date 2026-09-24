@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from 'react';
 import { ControlCenterNav } from '../components/ControlCenterNav';
+import { OperationalState } from '../components/OperationalState';
 import { useActionDialog } from '../components/ActionDialogProvider';
 import { useAuth } from '../auth/AuthProvider';
 import type { PermissionCode, ProfileStatus } from '../auth/types';
@@ -677,16 +678,17 @@ export function OwnerUsersScreen() {
 
         <div className="stack owner-users-list">
           {usersLoading ? (
-            <div
-              className="operations-card-skeleton owner-users-loading"
-              aria-label="Memuat pengguna"
-            >
-              <span />
-              <span />
-              <span />
-            </div>
+            <OperationalState
+              kind="loading"
+              message="Memuat pengguna"
+              skeletonItems={3}
+            />
           ) : filteredUsers.length === 0 ? (
-            <p className="muted">Tidak ada pengguna yang sesuai filter.</p>
+            <OperationalState
+              kind="empty"
+              title="Pengguna tidak ditemukan"
+              message="Tidak ada pengguna yang sesuai pencarian atau filter saat ini."
+            />
           ) : (
             filteredUsers.map((user) => (
               <article
@@ -822,15 +824,17 @@ export function OwnerUsersScreen() {
 
           <div className="stack owner-device-list">
             {devicesLoading ? (
-              <div
-                className="operations-card-skeleton owner-devices-loading"
-                aria-label="Memuat perangkat"
-              >
-                <span />
-                <span />
-              </div>
+              <OperationalState
+                kind="loading"
+                message="Memuat perangkat"
+                skeletonItems={2}
+              />
             ) : visibleDevices.length === 0 ? (
-              <p className="muted">Belum ada perangkat tercatat.</p>
+              <OperationalState
+                kind="empty"
+                title="Belum ada perangkat tercatat"
+                message="Perangkat akan muncul setelah akun digunakan pada perangkat yang terdaftar."
+              />
             ) : (
               visibleDevices.map((device) => (
                 <article
