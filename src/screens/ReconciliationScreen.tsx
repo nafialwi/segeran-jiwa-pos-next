@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { OperationsNav } from '../components/OperationsNav';
+import { OperationalState } from '../components/OperationalState';
 import {
   formatIdr,
   formatVariance,
@@ -71,7 +72,21 @@ export function ReconciliationScreen() {
   if (loading) {
     return (
       <main className="shell operations-shell shift-reconciliation-screen">
-        <p>Memuat riwayat shift…</p>
+        <header className="topbar operations-header secondary-hero">
+          <div>
+            <Link className="muted" to="/">
+              ← Beranda
+            </Link>
+            <p className="eyebrow">OPERASIONAL · SHIFT</p>
+            <h1>Rekonsiliasi Shift</h1>
+          </div>
+        </header>
+        <OperationsNav />
+        <OperationalState
+          kind="loading"
+          message="Memuat riwayat shift untuk rekonsiliasi"
+          skeletonItems={2}
+        />
       </main>
     );
   }
@@ -89,11 +104,11 @@ export function ReconciliationScreen() {
           </div>
         </header>
         <OperationsNav />
-        <section className="operations-panel">
-          <p className="muted">
-            Belum ada shift tertutup untuk direkonsiliasi.
-          </p>
-        </section>
+        <OperationalState
+          kind="empty"
+          title="Belum ada shift untuk direkonsiliasi"
+          message="Rekonsiliasi tersedia setelah sebuah shift selesai ditutup."
+        />
       </main>
     );
   }

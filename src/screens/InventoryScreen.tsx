@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { canAccessOwnerArea } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
 import { OperationsNav } from '../components/OperationsNav';
+import { OperationalState } from '../components/OperationalState';
 import {
   aggregateInventoryItems,
   fetchInventoryOverview,
@@ -114,7 +115,13 @@ export function InventoryScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner">{error}</p>}
+      {error && (
+        <OperationalState
+          kind="error"
+          title="Persediaan tidak dapat dimuat"
+          message={error}
+        />
+      )}
 
       <section
         className="inventory-summary-grid"
@@ -178,19 +185,13 @@ export function InventoryScreen() {
         </div>
 
         {loading ? (
-          <div className="operations-card-skeleton" aria-label="Memuat stok">
-            <span />
-            <span />
-            <span />
-          </div>
+          <OperationalState kind="loading" message="Memuat stok" />
         ) : rows.length === 0 ? (
-          <div className="empty-state">
-            <strong>Master stok belum tersedia.</strong>
-            <p>
-              Import data Legacy atau tambahkan barang lewat alur Pembelian.
-              Sistem tidak membuat item dummy.
-            </p>
-          </div>
+          <OperationalState
+            kind="empty"
+            title="Master stok belum tersedia"
+            message="Import data Legacy atau tambahkan barang lewat alur Pembelian. Sistem tidak membuat item dummy."
+          />
         ) : items.length === 0 ? (
           <p className="operations-empty">Tidak ada barang sesuai filter.</p>
         ) : (

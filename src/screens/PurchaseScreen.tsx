@@ -550,8 +550,8 @@ export function PurchaseScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner">{error}</p>}
-      {message && <p className="success-banner">{message}</p>}
+      {error && <p className="error-banner" role="alert">{error}</p>}
+      {message && <p className="success-banner" role="status" aria-live="polite">{message}</p>}
 
       <section
         className="purchase-summary-grid"

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { OperationsNav } from '../components/OperationsNav';
+import { OperationalState } from '../components/OperationalState';
 import {
   formatVariance,
   toShiftErrorMessage,
@@ -44,12 +45,26 @@ export function ShiftHistoryScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner">{error}</p>}
+      {error && (
+        <OperationalState
+          kind="error"
+          title="Riwayat shift tidak dapat dimuat"
+          message={error}
+        />
+      )}
 
       {loading ? (
-        <p>Memuat…</p>
+        <OperationalState
+          kind="loading"
+          message="Memuat riwayat shift"
+          skeletonItems={2}
+        />
       ) : shifts.length === 0 ? (
-        <p className="muted">Belum ada shift tertutup.</p>
+        <OperationalState
+          kind="empty"
+          title="Belum ada shift tertutup"
+          message="Riwayat shift akan muncul setelah shift pertama selesai ditutup."
+        />
       ) : (
         <ul className="list-cards">
           {shifts.map((s) => (

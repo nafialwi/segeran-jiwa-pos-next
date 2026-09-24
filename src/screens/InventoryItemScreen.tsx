@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { OperationsNav } from '../components/OperationsNav';
+import { OperationalState } from '../components/OperationalState';
 import {
   fetchInventoryItemDetail,
   type InventoryItemDetail,
@@ -63,14 +64,21 @@ export function InventoryItemScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner">{error}</p>}
+      {error && (
+        <OperationalState
+          kind="error"
+          title="Detail barang tidak dapat dimuat"
+          message={error}
+        />
+      )}
 
       {!detail ? (
         error ? null : (
-          <div className="operations-card-skeleton">
-            <span />
-            <span />
-          </div>
+          <OperationalState
+            kind="loading"
+            message="Memuat detail barang"
+            skeletonItems={2}
+          />
         )
       ) : (
         <>
@@ -128,9 +136,11 @@ export function InventoryItemScreen() {
             </header>
 
             {detail.movements.length === 0 ? (
-              <p className="operations-empty">
-                Belum ada pergerakan stok untuk barang ini.
-              </p>
+              <OperationalState
+                kind="empty"
+                title="Belum ada pergerakan stok"
+                message="Fakta pergerakan akan muncul setelah barang menerima transaksi stok."
+              />
             ) : (
               <div className="inventory-movement-list">
                 {detail.movements.map((movement) => (

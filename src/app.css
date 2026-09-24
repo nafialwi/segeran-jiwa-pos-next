@@ -9521,3 +9521,58 @@ pre {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* C11-D1 — shared operational state convergence */
+.operational-state {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.operational-state-loading {
+  min-height: 132px;
+}
+
+.operational-state-loading .operations-card-skeleton {
+  margin: 0;
+}
+
+.operational-state-empty {
+  min-height: 112px;
+  display: grid;
+  align-content: center;
+  gap: 5px;
+  margin-bottom: 0;
+}
+
+.operational-state-empty strong {
+  font-size: var(--sj-font-body);
+}
+
+.operational-state-empty p {
+  margin: 0;
+  color: var(--sj-text-muted);
+}
+
+.operational-state-error {
+  display: grid;
+  gap: 4px;
+}
+
+.operational-state-error strong {
+  font-size: var(--sj-font-small);
+}
+
+.operational-state-error span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 420px) {
+  .operational-state-loading {
+    min-height: 108px;
+  }
+
+  .operational-state-empty {
+    min-height: 96px;
+  }
+}
