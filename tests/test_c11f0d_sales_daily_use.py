@@ -61,8 +61,9 @@ class C11F0DSalesDailyUseTests(unittest.TestCase):
     def test_checkout_truth_and_fail_closed_authority_are_unchanged(self):
         source = SCREEN.read_text(encoding="utf-8")
         api = API.read_text(encoding="utf-8")
-        self.assertIn("checkoutSale({", source)
-        self.assertIn("pendingOperationIdRef", source)
+        self.assertIn("checkoutSale(request)", source)
+        self.assertIn("pendingCheckout", source)
+        self.assertIn("operationId: crypto.randomUUID()", source)
         self.assertIn("requireOnlineAction('Penjualan')", api)
         self.assertIn("supabase.rpc('checkout_sale_v2'", api)
         self.assertNotIn(".from('sales').insert", source + api)

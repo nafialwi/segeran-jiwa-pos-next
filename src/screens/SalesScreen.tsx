@@ -21,6 +21,12 @@ import {
   fetchProductMediaIndex,
   productMediaPublicUrl,
 } from '../operations/product-media';
+import {
+  clearSalesDraft,
+  loadSalesDraft,
+  saveSalesDraft,
+  type PendingCheckoutDraft,
+} from '../sales/sales-draft';
 
 type CartLine = {
   item: SalesCatalogItem;
@@ -128,9 +134,11 @@ export function SalesScreen() {
   const [success, setSuccess] = useState<SaleSuccess | null>(null);
   const [gridDensity, setGridDensity] =
     useState<GridDensity>(initialGridDensity);
+  const [draftReady, setDraftReady] = useState(false);
+  const [pendingCheckout, setPendingCheckout] =
+    useState<PendingCheckoutDraft | null>(null);
 
   const submitGuardRef = useRef(false);
-  const pendingOperationIdRef = useRef<string | null>(null);
   const customersLoadingRef = useRef(false);
   const qrisLoadingRef = useRef(false);
   const productMediaLoadingRef = useRef(false);
@@ -176,6 +184,7 @@ export function SalesScreen() {
 
   async function load() {
     setLoading(true);
+    setDraftReady(false);
     setError('');
     try {
       const currentShift = await fetchMyOpenShift();
@@ -189,6 +198,81 @@ export function SalesScreen() {
       // Customers and QRIS are checkout support data and warm in background.
       const items = await fetchSalesCatalog(currentShift.location_id);
       setCatalog(items);
+
+      if (authority) {
+        const draft = loadSalesDraft(
+          window.localStorage,
+          authority.profile_id,
+          currentShift.id,
+        );
+
+        if (draft) {
+          const byVariant = new Map(
+            items.map((item) => [item.variant_id, item] as const),
+          );
+          let adjusted = false;
+          const restoredCart = draft.lines.flatMap((line) => {
+            const item = byVariant.get(line.variantId);
+            if (!item) {
+              adjusted = true;
+              return [];
+            }
+
+            let quantity = line.quantity;
+            if (
+              item.inventory_managed &&
+              item.available_quantity !== null &&
+              quantity > item.available_quantity
+            ) {
+              quantity = Math.max(0, Math.floor(item.available_quantity));
+              adjusted = true;
+            }
+
+            if (quantity <= 0) return [];
+            return [{ item, quantity, lineNote: line.lineNote }];
+          });
+
+          const canRestoreMethod =
+            draft.method === 'CASH' ||
+            (draft.method === 'QRIS' &&
+              hasPermission(authority, 'PAYMENT_QRIS')) ||
+            (draft.method === 'TRANSFER' &&
+              hasPermission(authority, 'PAYMENT_TRANSFER')) ||
+            (draft.method === 'CREDIT' &&
+              hasPermission(authority, 'CUSTOMER_DEBT_MANAGE'));
+
+          setCart(restoredCart);
+          setMethod(canRestoreMethod ? draft.method : 'CASH');
+          setCashReceived(draft.cashReceived);
+          setCustomerId(draft.customerId);
+          setNote(draft.note);
+          setDiscountType(draft.discountType);
+          setDiscountValue(draft.discountValue);
+          setDiscountReason(draft.discountReason);
+          setQrisConfirmed(false);
+          setTransferConfirmed(false);
+          const restorablePending =
+            draft.pendingCheckout?.locationId === currentShift.location_id
+              ? draft.pendingCheckout
+              : null;
+          setPendingCheckout(restorablePending);
+
+          if (draft.pendingCheckout && !restorablePending) {
+            adjusted = true;
+          }
+
+          if (restorablePending) {
+            setError(
+              'Ada transaksi sebelumnya yang belum terkonfirmasi. Verifikasi pembayaran lalu gunakan tombol Periksa transaksi sebelumnya.',
+            );
+          } else if (adjusted) {
+            setError(
+              'Draft penjualan dipulihkan dengan penyesuaian karena produk atau stok telah berubah.',
+            );
+          }
+        }
+      }
+
       void warmProductMedia();
       void warmCustomers();
       void warmQris();
@@ -199,6 +283,7 @@ export function SalesScreen() {
           : 'Data penjualan gagal dimuat.',
       );
     } finally {
+      setDraftReady(true);
       setLoading(false);
     }
   }
@@ -226,6 +311,61 @@ export function SalesScreen() {
   useEffect(() => {
     void load();
   }, []);
+
+  useEffect(() => {
+    if (!draftReady || !shift || !authority) return;
+
+    const meaningfulDraft =
+      cart.length > 0 ||
+      pendingCheckout !== null ||
+      method !== 'CASH' ||
+      cashReceived > 0 ||
+      customerId.length > 0 ||
+      note.length > 0 ||
+      discountType !== 'NONE' ||
+      discountValue > 0 ||
+      discountReason.length > 0;
+
+    if (!meaningfulDraft) {
+      clearSalesDraft(
+        window.localStorage,
+        authority.profile_id,
+        shift.id,
+      );
+      return;
+    }
+
+    saveSalesDraft(window.localStorage, {
+      profileId: authority.profile_id,
+      shiftId: shift.id,
+      lines: cart.map((line) => ({
+        variantId: line.item.variant_id,
+        quantity: line.quantity,
+        lineNote: line.lineNote,
+      })),
+      method,
+      cashReceived,
+      customerId,
+      note,
+      discountType,
+      discountValue,
+      discountReason,
+      pendingCheckout,
+    });
+  }, [
+    authority,
+    shift,
+    draftReady,
+    cart,
+    method,
+    cashReceived,
+    customerId,
+    note,
+    discountType,
+    discountValue,
+    discountReason,
+    pendingCheckout,
+  ]);
 
   useEffect(() => {
     if (!cartOpen && !variantPicker && !success) return;
@@ -317,7 +457,7 @@ export function SalesScreen() {
 
   function invalidatePendingOperation() {
     if (!submitGuardRef.current) {
-      pendingOperationIdRef.current = null;
+      setPendingCheckout(null);
     }
   }
 
@@ -404,16 +544,28 @@ export function SalesScreen() {
     allowedMethods.push('CREDIT');
   }
 
-  const canPay =
-    cart.length > 0 &&
+  const canResumePending =
+    pendingCheckout !== null &&
+    allowedMethods.includes(pendingCheckout.method) &&
     !busy &&
-    discountValid &&
-    (total === 0
-      ? method === 'CASH'
-      : (method === 'CASH' && effectiveCashReceived >= total) ||
-        (method === 'QRIS' && Boolean(qrisImage) && qrisConfirmed) ||
-        (method === 'TRANSFER' && transferConfirmed) ||
-        (method === 'CREDIT' && Boolean(customerId)));
+    (pendingCheckout.method === 'QRIS'
+      ? Boolean(qrisImage) && qrisConfirmed
+      : pendingCheckout.method === 'TRANSFER'
+        ? transferConfirmed
+        : true);
+
+  const canPay =
+    pendingCheckout !== null
+      ? canResumePending
+      : cart.length > 0 &&
+        !busy &&
+        discountValid &&
+        (total === 0
+          ? method === 'CASH'
+          : (method === 'CASH' && effectiveCashReceived >= total) ||
+            (method === 'QRIS' && Boolean(qrisImage) && qrisConfirmed) ||
+            (method === 'TRANSFER' && transferConfirmed) ||
+            (method === 'CREDIT' && Boolean(customerId)));
 
   async function submit() {
     if (!shift || !canPay || submitGuardRef.current) return;
@@ -422,18 +574,9 @@ export function SalesScreen() {
     setBusy(true);
     setError('');
 
-    const operationId = pendingOperationIdRef.current ?? crypto.randomUUID();
-    pendingOperationIdRef.current = operationId;
-
-    try {
-      const successItems = cart.map((line) => ({
-        productName: line.item.product_name,
-        variantName: line.item.variant_name,
-        quantity: line.quantity,
-        lineNote: line.lineNote,
-      }));
-      const result = await checkoutSale({
-        operationId,
+    const request: PendingCheckoutDraft =
+      pendingCheckout ?? {
+        operationId: crypto.randomUUID(),
         locationId: shift.location_id,
         items: cart.map((line) => ({
           variant_id: line.item.variant_id,
@@ -442,17 +585,58 @@ export function SalesScreen() {
         })),
         method,
         total,
-        tenderedAmount: method === 'CASH' ? effectiveCashReceived : undefined,
+        tenderedAmount:
+          method === 'CASH' ? effectiveCashReceived : undefined,
         discount: {
           type: discountType,
           value: discountType === 'NONE' ? 0 : discountValueNumber,
-          reason: discountType === 'NONE' ? undefined : discountReason.trim(),
+          reason:
+            discountType === 'NONE' ? undefined : discountReason.trim(),
         },
         customerId: method === 'CREDIT' ? customerId : undefined,
         note,
-      });
+      };
 
-      pendingOperationIdRef.current = null;
+    if (!pendingCheckout) {
+      setPendingCheckout(request);
+      if (authority) {
+        saveSalesDraft(window.localStorage, {
+          profileId: authority.profile_id,
+          shiftId: shift.id,
+          lines: cart.map((line) => ({
+            variantId: line.item.variant_id,
+            quantity: line.quantity,
+            lineNote: line.lineNote,
+          })),
+          method,
+          cashReceived,
+          customerId,
+          note,
+          discountType,
+          discountValue,
+          discountReason,
+          pendingCheckout: request,
+        });
+      }
+    }
+
+    try {
+      const successItems = cart.map((line) => ({
+        productName: line.item.product_name,
+        variantName: line.item.variant_name,
+        quantity: line.quantity,
+        lineNote: line.lineNote,
+      }));
+      const result = await checkoutSale(request);
+
+      if (authority) {
+        clearSalesDraft(
+          window.localStorage,
+          authority.profile_id,
+          shift.id,
+        );
+      }
+      setPendingCheckout(null);
       setSuccess({ result, items: successItems });
       setCart([]);
       setMethod('CASH');
@@ -1044,8 +1228,13 @@ export function SalesScreen() {
                   <Icon name="checkout" size={19} />
                   <span>
                     {busy
-                      ? 'Memproses satu transaksi...'
-                      : 'Bayar ' + formatIdr(total)}
+                      ? pendingCheckout
+                        ? 'Memeriksa transaksi sebelumnya...'
+                        : 'Memproses satu transaksi...'
+                      : pendingCheckout
+                        ? 'Periksa transaksi sebelumnya ' +
+                          formatIdr(pendingCheckout.total)
+                        : 'Bayar ' + formatIdr(total)}
                   </span>
                 </button>
               </section>
