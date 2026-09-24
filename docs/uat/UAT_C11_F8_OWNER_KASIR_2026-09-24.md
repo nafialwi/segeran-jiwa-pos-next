@@ -226,3 +226,43 @@ F8 can be marked PASS only when:
 - post-UAT F9 canonical regression is rerun.
 
 Until then, status remains **READY FOR HUMAN UAT**.
+
+## Finding F8-01 — Product Media upload Storage permission
+
+Observed on Android during the first real-device Product Media upload attempt:
+
+`permission denied for function has_permission`
+
+Classification at discovery: **P1** for the Product Media workflow.
+
+Backend log correlation confirmed the failure came from the Supabase Storage API
+while inserting into `storage.objects`, not from Product Master save logic.
+
+Root cause: the original Product Media Storage mutation policies directly called
+the private `has_permission` helper, whose EXECUTE grant is intentionally not
+available to the Storage API policy execution context.
+
+Repair applied:
+
+- managed migration `20260924053235_c11f5a_product_media_storage_policy_fix`;
+- mutation policies now require PRODUCT_MANAGE through
+  `public.get_my_authority() -> 'permissions'`;
+- business/product path checks remain intact;
+- policy role remains authenticated;
+- no anon/public write path added.
+
+Post-repair rolled-back Storage RLS INSERT smoke using an active Owner context:
+**PASS**. Persisted Product Media objects after smoke: **0**.
+
+Current finding state: **FIXED IN BACKEND — PENDING HUMAN RETEST**.
+
+Retest the same flow:
+
+1. reload the F8 preview;
+2. Menu > Produk & Resep > product > Kelola Produk;
+3. Pilih Foto;
+4. confirm upload success and image appears;
+5. then continue Ganti Foto and Hapus Foto acceptance.
+
+See:
+`docs/checkpoints/C11F8A_PRODUCT_MEDIA_STORAGE_POLICY_BLOCKER_FIX.md`

@@ -522,3 +522,29 @@ Human UAT plan:
 
 Backend activation evidence:
 `docs/checkpoints/C11F5_1_PRODUCT_MEDIA_BACKEND_ACTIVATION.md`
+
+## C11-F8A blocker repair — Product Media Storage RLS
+
+First Android Product Media upload exposed a real Storage API blocker:
+`permission denied for function has_permission`.
+
+Supabase logs confirmed the failing operation was the Storage API INSERT into
+`storage.objects`. The original Product Media mutation policies called
+`private.has_permission` directly, but that helper intentionally has no direct
+authenticated EXECUTE grant.
+
+Repair migration:
+`20260924124500_c11f5a_product_media_storage_policy_fix.sql`
+
+Live managed migration:
+`20260924053235_c11f5a_product_media_storage_policy_fix`
+
+The repaired policies preserve authenticated/tenant/product/PRODUCT_MANAGE
+authority but obtain permission membership through the public authenticated
+authority projection instead of directly invoking the private helper.
+
+Post-repair Storage RLS INSERT smoke with active Owner claims: **PASS**, inside a
+rolled-back transaction. Persisted Product Media objects after smoke: **0**.
+
+F8 status remains **READY / IN PROGRESS**. Product Media human retest is required
+before the finding is closed.
