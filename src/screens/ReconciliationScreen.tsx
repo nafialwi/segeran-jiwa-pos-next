@@ -51,6 +51,7 @@ export function ReconciliationScreen() {
     if (!selectedShiftId) return;
     let cancelled = false;
     setLoadingRecon(true);
+    setReconciliation(null);
     setError(null);
     (async () => {
       try {
@@ -111,7 +112,7 @@ export function ReconciliationScreen() {
 
       <OperationsNav />
 
-      {error && <p className="error-banner">{error}</p>}
+      {error && <p className="error-banner" role="alert">{error}</p>}
 
       <section className="operations-panel">
         <label>
@@ -123,7 +124,8 @@ export function ReconciliationScreen() {
           >
             {shifts.map((s) => (
               <option key={s.id} value={s.id}>
-                {new Date(s.closed_at ?? s.opened_at).toLocaleString('id-ID')}
+                {new Date(s.closed_at ?? s.opened_at).toLocaleString('id-ID')} ·{' '}
+                {s.id.slice(0, 8)}
               </option>
             ))}
           </select>
@@ -131,7 +133,14 @@ export function ReconciliationScreen() {
       </section>
 
       {loadingRecon ? (
-        <p>Memuat rekonsiliasi…</p>
+        <div
+          className="operations-card-skeleton reconciliation-loading"
+          aria-label="Memuat rekonsiliasi"
+        >
+          <span />
+          <span />
+          <span />
+        </div>
       ) : reconciliation ? (
         <section className="operations-panel">
           <h2>Breakdown Kas</h2>
@@ -162,18 +171,38 @@ export function ReconciliationScreen() {
             </div>
           </dl>
 
-          <h2>Ringkasan</h2>
-          <dl className="identity-meta">
+          <div className="section-heading reconciliation-summary-heading">
             <div>
-              <dt>Expected Cash</dt>
+              <p className="eyebrow">HASIL REKONSILIASI</p>
+              <h2>Expected vs Kas Fisik</h2>
+            </div>
+            <span
+              className={
+                reconciliation.actual_cash === null
+                  ? 'operations-status neutral'
+                  : reconciliationVariance(reconciliation) === 0
+                    ? 'operations-status'
+                    : 'operations-status warning'
+              }
+            >
+              {reconciliation.actual_cash === null
+                ? 'Belum ada kas fisik'
+                : reconciliationVariance(reconciliation) === 0
+                  ? 'Sesuai'
+                  : 'Ada selisih'}
+            </span>
+          </div>
+          <dl className="identity-meta reconciliation-summary-grid">
+            <div>
+              <dt>Kas Diharapkan (Expected)</dt>
               <dd>{formatIdr(reconciliationExpectedCash(reconciliation))}</dd>
             </div>
             <div>
-              <dt>Actual Cash</dt>
+              <dt>Kas Fisik (Actual)</dt>
               <dd>
                 {reconciliation.actual_cash !== null
                   ? formatIdr(reconciliation.actual_cash)
-                  : '—'}
+                  : 'Belum dicatat'}
               </dd>
             </div>
             <div>
@@ -181,6 +210,12 @@ export function ReconciliationScreen() {
               <dd>{formatVariance(reconciliationVariance(reconciliation))}</dd>
             </div>
           </dl>
+          {reconciliation.actual_cash === null && (
+            <p className="muted reconciliation-note">
+              Varians belum dapat dihitung karena hasil hitung kas fisik belum
+              tercatat pada penutupan shift.
+            </p>
+          )}
         </section>
       ) : null}
     </main>

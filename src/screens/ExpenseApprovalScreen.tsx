@@ -39,7 +39,11 @@ export function ExpenseApprovalScreen() {
   const [minAmount, setMinAmount] = useState(0);
   const [active, setActive] = useState(true);
   const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [feedback, setFeedback] = useState<{
+    kind: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   const load = useCallback(async () => {
     const [ruleResult, requestResult] = await Promise.all([
@@ -63,20 +67,24 @@ export function ExpenseApprovalScreen() {
   }, []);
 
   useEffect(() => {
-    void load().catch((error: unknown) => {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : 'Data approval pengeluaran tidak dapat dimuat.',
-      );
-    });
+    void load()
+      .catch((error: unknown) => {
+        setFeedback({
+          kind: 'error',
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Data approval pengeluaran tidak dapat dimuat.',
+        });
+      })
+      .finally(() => setLoading(false));
   }, [load]);
 
   async function saveRule(event: React.FormEvent) {
     event.preventDefault();
     requireOnlineAction('Perubahan rule approval');
     setBusy(true);
-    setMessage('');
+    setFeedback(null);
     try {
       const { error } = await supabase.rpc(
         'finance_set_expense_approval_rule',
@@ -87,14 +95,16 @@ export function ExpenseApprovalScreen() {
         },
       );
       if (error) throw new Error(error.message);
-      setMessage('Rule approval tersimpan.');
+      setFeedback({ kind: 'success', message: 'Rule approval tersimpan.' });
       await load();
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : 'Rule approval gagal disimpan.',
-      );
+      setFeedback({
+        kind: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Rule approval gagal disimpan.',
+      });
     } finally {
       setBusy(false);
     }
@@ -106,9 +116,11 @@ export function ExpenseApprovalScreen() {
       title: approve ? 'Setujui pengeluaran?' : 'Tolak pengeluaran?',
       description: approve
         ? 'Catatan bersifat opsional dan akan tersimpan bersama keputusan.'
-        : 'Tambahkan alasan bila diperlukan agar keputusan mudah diaudit.',
+        : 'Alasan penolakan wajib diisi agar keputusan dapat ditelusuri dan dipahami pemohon.',
       fieldLabel: approve ? 'Catatan approval' : 'Alasan penolakan',
       inputType: 'textarea',
+      required: !approve,
+      minLength: approve ? undefined : 3,
       maxLength: 500,
       confirmLabel: approve ? 'Setujui' : 'Tolak',
       tone: approve ? 'default' : 'danger',
@@ -116,7 +128,7 @@ export function ExpenseApprovalScreen() {
     if (reason === null) return;
 
     setBusy(true);
-    setMessage('');
+    setFeedback(null);
     try {
       const { error } = await supabase.rpc('finance_decide_expense_request', {
         p_request_id: requestId,
@@ -125,18 +137,31 @@ export function ExpenseApprovalScreen() {
         p_idempotency_key: crypto.randomUUID(),
       });
       if (error) throw new Error(error.message);
-      setMessage(approve ? 'Pengeluaran disetujui.' : 'Pengeluaran ditolak.');
+      setFeedback({
+        kind: 'success',
+        message: approve ? 'Pengeluaran disetujui.' : 'Pengeluaran ditolak.',
+      });
       await load();
     } catch (error) {
-      setMessage(
-        error instanceof Error
-          ? error.message
-          : 'Keputusan approval tidak dapat disimpan.',
-      );
+      setFeedback({
+        kind: 'error',
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Keputusan approval tidak dapat disimpan.',
+      });
     } finally {
       setBusy(false);
     }
   }
+
+  const pendingRequests = requests.filter(
+    (request) => request.status === 'PENDING',
+  );
+  const decidedRequests = requests.filter(
+    (request) => request.status !== 'PENDING',
+  );
+  const orderedRequests = [...pendingRequests, ...decidedRequests];
 
   return (
     <main className="shell secondary-screen expense-approval-workspace">
@@ -151,7 +176,16 @@ export function ExpenseApprovalScreen() {
         </div>
       </header>
 
-      {message && <p className="error-banner">{message}</p>}
+            {feedback && (
+        <p
+          className={
+            feedback.kind === 'success' ? 'success-banner' : 'error-banner'
+          }
+          role={feedback.kind === 'error' ? 'alert' : 'status'}
+        >
+          {feedback.message}
+        </p>
+      )}
 
       <section className="identity-card">
         <h2>Aturan Approval</h2>
@@ -206,19 +240,62 @@ export function ExpenseApprovalScreen() {
         )}
       </section>
 
-      <section className="identity-card">
-        <h2>Permintaan Pengeluaran</h2>
-        {requests.length === 0 ? (
-          <p className="muted">Belum ada permintaan approval.</p>
+      <section className="identity-card approval-request-section">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">KEPUTUSAN OWNER</p>
+            <h2>Permintaan Pengeluaran</h2>
+          </div>
+          <span
+            className={
+              pendingRequests.length > 0
+                ? 'operations-status warning'
+                : 'operations-status'
+            }
+          >
+            {pendingRequests.length} menunggu
+          </span>
+        </div>
+        {loading ? (
+          <div
+            className="operations-card-skeleton approval-loading"
+            aria-label="Memuat approval"
+          >
+            <span />
+            <span />
+          </div>
+        ) : requests.length === 0 ? (
+          <p className="empty-state">Belum ada permintaan approval.</p>
         ) : (
-          <div className="stack-list">
-            {requests.map((request) => (
-              <article className="list-card" key={request.request_id}>
-                <strong>
-                  {request.category_code} - {formatIdr(request.amount)}
-                </strong>
+          <div className="stack-list approval-request-list">
+            {orderedRequests.map((request) => (
+              <article
+                className={
+                  request.status === 'PENDING'
+                    ? 'list-card approval-request-card pending'
+                    : 'list-card approval-request-card'
+                }
+                key={request.request_id}
+              >
+                <div className="approval-request-head">
+                  <strong>
+                    {request.category_code} · {formatIdr(request.amount)}
+                  </strong>
+                  <span
+                    className={
+                      request.status === 'PENDING'
+                        ? 'operations-status warning'
+                        : 'operations-status'
+                    }
+                  >
+                    {request.status === 'PENDING'
+                      ? 'Menunggu'
+                      : request.status === 'APPROVED'
+                        ? 'Disetujui'
+                        : 'Ditolak'}
+                  </span>
+                </div>
                 <span>{request.description}</span>
-                <span>Status: {request.status}</span>
                 <span>
                   {new Date(request.requested_at).toLocaleString('id-ID')}
                 </span>

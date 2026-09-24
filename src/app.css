@@ -9440,3 +9440,84 @@ pre {
     flex: 0 0 auto;
   }
 }
+
+
+/* C11-C2 — handover, reconciliation, and approval clarity */
+.handover-loading,
+.reconciliation-loading,
+.approval-loading {
+  margin-top: 12px;
+}
+
+.handover-card {
+  margin-top: 12px;
+}
+
+.handover-card.warning {
+  border-color: #e2c87d;
+  background: #fffaf0;
+}
+
+.handover-card-head,
+.approval-request-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.handover-card-head > span:first-child {
+  display: grid;
+  gap: 4px;
+}
+
+.operations-status.warning {
+  background: var(--sj-warning-soft);
+  color: #7b5c0b;
+}
+
+.operations-status.neutral {
+  background: var(--sj-surface-muted);
+  color: var(--sj-text-muted);
+}
+
+.reconciliation-summary-heading {
+  margin-top: 22px;
+  margin-bottom: 0;
+}
+
+.reconciliation-summary-grid {
+  margin-top: 10px;
+}
+
+.reconciliation-note {
+  margin: 10px 0 0;
+}
+
+.approval-request-section {
+  margin-top: 16px;
+}
+
+.approval-request-card.pending {
+  padding: 13px;
+  border: 1px solid #e2c87d;
+  border-radius: 12px;
+  background: #fffaf0;
+}
+
+.approval-request-card:not(.pending) {
+  opacity: 0.82;
+}
+
+@media (max-width: 520px) {
+  .handover-card-head,
+  .approval-request-head {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .handover-balance-grid,
+  .reconciliation-summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
