@@ -9353,3 +9353,38 @@ pre {
     font-size: 0.62rem;
   }
 }
+
+
+/* C11-B2 — product edit discoverability */
+.product-variant-list > article {
+  grid-template-columns:
+    minmax(0, 1.2fr) auto minmax(92px, 0.7fr) auto auto;
+}
+
+.product-variant-edit {
+  min-height: 36px;
+  padding: 0 11px;
+  font-size: 0.74rem;
+}
+
+.product-master-capability-note {
+  margin-top: 12px;
+}
+
+@media (max-width: 720px) {
+  .product-variant-list > article {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+  }
+
+  .product-variant-list > article > .operations-mode,
+  .product-variant-list > article > span:not(.operations-mode),
+  .product-variant-list > article > strong {
+    justify-self: start;
+  }
+
+  .product-variant-edit {
+    width: 100%;
+    grid-column: 1 / -1;
+  }
+}

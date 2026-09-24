@@ -17,6 +17,7 @@ import { SearchablePicker } from './SearchablePicker';
 
 type Props = {
   product: ProductOperationsProduct | null;
+  initialVariantId?: string | null;
   stockOptions: ProductMasterStockOption[];
   businessId: string;
   imagePath: string | null;
@@ -65,6 +66,7 @@ function fromVariant(variant: ProductVariantOps): VariantDraft {
 
 export function ProductMasterEditor({
   product,
+  initialVariantId = null,
   stockOptions,
   businessId,
   imagePath,
@@ -112,13 +114,20 @@ export function ProductMasterEditor({
     setCategoryCode(product?.categoryCode ?? '');
     setDescription(product?.description ?? '');
     setProductActive(product?.active ?? true);
-    const first = product?.variants[0] ?? null;
-    setVariantId(first?.id ?? null);
+    const initial =
+      product?.variants.find((variant) => variant.id === initialVariantId) ??
+      product?.variants[0] ??
+      null;
+    setVariantId(initial?.id ?? null);
     setVariantDraft(
-      first ? fromVariant(first) : product ? newVariantDraft(product) : null,
+      initial
+        ? fromVariant(initial)
+        : product
+          ? newVariantDraft(product)
+          : null,
     );
     setComponents(
-      first?.components
+      initial?.components
         .filter((component) => component.role !== 'FINISHED_GOOD')
         .map((component) => ({
           stockItemId: component.stockItemId,
@@ -128,7 +137,7 @@ export function ProductMasterEditor({
     );
     setError('');
     setMessage('');
-  }, [product]);
+  }, [product, initialVariantId]);
 
   const selectedVariant =
     product?.variants.find((variant) => variant.id === variantId) ?? null;

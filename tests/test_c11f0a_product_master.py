@@ -134,5 +134,19 @@ class C11F0AProductMasterTests(unittest.TestCase):
         self.assertNotIn("grant delete on table public.variant_sale_components", sql)
 
 
+    def test_product_and_variant_edit_paths_are_direct_and_visible(self):
+        screen = SCREEN.read_text(encoding="utf-8")
+        editor = EDITOR.read_text(encoding="utf-8")
+        css = CSS.read_text(encoding="utf-8")
+        self.assertIn("<span>Edit Produk</span>", screen)
+        self.assertIn('className="secondary-button product-variant-edit"', screen)
+        self.assertIn("openProductMaster(selected.id, variant.id)", screen)
+        self.assertIn("initialVariantId={masterVariantId}", screen)
+        self.assertIn("initialVariantId?: string | null;", editor)
+        self.assertIn("variant.id === initialVariantId", editor)
+        self.assertIn("Editor produk belum aktif pada backend ini.", screen)
+        self.assertIn("/* C11-B2 — product edit discoverability */", css)
+
+
 if __name__ == "__main__":
     unittest.main()

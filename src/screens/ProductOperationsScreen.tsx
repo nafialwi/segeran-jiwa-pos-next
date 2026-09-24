@@ -70,6 +70,7 @@ export function ProductOperationsScreen() {
   >({});
   const [masterOpen, setMasterOpen] = useState(false);
   const [masterProductId, setMasterProductId] = useState<string | null>(null);
+  const [masterVariantId, setMasterVariantId] = useState<string | null>(null);
   const detailRef = useRef<HTMLElement | null>(null);
 
   const canRequestProductManagement =
@@ -339,9 +340,13 @@ export function ProductOperationsScreen() {
     }
   }
 
-  async function openProductMaster(productId: string | null) {
+  async function openProductMaster(
+    productId: string | null,
+    variantId: string | null = null,
+  ) {
     if (!canManageProduct) return;
     setMasterProductId(productId);
+    setMasterVariantId(variantId);
     setMasterOpen(true);
     if (masterStockLoaded || masterStockLoading) return;
     setMasterStockLoading(true);
@@ -551,7 +556,7 @@ export function ProductOperationsScreen() {
                       disabled={masterStockLoading}
                     >
                       <Icon name="settings" size={17} />
-                      <span>Kelola Produk</span>
+                      <span>Edit Produk</span>
                     </button>
                   )}
                 </div>
@@ -623,6 +628,17 @@ export function ProductOperationsScreen() {
                       </span>
                       <span>{variant.active ? 'Aktif' : 'Nonaktif'}</span>
                       <strong>{formatIdr(variant.salePrice)}</strong>
+                      {canManageProduct && (
+                        <button
+                          className="secondary-button product-variant-edit"
+                          type="button"
+                          onClick={() =>
+                            void openProductMaster(selected.id, variant.id)
+                          }
+                        >
+                          Edit
+                        </button>
+                      )}
                     </article>
                   ))}
                 </div>
@@ -930,6 +946,7 @@ export function ProductOperationsScreen() {
       {masterOpen && (!masterStockLoading || masterStockLoaded) && (
         <ProductMasterEditor
           product={masterProduct}
+          initialVariantId={masterVariantId}
           stockOptions={masterStockOptions}
           businessId={authority?.business_id ?? ''}
           imagePath={
@@ -937,7 +954,10 @@ export function ProductOperationsScreen() {
           }
           productMediaReady={canManageProductMedia}
           onMediaChanged={handleProductMediaChanged}
-          onClose={() => setMasterOpen(false)}
+          onClose={() => {
+            setMasterOpen(false);
+            setMasterVariantId(null);
+          }}
           onSaved={refreshAfterMasterSave}
         />
       )}
@@ -945,9 +965,11 @@ export function ProductOperationsScreen() {
       {canRequestProductManagement &&
         productMasterChecked &&
         !productMasterReady && (
-          <span className="sr-only">
-            Editor produk belum aktif pada backend ini.
-          </span>
+          <p className="error-banner product-master-capability-note" role="alert">
+            Editor produk belum aktif pada backend ini. Produk masih dapat
+            dilihat, tetapi perubahan nama, harga, status, dan varian belum
+            dapat disimpan.
+          </p>
         )}
     </main>
   );
