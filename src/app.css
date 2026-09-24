@@ -9576,3 +9576,127 @@ pre {
     min-height: 96px;
   }
 }
+
+
+/* C11-D2 — operational density & alignment convergence */
+.operations-shell > .topbar.operations-header,
+.secondary-screen > .topbar.secondary-hero {
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 13px 15px;
+  border-radius: var(--sj-radius-card);
+}
+
+.operations-shell > .topbar.operations-header h1,
+.secondary-screen > .topbar.secondary-hero h1 {
+  margin: 2px 0 0;
+  font-size: clamp(1.35rem, 3vw, 1.8rem);
+  line-height: 1.08;
+}
+
+.operations-shell > .topbar.operations-header .eyebrow,
+.secondary-screen > .topbar.secondary-hero .eyebrow {
+  margin-bottom: 2px;
+}
+
+.secondary-screen > .topbar.secondary-hero a {
+  margin-bottom: 5px;
+}
+
+.operations-shell .operations-nav {
+  margin-bottom: 12px;
+}
+
+.operations-shell .operations-panel,
+.secondary-screen .secondary-panel,
+.secondary-screen .secondary-filter-panel {
+  margin-top: 10px;
+  padding: 14px;
+}
+
+.operations-shell .operations-panel-header,
+.secondary-screen .section-heading,
+.secondary-screen .dashboard-panel-header {
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.operations-shell .identity-card,
+.secondary-screen .identity-card {
+  padding: 16px;
+}
+
+.operations-shell .stack-form,
+.operations-shell .compact-grid-form,
+.secondary-screen .stack-form,
+.secondary-screen .compact-grid-form {
+  gap: 10px;
+}
+
+.operations-shell .button-row,
+.secondary-screen .button-row {
+  gap: 8px;
+}
+
+.operations-shell label,
+.secondary-screen label {
+  min-width: 0;
+}
+
+.operations-shell input:not([type='checkbox']):not([type='radio']),
+.operations-shell select,
+.operations-shell textarea,
+.secondary-screen input:not([type='checkbox']):not([type='radio']),
+.secondary-screen select,
+.secondary-screen textarea {
+  min-height: var(--sj-touch-min);
+}
+
+.operations-shell .error-banner,
+.operations-shell .success-banner,
+.secondary-screen .error-banner,
+.secondary-screen .success-banner {
+  margin-block: 10px;
+}
+
+@media (max-width: 759px) {
+  .operations-shell > .topbar.operations-header,
+  .secondary-screen > .topbar.secondary-hero {
+    padding: 12px 13px;
+  }
+
+  .operations-shell .operations-panel,
+  .secondary-screen .secondary-panel,
+  .secondary-screen .secondary-filter-panel,
+  .operations-shell .identity-card,
+  .secondary-screen .identity-card {
+    padding: 13px;
+  }
+
+  .operations-shell .operations-panel-header,
+  .secondary-screen .section-heading,
+  .secondary-screen .dashboard-panel-header {
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 420px) {
+  .operations-shell > .topbar.operations-header,
+  .secondary-screen > .topbar.secondary-hero {
+    gap: 8px;
+    padding: 11px 12px;
+  }
+
+  .operations-shell > .topbar.operations-header h1,
+  .secondary-screen > .topbar.secondary-hero h1 {
+    font-size: 1.32rem;
+  }
+
+  .operations-shell .operations-panel,
+  .secondary-screen .secondary-panel,
+  .secondary-screen .secondary-filter-panel,
+  .operations-shell .identity-card,
+  .secondary-screen .identity-card {
+    padding: 12px;
+  }
+}
