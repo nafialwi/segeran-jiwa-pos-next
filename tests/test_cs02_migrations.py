@@ -73,6 +73,7 @@ EXPECTED_MIGRATIONS = [
     "20260923120000_c11f0a_product_master_editor.sql",
     "20260923133000_c11f0b_operational_message.sql",
     "20260923150000_c11f0c_shift_packaging_reconciliation.sql",
+    "20260924083000_c11f5_product_media.sql",
 ]
 EXPECTED_SQL_TESTS = [
     "001_foundation_assertions.sql",

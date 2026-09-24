@@ -380,3 +380,35 @@ Canonical verification: **96/96 JS + 412/412 Python PASS**, plus repo guard,
 Prettier, ESLint, TypeScript, production build, and diff-check.
 
 See: `docs/checkpoints/C11F42_REPORT_INFORMATION_ARCHITECTURE_SAFEPOINT.md`
+
+## C11-F5 safe checkpoint — Product Media & Catalog Completion
+
+C11-F5 adds optional product presentation media while preserving all sale,
+inventory, finance, shift, purchase, BOM, and historical transaction authorities.
+
+- new optional `sale_products.image_path` source contract;
+- dedicated `product-media` bucket with 2 MB object limit and image MIME bounds;
+- storage mutation is tenant/product scoped and requires `PRODUCT_MANAGE`;
+- media pointer writes use audited/idempotent `set_sale_product_image`;
+- browser-side source validation and compression: JPG/PNG/WebP, 12 MB source,
+  1200 px maximum edge, <= 2 MB stored object;
+- replace uses upload-new -> switch pointer -> best-effort old cleanup;
+- remove clears pointer before best-effort storage cleanup;
+- Product Master supports preview, choose/replace, and remove;
+- new products must be saved before media upload;
+- media capability failure does not disable ordinary Product Master editing;
+- Product Operations shows image thumbnails/hero when available;
+- Jual warms images after authoritative catalog first paint, so missing/slow media
+  never blocks selling;
+- placeholder remains the fallback when image is absent or fails to load;
+- migration source is prepared but **not applied to Production**;
+- unmigrated backend stays fail-closed for media and continues to work without it.
+
+Focused F5 regression: **8/8 PASS**.
+F5 + migration source-control regression: **14/14 PASS**.
+Canonical verification: **96/96 JS + 420/420 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+See: `docs/checkpoints/C11F5_PRODUCT_MEDIA_SAFEPOINT.md`
+
+Next planned source stage: **C11-F6 — Daily Interaction Cleanup / input-mode sweep**.

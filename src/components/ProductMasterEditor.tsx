@@ -7,12 +7,21 @@ import {
   type ProductOperationsProduct,
   type ProductVariantOps,
 } from '../operations/product-api';
+import {
+  productMediaPublicUrl,
+  removeProductImage,
+  uploadProductImage,
+} from '../operations/product-media';
 import { Icon } from '../ui/Icon';
 import { SearchablePicker } from './SearchablePicker';
 
 type Props = {
   product: ProductOperationsProduct | null;
   stockOptions: ProductMasterStockOption[];
+  businessId: string;
+  imagePath: string | null;
+  productMediaReady: boolean;
+  onMediaChanged: (productId: string, imagePath: string | null) => void;
   onClose: () => void;
   onSaved: (productId: string) => Promise<void>;
 };
@@ -57,6 +66,10 @@ function fromVariant(variant: ProductVariantOps): VariantDraft {
 export function ProductMasterEditor({
   product,
   stockOptions,
+  businessId,
+  imagePath,
+  productMediaReady,
+  onMediaChanged,
   onClose,
   onSaved,
 }: Props) {
@@ -119,6 +132,7 @@ export function ProductMasterEditor({
 
   const selectedVariant =
     product?.variants.find((variant) => variant.id === variantId) ?? null;
+  const productImageUrl = productMediaPublicUrl(imagePath);
 
   const componentStockOptions = useMemo(() => {
     if (componentRole === 'PACKAGING') {
@@ -248,6 +262,54 @@ export function ProductMasterEditor({
     }
   }
 
+  async function replaceProductImage(file: File | undefined) {
+    if (!product || !file || !productMediaReady || busy) return;
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      const result = await uploadProductImage({
+        businessId,
+        productId: product.id,
+        file,
+        previousPath: imagePath,
+      });
+      onMediaChanged(product.id, result.path);
+      setMessage(
+        `Foto produk diperbarui · ${Math.max(1, Math.round(result.size / 1024))} KB.`,
+      );
+    } catch (cause) {
+      setError(
+        cause instanceof Error
+          ? cause.message
+          : 'Foto produk gagal diperbarui.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function clearProductImage() {
+    if (!product || !imagePath || !productMediaReady || busy) return;
+    setBusy(true);
+    setError('');
+    setMessage('');
+    try {
+      await removeProductImage({
+        productId: product.id,
+        imagePath,
+      });
+      onMediaChanged(product.id, null);
+      setMessage('Foto produk dihapus. Katalog kembali memakai placeholder.');
+    } catch (cause) {
+      setError(
+        cause instanceof Error ? cause.message : 'Foto produk gagal dihapus.',
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="product-master-backdrop" role="presentation">
       <section
@@ -358,6 +420,88 @@ export function ProductMasterEditor({
               </span>
             </button>
           </form>
+
+          {product && (
+            <section className="product-master-section product-master-media-section">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">FOTO PRODUK</p>
+                  <h3>Gambar di Katalog Jual</h3>
+                </div>
+                {imagePath && <span className="operations-status">Aktif</span>}
+              </div>
+
+              {!productMediaReady ? (
+                <p className="muted">
+                  Foto produk belum aktif pada backend ini. Produk tetap dapat
+                  dijual dengan placeholder.
+                </p>
+              ) : (
+                <div className="product-master-media-layout">
+                  <div className="product-master-media-preview">
+                    <Icon name="product" size={28} />
+                    {productImageUrl ? (
+                      <img
+                        src={productImageUrl}
+                        alt={`Foto ${product.displayName}`}
+                        onError={(event) => {
+                          event.currentTarget.hidden = true;
+                        }}
+                      />
+                    ) : (
+                      <span>Belum ada foto</span>
+                    )}
+                  </div>
+
+                  <div className="product-master-media-copy">
+                    <strong>
+                      {imagePath
+                        ? 'Foto dipakai di katalog Jual.'
+                        : 'Tambahkan foto agar produk lebih cepat dikenali.'}
+                    </strong>
+                    <small>
+                      JPG, PNG, atau WebP. Foto otomatis diperkecil maksimal
+                      1200 px dan 2 MB sebelum diunggah.
+                    </small>
+                    <div className="product-master-media-actions">
+                      <label
+                        className={
+                          busy
+                            ? 'secondary-button product-media-file-button disabled'
+                            : 'secondary-button product-media-file-button'
+                        }
+                      >
+                        <Icon name="add" size={17} />
+                        <span>{imagePath ? 'Ganti Foto' : 'Pilih Foto'}</span>
+                        <input
+                          className="sr-only"
+                          type="file"
+                          accept="image/jpeg,image/png,image/webp"
+                          disabled={busy}
+                          onChange={(event) => {
+                            const file = event.currentTarget.files?.[0];
+                            event.currentTarget.value = '';
+                            void replaceProductImage(file);
+                          }}
+                        />
+                      </label>
+                      {imagePath && (
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          disabled={busy}
+                          onClick={() => void clearProductImage()}
+                        >
+                          Hapus Foto
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
           {product && variantDraft && (
             <form
               className="product-master-section stack-form"

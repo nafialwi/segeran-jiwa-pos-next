@@ -16,6 +16,11 @@ import {
   type ProductOperationsProduct,
   type ProductVariantOps,
 } from '../operations/product-api';
+import {
+  fetchProductMediaCapability,
+  fetchProductMediaIndex,
+  productMediaPublicUrl,
+} from '../operations/product-media';
 import { Icon } from '../ui/Icon';
 
 type ProductTab = 'INFO' | 'VARIANTS' | 'RECIPE' | 'PACKAGING';
@@ -59,6 +64,10 @@ export function ProductOperationsScreen() {
   >([]);
   const [masterStockLoaded, setMasterStockLoaded] = useState(false);
   const [masterStockLoading, setMasterStockLoading] = useState(false);
+  const [productMediaReady, setProductMediaReady] = useState(false);
+  const [productMediaPaths, setProductMediaPaths] = useState<
+    Record<string, string>
+  >({});
   const [masterOpen, setMasterOpen] = useState(false);
   const [masterProductId, setMasterProductId] = useState<string | null>(null);
   const detailRef = useRef<HTMLElement | null>(null);
@@ -66,6 +75,7 @@ export function ProductOperationsScreen() {
   const canRequestProductManagement =
     authority !== null && hasPermission(authority, 'PRODUCT_MANAGE');
   const canManageProduct = canRequestProductManagement && productMasterReady;
+  const canManageProductMedia = canManageProduct && productMediaReady;
   const canManageProduction =
     authority !== null && hasPermission(authority, 'PRODUCTION_MANAGE');
 
@@ -119,8 +129,23 @@ export function ProductOperationsScreen() {
 
   useEffect(() => {
     let active = true;
+    void fetchProductMediaIndex()
+      .then((paths) => {
+        if (active) setProductMediaPaths(paths);
+      })
+      .catch(() => {
+        if (active) setProductMediaPaths({});
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
     if (!canRequestProductManagement) {
       setProductMasterReady(false);
+      setProductMediaReady(false);
       setProductMasterChecked(true);
       return () => {
         active = false;
@@ -128,15 +153,20 @@ export function ProductOperationsScreen() {
     }
 
     setProductMasterChecked(false);
-    void fetchProductMasterCapability()
-      .then((ready) => {
+    void Promise.all([
+      fetchProductMasterCapability(),
+      fetchProductMediaCapability().catch(() => false),
+    ])
+      .then(([masterReady, mediaReady]) => {
         if (!active) return;
-        setProductMasterReady(ready);
+        setProductMasterReady(masterReady);
+        setProductMediaReady(mediaReady);
         setProductMasterChecked(true);
       })
       .catch(() => {
         if (!active) return;
         setProductMasterReady(false);
+        setProductMediaReady(false);
         setProductMasterChecked(true);
       });
 
@@ -336,6 +366,18 @@ export function ProductOperationsScreen() {
     setMasterProductId(productId);
   }
 
+  function handleProductMediaChanged(
+    productId: string,
+    imagePath: string | null,
+  ) {
+    setProductMediaPaths((current) => {
+      const next = { ...current };
+      if (imagePath) next[productId] = imagePath;
+      else delete next[productId];
+      return next;
+    });
+  }
+
   const masterProduct =
     masterProductId === null
       ? null
@@ -418,8 +460,22 @@ export function ProductOperationsScreen() {
                   }
                   onClick={() => selectProduct(product.id)}
                 >
-                  <span className="operations-icon">
+                  <span className="operations-icon product-ops-thumbnail">
                     <Icon name="product" size={18} />
+                    {productMediaPaths[product.id] && (
+                      <img
+                        src={
+                          productMediaPublicUrl(
+                            productMediaPaths[product.id],
+                          ) ?? undefined
+                        }
+                        alt=""
+                        loading="lazy"
+                        onError={(event) => {
+                          event.currentTarget.hidden = true;
+                        }}
+                      />
+                    )}
                   </span>
                   <span>
                     <strong>{product.displayName}</strong>
@@ -457,8 +513,23 @@ export function ProductOperationsScreen() {
           ) : (
             <>
               <header className="product-ops-detail-head">
-                <span className="product-ops-hero-icon" aria-hidden="true">
+                <span
+                  className="product-ops-hero-icon product-ops-hero-media"
+                  aria-hidden="true"
+                >
                   <Icon name="product" size={28} />
+                  {productMediaPaths[selected.id] && (
+                    <img
+                      src={
+                        productMediaPublicUrl(productMediaPaths[selected.id]) ??
+                        undefined
+                      }
+                      alt=""
+                      onError={(event) => {
+                        event.currentTarget.hidden = true;
+                      }}
+                    />
+                  )}
                 </span>
                 <div className="product-ops-detail-copy">
                   <p className="eyebrow">{selected.categoryCode ?? 'PRODUK'}</p>
@@ -857,6 +928,12 @@ export function ProductOperationsScreen() {
         <ProductMasterEditor
           product={masterProduct}
           stockOptions={masterStockOptions}
+          businessId={authority?.business_id ?? ''}
+          imagePath={
+            masterProduct ? (productMediaPaths[masterProduct.id] ?? null) : null
+          }
+          productMediaReady={canManageProductMedia}
+          onMediaChanged={handleProductMediaChanged}
           onClose={() => setMasterOpen(false)}
           onSaved={refreshAfterMasterSave}
         />

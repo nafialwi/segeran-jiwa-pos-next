@@ -17,6 +17,10 @@ import {
 } from '../sales/sales-api';
 import { fetchMyOpenShift } from '../shift/shift-api';
 import type { Shift } from '../shift/shift-core';
+import {
+  fetchProductMediaIndex,
+  productMediaPublicUrl,
+} from '../operations/product-media';
 
 type CartLine = {
   item: SalesCatalogItem;
@@ -29,6 +33,7 @@ type ProductGroup = {
   productCode: string;
   productName: string;
   categoryCode: string;
+  imagePath: string | null;
   variants: SalesCatalogItem[];
 };
 
@@ -98,6 +103,9 @@ export function SalesScreen() {
   const [catalog, setCatalog] = useState<SalesCatalogItem[]>([]);
   const [customers, setCustomers] = useState<SaleCustomer[]>([]);
   const [qrisImage, setQrisImage] = useState<string | null>(null);
+  const [productMediaPaths, setProductMediaPaths] = useState<
+    Record<string, string>
+  >({});
   const [customersLoaded, setCustomersLoaded] = useState(false);
   const [qrisLoaded, setQrisLoaded] = useState(false);
   const [cart, setCart] = useState<CartLine[]>([]);
@@ -125,6 +133,19 @@ export function SalesScreen() {
   const pendingOperationIdRef = useRef<string | null>(null);
   const customersLoadingRef = useRef(false);
   const qrisLoadingRef = useRef(false);
+  const productMediaLoadingRef = useRef(false);
+
+  async function warmProductMedia() {
+    if (productMediaLoadingRef.current) return;
+    productMediaLoadingRef.current = true;
+    try {
+      setProductMediaPaths(await fetchProductMediaIndex());
+    } catch {
+      // Product images are optional presentation data, never a sales blocker.
+    } finally {
+      productMediaLoadingRef.current = false;
+    }
+  }
 
   async function warmCustomers() {
     if (customersLoaded || customersLoadingRef.current) return;
@@ -168,6 +189,7 @@ export function SalesScreen() {
       // Customers and QRIS are checkout support data and warm in background.
       const items = await fetchSalesCatalog(currentShift.location_id);
       setCatalog(items);
+      void warmProductMedia();
       void warmCustomers();
       void warmQris();
     } catch (caught) {
@@ -250,12 +272,13 @@ export function SalesScreen() {
           productCode: item.product_code,
           productName: item.product_name,
           categoryCode: item.category_code,
+          imagePath: productMediaPaths[item.sale_product_id] ?? null,
           variants: [item],
         });
       }
     }
     return Array.from(groups.values());
-  }, [visibleItems]);
+  }, [visibleItems, productMediaPaths]);
 
   const catalogProductCount = useMemo(
     () => new Set(catalog.map((item) => item.sale_product_id)).size,
@@ -622,6 +645,19 @@ export function SalesScreen() {
                         aria-hidden="true"
                       >
                         <Icon name="product" size={26} />
+                        {group.imagePath && (
+                          <img
+                            src={
+                              productMediaPublicUrl(group.imagePath) ??
+                              undefined
+                            }
+                            alt=""
+                            loading="lazy"
+                            onError={(event) => {
+                              event.currentTarget.hidden = true;
+                            }}
+                          />
+                        )}
                         <small>{group.categoryCode}</small>
                       </span>
                       <span className="sales-v2-product-name">
