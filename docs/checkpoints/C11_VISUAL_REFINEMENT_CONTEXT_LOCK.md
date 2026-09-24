@@ -351,3 +351,32 @@ Canonical verification: **96/96 JS + 406/406 Python PASS**, plus repo guard,
 Prettier, ESLint, TypeScript, production build, and diff-check.
 
 See: `docs/checkpoints/C11F41_COMPACT_REPORT_DRILLDOWN_SAFEPOINT.md`
+
+## C11-F4.2 safe checkpoint — report information architecture & semantic density
+
+C11-F4.2 corrects the semantic hierarchy discovered during real-device review of
+the compact report UI.
+
+- all report families still use one universal compact-list + detail pattern;
+- compact row identity is now selected by report code + section key;
+- Finance money flow prefers source/reason/reference context instead of generic
+  movement type such as INCOME as the primary identity;
+- customer debt uses customer identity and outstanding balance rather than OPEN
+  as the row identity;
+- supplier payable and employee kasbon likewise use the party identity first;
+- normal statuses are quiet while non-normal/action-relevant statuses can surface;
+- Finance customer debt is presented as Piutang Pelanggan without changing its
+  backend key or contract;
+- phone row height is reduced to a 52px minimum;
+- section count chips no longer stretch across phone width;
+- report empty states and search/filter area are more compact;
+- pagination remains 20 rows per page;
+- report RPC, permissions, summaries, Excel authority, schema, and business writers
+  are unchanged;
+- Production remains untouched.
+
+Focused report regression: **18/18 PASS**.
+Canonical verification: **96/96 JS + 412/412 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+See: `docs/checkpoints/C11F42_REPORT_INFORMATION_ARCHITECTURE_SAFEPOINT.md`

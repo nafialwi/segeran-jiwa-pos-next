@@ -5,7 +5,6 @@ import { hasPermission } from '../auth/permission';
 import {
   runReport,
   type ReportCode,
-  type ReportColumn,
   type ReportEnvelope,
   type ReportFormat,
   type ReportSection,
@@ -106,30 +105,6 @@ function findColumn(section: ReportSection, labels: string[]) {
   );
 }
 
-function getRowValue(
-  row: Record<string, unknown>,
-  column: ReportColumn | undefined,
-) {
-  return column ? row[column.key] : undefined;
-}
-
-function mobilePrimaryColumns(reportCode: ReportCode, section: ReportSection) {
-  const preferences: Record<ReportCode, string[][]> = {
-    PRODUCT: [['Produk'], ['Kategori'], ['Kode']],
-    SALES: [['Nomor Transaksi'], ['Status'], ['Tanggal']],
-    INVENTORY: [['Item', 'Produk', 'Nama'], ['Kategori'], ['Kode']],
-    SHIFT: [['Shift', 'Nomor Shift'], ['Status'], ['Tanggal']],
-    PURCHASE: [['Nomor Pembelian', 'Nomor'], ['Status'], ['Tanggal']],
-    FINANCE: [['Jenis', 'Akun', 'Keterangan'], ['Status'], ['Tanggal']],
-  };
-
-  const selected = preferences[reportCode]
-    .map((labels) => findColumn(section, labels))
-    .filter((column): column is ReportColumn => Boolean(column));
-
-  return selected.length ? selected : section.columns.slice(0, 3);
-}
-
 function rowSearchText(section: ReportSection, row: Record<string, unknown>) {
   return section.columns
     .map((column) => String(row[column.key] ?? ''))
@@ -163,42 +138,422 @@ function displaySortColumn(
 
 const REPORT_PAGE_SIZE = 20;
 
-function compactRowPresentation(
+type CompactRowPresentation = {
+  title: string;
+  supporting: string[];
+  metric: string;
+  status?: string;
+  statusTone?: 'neutral' | 'attention';
+};
+
+const COMPACT_ENUM_LABELS: Record<string, string> = {
+  SALE: 'Penjualan',
+  SALES: 'Penjualan',
+  PENJUALAN: 'Penjualan',
+  INCOME: 'Kas Masuk',
+  CASH_IN: 'Kas Masuk',
+  EXPENSE: 'Pengeluaran',
+  CASH_OUT: 'Kas Keluar',
+  REFUND: 'Refund',
+  CORRECTION: 'Koreksi',
+  ADJUSTMENT: 'Penyesuaian',
+  CUSTOMER_PAYMENT: 'Pembayaran Pelanggan',
+  CUSTOMER_DEBT_PAYMENT: 'Pelunasan Hutang Pelanggan',
+  SUPPLIER_PAYMENT: 'Pembayaran Pemasok',
+  OWNER_CAPITAL: 'Modal Pemilik',
+  OWNER_WITHDRAWAL: 'Penarikan Pemilik',
+  CASH: 'Tunai',
+  TRANSFER: 'Transfer',
+  CREDIT: 'Kredit',
+  QRIS: 'QRIS',
+  OPEN: 'Open',
+  CLOSED: 'Tutup',
+  COMPLETED: 'Selesai',
+  POSTED: 'Tercatat',
+  RECEIVED: 'Diterima',
+  PAID: 'Lunas',
+};
+
+function compactEnum(value: unknown) {
+  const raw = String(value ?? '').trim();
+  if (!raw) return '';
+  const upper = raw.toUpperCase();
+  if (COMPACT_ENUM_LABELS[upper]) return COMPACT_ENUM_LABELS[upper];
+  return raw
+    .replace(/[_-]+/g, ' ')
+    .toLocaleLowerCase('id-ID')
+    .replace(/\b\w/g, (letter) => letter.toLocaleUpperCase('id-ID'));
+}
+
+function columnByKey(section: ReportSection, key: string) {
+  return section.columns.find((column) => column.key === key);
+}
+
+function formattedKey(
+  section: ReportSection,
+  row: Record<string, unknown>,
+  key: string,
+) {
+  const column = columnByKey(section, key);
+  if (!column) return '';
+  const value = row[key];
+  if (value === null || value === undefined || value === '') return '';
+  return formatValue(value, column.type);
+}
+
+function rawKey(row: Record<string, unknown>, key: string) {
+  const value = row[key];
+  return value === null || value === undefined ? '' : String(value).trim();
+}
+
+function firstNonEmpty(...values: Array<string | undefined>) {
+  return values.find((value) => value?.trim())?.trim() ?? '';
+}
+
+function moneyKey(
+  section: ReportSection,
+  row: Record<string, unknown>,
+  ...keys: string[]
+) {
+  for (const key of keys) {
+    const value = formattedKey(section, row, key);
+    if (value) return value;
+  }
+  return '';
+}
+
+function statusPresentation(
+  section: ReportSection,
+  row: Record<string, unknown>,
+  options: { always?: boolean; normal?: string[] } = {},
+) {
+  if (!columnByKey(section, 'status')) return {};
+  const raw = rawKey(row, 'status');
+  if (!raw) return {};
+  const upper = raw.toUpperCase();
+  const normal = new Set(
+    (
+      options.normal ?? ['COMPLETED', 'CLOSED', 'POSTED', 'PAID', 'RECEIVED']
+    ).map((value) => value.toUpperCase()),
+  );
+  if (!options.always && normal.has(upper)) return {};
+  return {
+    status: compactEnum(raw),
+    statusTone: normal.has(upper)
+      ? ('neutral' as const)
+      : ('attention' as const),
+  };
+}
+
+function reportSectionTitle(reportCode: ReportCode, section: ReportSection) {
+  if (reportCode === 'FINANCE' && section.key === 'customer_debts') {
+    return 'Piutang Pelanggan';
+  }
+  return section.title;
+}
+
+function reportSectionEmptyMessage(
   reportCode: ReportCode,
   section: ReportSection,
 ) {
-  const primaryColumns = mobilePrimaryColumns(reportCode, section);
-  const titleColumn = primaryColumns[0] ?? section.columns[0];
-  const moneyColumns = section.columns.filter(
-    (column) => column.type === 'money' && column.key !== titleColumn?.key,
-  );
-  const numberColumns = section.columns.filter(
-    (column) => column.type === 'number' && column.key !== titleColumn?.key,
-  );
-  const metricColumn =
-    moneyColumns[moneyColumns.length - 1] ??
-    numberColumns[numberColumns.length - 1];
-
-  const supportingColumns: ReportColumn[] = [];
-  const addSupporting = (column: ReportColumn | undefined) => {
-    if (
-      !column ||
-      column.key === titleColumn?.key ||
-      column.key === metricColumn?.key
-    )
-      return;
-    if (normalizedLabel(column.label).includes('kode')) return;
-    if (supportingColumns.some((item) => item.key === column.key)) return;
-    supportingColumns.push(column);
+  const identity = `${reportCode}:${section.key}`;
+  const messages: Record<string, string> = {
+    'FINANCE:expenses': 'Tidak ada pengeluaran usaha pada periode ini.',
+    'FINANCE:customer_debts': 'Tidak ada piutang pelanggan yang masih terbuka.',
+    'FINANCE:supplier_payables': 'Tidak ada utang pemasok yang masih terbuka.',
+    'FINANCE:kasbon': 'Tidak ada kasbon karyawan yang masih terbuka.',
+    'PURCHASE:payables': 'Tidak ada utang pemasok dari periode ini.',
+    'INVENTORY:movements': 'Tidak ada pergerakan persediaan pada periode ini.',
+    'SALES:transactions': 'Tidak ada transaksi pada periode ini.',
+    'SALES:products': 'Tidak ada produk terjual pada periode ini.',
+    'PRODUCT:products': 'Tidak ada kinerja produk pada periode ini.',
   };
+  return messages[identity] ?? 'Belum ada data untuk bagian ini.';
+}
 
-  primaryColumns.slice(1).forEach(addSupporting);
-  addSupporting(numberColumns[numberColumns.length - 1]);
+function semanticCompactRow(
+  reportCode: ReportCode,
+  section: ReportSection,
+  row: Record<string, unknown>,
+): CompactRowPresentation {
+  const identity = `${reportCode}:${section.key}`;
+
+  if (identity === 'SALES:transactions') {
+    const kind = compactEnum(rawKey(row, 'jenis')) || 'Transaksi';
+    const method = compactEnum(rawKey(row, 'metode'));
+    const reference = rawKey(row, 'nomor_transaksi');
+    const date = formattedKey(section, row, 'tanggal');
+    const user = rawKey(row, 'pengguna');
+    return {
+      title: [kind, method].filter(Boolean).join(' · '),
+      supporting: [reference, [date, user].filter(Boolean).join(' · ')].filter(
+        Boolean,
+      ),
+      metric: moneyKey(section, row, 'nominal'),
+      ...statusPresentation(section, row, { normal: ['COMPLETED'] }),
+    };
+  }
+
+  if (section.key === 'products') {
+    const product = firstNonEmpty(rawKey(row, 'produk'), 'Produk');
+    const variant = rawKey(row, 'varian');
+    const category = rawKey(row, 'kategori');
+    const cleanQty = formattedKey(section, row, 'qty_bersih');
+    const soldQty = formattedKey(section, row, 'qty_terjual');
+    return {
+      title: product,
+      supporting: [
+        firstNonEmpty(variant, category),
+        cleanQty ? `Bersih ${cleanQty}` : soldQty ? `Terjual ${soldQty}` : '',
+      ].filter(Boolean),
+      metric: moneyKey(
+        section,
+        row,
+        'nilai_bersih_item',
+        'nilai_bruto_item',
+        'harga_jual',
+      ),
+    };
+  }
+
+  if (identity === 'SALES:payments') {
+    const method = compactEnum(rawKey(row, 'metode')) || 'Pembayaran';
+    const refund = moneyKey(section, row, 'pengembalian_dana');
+    const cancelled = moneyKey(section, row, 'piutang_dibatalkan');
+    return {
+      title: method,
+      supporting: [
+        refund && rawKey(row, 'pengembalian_dana') !== '0'
+          ? `Pengembalian ${refund}`
+          : '',
+        cancelled && rawKey(row, 'piutang_dibatalkan') !== '0'
+          ? `Piutang dibatalkan ${cancelled}`
+          : '',
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'penerimaan_penjualan'),
+    };
+  }
+
+  if (identity === 'INVENTORY:balances') {
+    const quantity = formattedKey(section, row, 'quantity');
+    const unit = rawKey(row, 'satuan');
+    return {
+      title: firstNonEmpty(rawKey(row, 'produk'), 'Barang'),
+      supporting: [
+        rawKey(row, 'lokasi'),
+        [compactEnum(rawKey(row, 'jenis')), unit].filter(Boolean).join(' · '),
+      ].filter(Boolean),
+      metric: [quantity, unit].filter(Boolean).join(' '),
+    };
+  }
+
+  if (identity === 'INVENTORY:movements') {
+    const changeRaw = Number(row.perubahan ?? 0);
+    const change = formattedKey(section, row, 'perubahan');
+    return {
+      title: firstNonEmpty(rawKey(row, 'produk'), 'Pergerakan Stok'),
+      supporting: [
+        [formattedKey(section, row, 'tanggal'), rawKey(row, 'lokasi')]
+          .filter(Boolean)
+          .join(' · '),
+        [compactEnum(rawKey(row, 'jenis')), compactEnum(rawKey(row, 'alasan'))]
+          .filter(Boolean)
+          .join(' · '),
+      ].filter(Boolean),
+      metric: change
+        ? `${Number.isFinite(changeRaw) && changeRaw > 0 ? '+' : ''}${change}`
+        : '',
+    };
+  }
+
+  if (identity === 'SHIFT:shifts') {
+    return {
+      title: firstNonEmpty(rawKey(row, 'kasir'), 'Shift'),
+      supporting: [
+        [formattedKey(section, row, 'opened_at'), rawKey(row, 'lokasi')]
+          .filter(Boolean)
+          .join(' · '),
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'expected_cash', 'sale_total'),
+      ...statusPresentation(section, row, { normal: ['CLOSED'] }),
+    };
+  }
+
+  if (identity === 'PURCHASE:orders') {
+    return {
+      title: firstNonEmpty(rawKey(row, 'pemasok'), 'Pesanan Pembelian'),
+      supporting: [
+        rawKey(row, 'order_number'),
+        [formattedKey(section, row, 'ordered_at'), rawKey(row, 'lokasi')]
+          .filter(Boolean)
+          .join(' · '),
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'total'),
+      ...statusPresentation(section, row, {
+        normal: ['COMPLETED', 'CLOSED', 'RECEIVED'],
+      }),
+    };
+  }
+
+  if (identity === 'PURCHASE:receipts') {
+    const baseQty = formattedKey(section, row, 'jumlah_dasar');
+    return {
+      title: firstNonEmpty(rawKey(row, 'pemasok'), 'Barang Diterima'),
+      supporting: [
+        rawKey(row, 'receipt_number'),
+        [formattedKey(section, row, 'received_at'), rawKey(row, 'lokasi')]
+          .filter(Boolean)
+          .join(' · '),
+      ].filter(Boolean),
+      metric: baseQty ? `${baseQty} unit dasar` : '',
+      ...statusPresentation(section, row, {
+        normal: ['POSTED', 'RECEIVED', 'COMPLETED'],
+      }),
+    };
+  }
+
+  if (
+    identity === 'PURCHASE:payables' ||
+    identity === 'FINANCE:supplier_payables'
+  ) {
+    return {
+      title: firstNonEmpty(rawKey(row, 'pemasok'), 'Pemasok'),
+      supporting: [
+        rawKey(row, 'referensi'),
+        formattedKey(section, row, 'paid_amount')
+          ? `Dibayar ${formattedKey(section, row, 'paid_amount')}`
+          : '',
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'balance', 'original_amount'),
+      ...statusPresentation(section, row, { always: true }),
+    };
+  }
+
+  if (identity === 'FINANCE:accounts') {
+    return {
+      title: firstNonEmpty(rawKey(row, 'akun'), 'Akun'),
+      supporting: [
+        rawKey(row, 'code'),
+        compactEnum(rawKey(row, 'jenis')),
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'saldo'),
+    };
+  }
+
+  if (identity === 'FINANCE:money') {
+    const source = compactEnum(rawKey(row, 'sumber'));
+    const reason = compactEnum(rawKey(row, 'alasan'));
+    const kind = compactEnum(rawKey(row, 'jenis'));
+    const from = rawKey(row, 'dari_akun');
+    const to = rawKey(row, 'ke_akun');
+    const flow =
+      from && to
+        ? `${from} → ${to}`
+        : to
+          ? `Masuk ke ${to}`
+          : from
+            ? `Dari ${from}`
+            : '';
+    return {
+      title: firstNonEmpty(source, reason, kind, 'Arus Uang'),
+      supporting: [
+        firstNonEmpty(rawKey(row, 'referensi'), flow),
+        [formattedKey(section, row, 'created_at'), kind]
+          .filter(Boolean)
+          .join(' · '),
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'amount'),
+    };
+  }
+
+  if (identity === 'FINANCE:expenses') {
+    return {
+      title: firstNonEmpty(
+        rawKey(row, 'description'),
+        compactEnum(rawKey(row, 'kategori')),
+        'Pengeluaran Usaha',
+      ),
+      supporting: [
+        [
+          compactEnum(rawKey(row, 'kategori')),
+          formattedKey(section, row, 'created_at'),
+        ]
+          .filter(Boolean)
+          .join(' · '),
+        rawKey(row, 'sumber_dana') ? `Dari ${rawKey(row, 'sumber_dana')}` : '',
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'amount'),
+    };
+  }
+
+  if (identity === 'FINANCE:customer_debts') {
+    return {
+      title: firstNonEmpty(rawKey(row, 'pelanggan'), 'Pelanggan belum diisi'),
+      supporting: [
+        formattedKey(section, row, 'paid_amount')
+          ? `Dibayar ${formattedKey(section, row, 'paid_amount')}`
+          : '',
+        formattedKey(section, row, 'original_amount')
+          ? `Nilai awal ${formattedKey(section, row, 'original_amount')}`
+          : '',
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'balance', 'original_amount'),
+      ...statusPresentation(section, row, { always: true }),
+    };
+  }
+
+  if (identity === 'FINANCE:kasbon') {
+    return {
+      title: firstNonEmpty(rawKey(row, 'karyawan'), 'Karyawan'),
+      supporting: [
+        rawKey(row, 'note'),
+        formattedKey(section, row, 'paid_amount')
+          ? `Dibayar ${formattedKey(section, row, 'paid_amount')}`
+          : '',
+      ].filter(Boolean),
+      metric: moneyKey(section, row, 'balance', 'original_amount'),
+      ...statusPresentation(section, row, { always: true }),
+    };
+  }
+
+  const textColumns = section.columns.filter(
+    (column) =>
+      column.type === 'text' &&
+      !['kode', 'code', 'status'].includes(
+        column.key.toLocaleLowerCase('id-ID'),
+      ),
+  );
+  const titleColumn = textColumns[0] ?? section.columns[0];
+  const metricColumn =
+    [...section.columns].reverse().find((column) => column.type === 'money') ??
+    [...section.columns].reverse().find((column) => column.type === 'number');
+  const supportColumns = section.columns
+    .filter(
+      (column) =>
+        column.key !== titleColumn?.key &&
+        column.key !== metricColumn?.key &&
+        !normalizedLabel(column.label).includes('kode') &&
+        normalizedLabel(column.label) !== 'status',
+    )
+    .slice(0, 2);
 
   return {
-    titleColumn,
-    metricColumn,
-    supportingColumns: supportingColumns.slice(0, 2),
+    title: firstNonEmpty(
+      titleColumn
+        ? formatValue(row[titleColumn.key], titleColumn.type)
+        : undefined,
+      section.title,
+    ),
+    supporting: supportColumns
+      .map((column) => {
+        const value = formatValue(row[column.key], column.type);
+        return value === '—' ? '' : `${column.label}: ${value}`;
+      })
+      .filter(Boolean),
+    metric: metricColumn
+      ? formatValue(row[metricColumn.key], metricColumn.type)
+      : '',
+    ...statusPresentation(section, row),
   };
 }
 
@@ -213,8 +568,7 @@ function ReportCompactRow({
   row: Record<string, unknown>;
   onOpen: () => void;
 }) {
-  const { titleColumn, metricColumn, supportingColumns } =
-    compactRowPresentation(reportCode, section);
+  const presentation = semanticCompactRow(reportCode, section, row);
 
   return (
     <button
@@ -224,28 +578,24 @@ function ReportCompactRow({
       onClick={onOpen}
     >
       <span className="report-compact-row-copy">
-        <strong>
-          {formatValue(
-            getRowValue(row, titleColumn),
-            titleColumn?.type ?? 'text',
-          )}
-        </strong>
-        {supportingColumns.length > 0 && (
+        <strong>{presentation.title}</strong>
+        {presentation.supporting.length > 0 && (
           <small>
-            {supportingColumns.map((column) => (
-              <span key={column.key}>
-                {column.label}: {formatValue(row[column.key], column.type)}
-              </span>
+            {presentation.supporting.slice(0, 2).map((value, index) => (
+              <span key={`${index}-${value}`}>{value}</span>
             ))}
           </small>
         )}
       </span>
       <span className="report-compact-row-trailing">
-        {metricColumn && (
-          <strong>
-            {formatValue(row[metricColumn.key], metricColumn.type)}
-          </strong>
+        {presentation.status && (
+          <span
+            className={`report-compact-status ${presentation.statusTone ?? 'neutral'}`}
+          >
+            {presentation.status}
+          </span>
         )}
+        {presentation.metric && <strong>{presentation.metric}</strong>}
         <span className="report-compact-chevron" aria-hidden="true">
           ›
         </span>
@@ -265,7 +615,7 @@ function ReportDetailDialog({
   row: Record<string, unknown>;
   onClose: () => void;
 }) {
-  const { titleColumn } = compactRowPresentation(reportCode, section);
+  const presentation = semanticCompactRow(reportCode, section, row);
 
   useEffect(() => {
     const originalOverflow = document.body.style.overflow;
@@ -292,18 +642,13 @@ function ReportDetailDialog({
         className="report-detail-dialog"
         role="dialog"
         aria-modal="true"
-        aria-label={`Detail ${section.title}`}
+        aria-label={`Detail ${reportSectionTitle(reportCode, section)}`}
       >
         <header className="report-detail-header">
           <div>
             <p className="eyebrow">DETAIL LAPORAN</p>
-            <h2>
-              {formatValue(
-                getRowValue(row, titleColumn),
-                titleColumn?.type ?? 'text',
-              )}
-            </h2>
-            <p className="muted">{section.title}</p>
+            <h2>{presentation.title}</h2>
+            <p className="muted">{reportSectionTitle(reportCode, section)}</p>
           </div>
           <button
             className="icon-button"
@@ -358,9 +703,9 @@ function ReportSectionView({
 
   return (
     <section className="identity-card report-section-card">
-      <div className="section-heading">
+      <div className="section-heading report-section-heading">
         <div>
-          <h2>{section.title}</h2>
+          <h2>{reportSectionTitle(reportCode, section)}</h2>
           {section.note && <p className="muted">{section.note}</p>}
         </div>
         {section.rows.length > 0 && (
@@ -368,7 +713,9 @@ function ReportSectionView({
         )}
       </div>
       {section.rows.length === 0 ? (
-        <p className="empty-state">Tidak ada data pada bagian ini.</p>
+        <p className="empty-state report-section-empty">
+          {reportSectionEmptyMessage(reportCode, section)}
+        </p>
       ) : (
         <>
           <div className="report-mobile-list">
@@ -419,7 +766,7 @@ function ReportSectionView({
           {section.rows.length > REPORT_PAGE_SIZE && (
             <nav
               className="report-pagination"
-              aria-label={`Halaman ${section.title}`}
+              aria-label={`Halaman ${reportSectionTitle(reportCode, section)}`}
             >
               <span>
                 {pageStart + 1}–{pageEnd} dari {section.rows.length}
