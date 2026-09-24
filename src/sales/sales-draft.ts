@@ -202,3 +202,22 @@ export function clearSalesDraft(
     // Clearing a stale draft must never block checkout completion.
   }
 }
+
+
+export function hasSalesDraftForProfile(
+  storage: Storage,
+  profileId: string,
+): boolean {
+  const prefix = STORAGE_PREFIX + ':' + profileId + ':';
+  try {
+    for (let index = 0; index < storage.length; index += 1) {
+      const key = storage.key(index);
+      if (key?.startsWith(prefix) && storage.getItem(key)) {
+        return true;
+      }
+    }
+  } catch {
+    return false;
+  }
+  return false;
+}

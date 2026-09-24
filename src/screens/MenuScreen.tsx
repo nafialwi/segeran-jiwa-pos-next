@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import {
@@ -6,6 +7,9 @@ import {
   hasPermission,
 } from '../auth/permission';
 import { Icon } from '../ui/Icon';
+import { useActionDialog } from '../components/ActionDialogProvider';
+import { fetchMyOpenShift } from '../shift/shift-api';
+import { hasSalesDraftForProfile } from '../sales/sales-draft';
 import type { SegeranIconName } from '../ui/iconRegistry';
 
 type MenuEntry = {
@@ -46,8 +50,62 @@ function MenuGroup({
 
 export function MenuScreen() {
   const { authority, switchUser, logout } = useAuth();
+  const { confirmAction } = useActionDialog();
+  const [accountBusy, setAccountBusy] = useState(false);
+  const [accountError, setAccountError] = useState('');
 
   if (!authority) return null;
+
+  const activeProfileId = authority.profile_id;
+
+  async function runAccountAction(action: 'switch' | 'logout') {
+    if (accountBusy) return;
+
+    setAccountBusy(true);
+    setAccountError('');
+    try {
+      const hasDraft = hasSalesDraftForProfile(
+        window.localStorage,
+        activeProfileId,
+      );
+      const openShift = await fetchMyOpenShift();
+
+      if (openShift || hasDraft) {
+        const details = [
+          openShift ? 'shift masih aktif' : '',
+          hasDraft ? 'draft transaksi masih tersimpan' : '',
+        ]
+          .filter(Boolean)
+          .join(' dan ');
+
+        const confirmed = await confirmAction({
+          title: action === 'switch' ? 'Ganti pengguna?' : 'Keluar dari akun?',
+          description:
+            'Terdeteksi ' +
+            details +
+            '. Aksi ini tidak menutup shift dan draft tetap terkait akun ini. Pastikan pekerjaan kasir memang ingin ditinggalkan sementara.',
+          confirmLabel:
+            action === 'switch' ? 'Tetap Ganti Pengguna' : 'Tetap Keluar',
+          cancelLabel: 'Kembali',
+          tone: 'danger',
+        });
+
+        if (!confirmed) return;
+      }
+
+      if (action === 'switch') {
+        await switchUser();
+      } else {
+        await logout();
+      }
+    } catch {
+      setAccountError(
+        'Status shift tidak dapat diverifikasi. Sambungkan internet lalu coba lagi agar pekerjaan kasir tidak ditinggalkan tanpa kepastian.',
+      );
+    } finally {
+      setAccountBusy(false);
+    }
+  }
 
   const operations: MenuEntry[] = [
     {
@@ -236,22 +294,29 @@ export function MenuScreen() {
         <div>
           <strong>{authority.display_name}</strong>
           <span>@{authority.username}</span>
+          {accountError && (
+            <span className="form-error" role="alert">
+              {accountError}
+            </span>
+          )}
         </div>
         <div className="menu-account-actions">
           <button
             className="secondary-button"
             type="button"
-            onClick={() => void switchUser()}
+            disabled={accountBusy}
+            onClick={() => void runAccountAction('switch')}
           >
-            Ganti Pengguna
+            {accountBusy ? 'Memeriksa…' : 'Ganti Pengguna'}
           </button>
           <button
             className="secondary-button danger-lite"
             type="button"
-            onClick={() => void logout()}
+            disabled={accountBusy}
+            onClick={() => void runAccountAction('logout')}
           >
             <Icon name="logout" size={18} />
-            Keluar
+            {accountBusy ? 'Memeriksa…' : 'Keluar'}
           </button>
         </div>
       </section>

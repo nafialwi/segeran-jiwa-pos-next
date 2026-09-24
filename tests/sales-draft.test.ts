@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   clearSalesDraft,
+  hasSalesDraftForProfile,
   loadSalesDraft,
   saveSalesDraft,
 } from '../src/sales/sales-draft';
@@ -131,6 +132,44 @@ describe('C11-A sales draft continuity', () => {
     expect(() =>
       clearSalesDraft(brokenStorage, 'profile-1', 'shift-1'),
     ).not.toThrow();
+  });
+
+  it('detects whether a profile has a persisted draft without crossing profiles', () => {
+    const values = new Map<string, string>();
+    const storage = {
+      get length() {
+        return values.size;
+      },
+      key(index: number) {
+        return Array.from(values.keys())[index] ?? null;
+      },
+      getItem(key: string) {
+        return values.get(key) ?? null;
+      },
+      setItem(key: string, value: string) {
+        values.set(key, value);
+      },
+      removeItem(key: string) {
+        values.delete(key);
+      },
+    };
+
+    saveSalesDraft(storage, {
+      profileId: 'profile-1',
+      shiftId: 'shift-1',
+      lines: [{ variantId: 'v-1', quantity: 1, lineNote: '' }],
+      method: 'CASH',
+      cashReceived: 0,
+      customerId: '',
+      note: '',
+      discountType: 'NONE',
+      discountValue: 0,
+      discountReason: '',
+      pendingCheckout: null,
+    });
+
+    expect(hasSalesDraftForProfile(storage as Storage, 'profile-1')).toBe(true);
+    expect(hasSalesDraftForProfile(storage as Storage, 'profile-2')).toBe(false);
   });
 
 });
