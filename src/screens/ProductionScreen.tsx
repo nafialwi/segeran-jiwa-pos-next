@@ -7,6 +7,10 @@ import {
   type ProductionOverview,
 } from '../production/production-api';
 import { Icon } from '../ui/Icon';
+import {
+  operationalStatusClass,
+  statusLabel,
+} from '../ui/status-display';
 
 const EMPTY: ProductionOverview = {
   locations: [],
@@ -324,7 +328,9 @@ export function ProductionScreen() {
                       {batch.finishedGoodCode} · {batch.locationName}
                     </small>
                   </span>
-                  <span className="operations-status">{batch.status}</span>
+                  <span className={operationalStatusClass(batch.status)}>
+                    {statusLabel(batch.status)}
+                  </span>
                 </header>
 
                 <dl>

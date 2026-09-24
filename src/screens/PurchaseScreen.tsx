@@ -2,6 +2,10 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { OperationsNav } from '../components/OperationsNav';
 import { SearchablePicker } from '../components/SearchablePicker';
 import { Icon } from '../ui/Icon';
+import {
+  operationalStatusClass,
+  statusLabel,
+} from '../ui/status-display';
 import { supabase } from '../lib/supabase';
 import {
   createGoodsReceipt,
@@ -754,8 +758,8 @@ export function PurchaseScreen() {
                             {receipt.order_number} · {receipt.supplier_name}
                           </small>
                         </span>
-                        <span className="operations-status">
-                          {receipt.status}
+                        <span className={operationalStatusClass(receipt.status)}>
+                          {statusLabel(receipt.status)}
                         </span>
                       </header>
                       <p>{receipt.location_name}</p>
@@ -906,7 +910,9 @@ export function PurchaseScreen() {
                       {row.invoice_reference ?? 'Tanpa referensi invoice'}
                     </small>
                   </span>
-                  <span className="operations-status">{row.status}</span>
+                  <span className={operationalStatusClass(row.status)}>
+                    {statusLabel(row.status)}
+                  </span>
                 </header>
                 <p>Sisa {formatIdr(Number(row.balance))}</p>
               </article>

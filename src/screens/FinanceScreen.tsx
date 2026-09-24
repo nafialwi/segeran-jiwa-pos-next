@@ -5,6 +5,10 @@ import { useActionDialog } from '../components/ActionDialogProvider';
 import { Icon } from '../ui/Icon';
 import { SearchablePicker } from '../components/SearchablePicker';
 import {
+  operationalStatusClass,
+  statusLabel,
+} from '../ui/status-display';
+import {
   createEmployeeKasbon,
   fetchFinanceOverview,
   payCustomerDebt,
@@ -750,7 +754,9 @@ export function FinanceScreen() {
             <article className="list-card" key={item.debt_id}>
               <strong>{item.customer_name}</strong>
               <span>Sisa {formatIdr(item.balance)}</span>
-              <span className="muted">{item.status}</span>
+              <span className={operationalStatusClass(item.status)}>
+                {statusLabel(item.status)}
+              </span>
             </article>
           ))}
           {(overview?.customerDebts ?? []).length === 0 && (
@@ -897,7 +903,9 @@ export function FinanceScreen() {
             <article className="list-card" key={item.kasbon_id}>
               <strong>{item.employee_name}</strong>
               <span>Sisa {formatIdr(item.balance)}</span>
-              <span className="muted">{item.status}</span>
+              <span className={operationalStatusClass(item.status)}>
+                {statusLabel(item.status)}
+              </span>
             </article>
           ))}
           {(overview?.employeeKasbons ?? []).length === 0 && (

@@ -9700,3 +9700,30 @@ pre {
     padding: 12px;
   }
 }
+
+
+/* C11-D3 — status language and tone convergence */
+.operations-status.danger {
+  background: #fff0ee;
+  color: #9d3c2d;
+}
+
+.operations-status.warning {
+  border: 1px solid rgb(183 136 28 / 14%);
+}
+
+.operations-status.neutral {
+  border: 1px solid rgb(104 119 111 / 10%);
+}
+
+.operations-status.danger {
+  border: 1px solid rgb(157 60 45 / 12%);
+}
+
+@media (max-width: 420px) {
+  .operations-status {
+    max-width: 100%;
+    white-space: normal;
+    text-align: center;
+  }
+}
