@@ -486,3 +486,39 @@ See: `docs/checkpoints/C11F7_RESPONSIVE_VISUAL_MATRIX_SAFEPOINT.md`
 
 Next planned stage: controlled F5 Product Media backend activation for UAT,
 then **C11-F8 — Owner/Kasir real-device UAT**.
+
+## C11-F5.1 backend activation checkpoint — Product Media ready for F8 UAT
+
+The additive C11-F5 Product Media contract is now active on the shared Supabase
+backend used by the C11 preview.
+
+Live backend evidence:
+
+- managed migration: `20260924050442_c11f5_product_media`;
+- `sale_products.image_path`: installed;
+- `product-media` bucket: installed, public delivery, 2 MB object limit,
+  WebP/JPEG/PNG;
+- Storage policies: authenticated tenant read plus PRODUCT_MANAGE
+  insert/update/delete;
+- `product_media_capability()`: authenticated Owner smoke = TRUE;
+- `product_media_read_v1()`: 30 products readable in the active business;
+- `set_sale_product_image(...)`: writer smoke succeeded inside a rolled-back
+  transaction;
+- persisted product images after smoke: 0;
+- persisted Product Media audit events after smoke: 0;
+- Product Media RPCs are SECURITY DEFINER with pinned empty search_path;
+- Product Media RPC anon execute: denied;
+- F0B/F0C migrations were not promoted as part of this activation.
+
+Boundary clarification: the C11 frontend has **not** been deployed to the
+Production site, but the shared Supabase backend itself now contains the
+backward-compatible additive F5 capability because there is no separate
+Supabase development branch.
+
+C11-F8 is now **READY FOR HUMAN UAT**, not yet PASS.
+
+Human UAT plan:
+`docs/uat/UAT_C11_F8_OWNER_KASIR_2026-09-24.md`
+
+Backend activation evidence:
+`docs/checkpoints/C11F5_1_PRODUCT_MEDIA_BACKEND_ACTIVATION.md`

@@ -371,11 +371,13 @@ No C11 frontend source change has been released to Production. The shared previe
 
 ## NEXT ACTION
 
-**Continue C11-F — final responsive QA and operating guide.**
+**Run C11-F8 — Owner/Kasir real-device UAT on the F7 candidate.**
 
-Run the final 320/360/390/412 px mobile matrix plus desktop checks for primary Owner/Kasir workflows, rerun the complete canonical regression, issue the next preview safe point, and create the complete Owner/Kasir operating guide requested by the user.
+C11-F6 Daily Interaction Cleanup and C11-F7 Responsive & Visual Matrix are now complete. The source matrix covers 320/360/390/412 px phone, 768 px tablet, and 1024/1440 px desktop reference widths. F7 is locked at tag `c11-f7-responsive-visual-matrix-safepoint`.
 
-Keep RC4 immutable and Production blocked until the final C11 UAT/release gate.
+The additive C11-F5 Product Media migration is now active on the shared Supabase backend used by the C11 preview. Capability/read smoke passed for an authorized Owner, and the image-pointer writer passed inside a rolled-back transaction with no persisted Product Media test data. The C11 frontend has still not been promoted to the Production site.
+
+F8 must exercise Owner and Kasir workflows on real devices, including actual Product Media upload/replace/remove. Do not mark F8 PASS until P0/P1 findings are zero. After Human UAT closes, run C11-F9 final canonical regression and release hardening before C11 Final Lock / RC5.
 
 ## Cutover rule
 
