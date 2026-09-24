@@ -66,5 +66,9 @@ describe('CS-03 route access policy', () => {
     expect(canAccessRoute(kasir, '/pengguna')).toBe(false);
     expect(canAccessRoute(owner, '/pengguna')).toBe(true);
     expect(canAccessRoute(kasir, '/keuangan')).toBe(false);
+    expect(canAccessRoute(kasir, '/expense-approval')).toBe(false);
+    expect(canAccessRoute(owner, '/expense-approval')).toBe(true);
+    expect(canAccessRoute(kasir, '/legacy-import')).toBe(false);
+    expect(canAccessRoute(owner, '/legacy-import')).toBe(true);
   });
 });

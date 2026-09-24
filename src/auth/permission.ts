@@ -28,7 +28,9 @@ export function canAccessRoute(
   if (
     route === '/pengguna' ||
     route === '/keuangan' ||
-    route === '/pengaturan/backup'
+    route === '/pengaturan/backup' ||
+    route === '/expense-approval' ||
+    route === '/legacy-import'
   ) {
     return canAccessOwnerArea(authority);
   }
