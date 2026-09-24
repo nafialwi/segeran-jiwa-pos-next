@@ -589,6 +589,7 @@ export function ShiftManagementScreen() {
                   Jumlah (Rp)
                   <input
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     step="1000"
                     value={expenseAmount}
@@ -1232,6 +1233,7 @@ export function ShiftManagementScreen() {
               Saldo Awal (Rp)
               <input
                 type="number"
+                inputMode="numeric"
                 step="1000"
                 min="0"
                 value={openingBalance}

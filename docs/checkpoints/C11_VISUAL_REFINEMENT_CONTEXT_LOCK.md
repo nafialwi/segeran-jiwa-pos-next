@@ -412,3 +412,34 @@ Prettier, ESLint, TypeScript, production build, and diff-check.
 See: `docs/checkpoints/C11F5_PRODUCT_MEDIA_SAFEPOINT.md`
 
 Next planned source stage: **C11-F6 — Daily Interaction Cleanup / input-mode sweep**.
+
+## C11-F6 safe checkpoint — Daily Interaction Cleanup
+
+C11-F6 removes the remaining browser-native daily-use interaction traps before
+the full responsive matrix.
+
+- one global `ActionDialogProvider` now provides in-app confirm/prompt flows;
+- application source no longer uses `window.confirm`, `window.prompt`, or
+  `window.alert`;
+- Legacy import, refund, correction, operational-message cancellation, Owner
+  personal withdrawal, Owner password/device administration, and expense
+  approval decisions use the shared dialog;
+- canceling an expense-approval prompt now truly aborts the decision;
+- destructive actions have explicit consequence copy and danger treatment;
+- dialog focus, Escape/backdrop cancel, and background scroll lock are handled
+  consistently;
+- all JSX numeric inputs declare `inputMode="numeric"` or
+  `inputMode="decimal"` according to their quantity semantics;
+- touch/coarse-pointer focus remains keyboard-accessible through
+  `:focus-visible`;
+- no F6 database migration, writer, permission, route authority, or Production
+  deployment is introduced.
+
+Focused C11-F6 regression: **7/7 PASS**.
+C11-F6 + affected historical safety regression: **33/33 PASS**.
+Canonical verification: **96/96 JS + 427/427 Python PASS**, plus repo guard,
+Prettier, ESLint, TypeScript, production build, and diff-check.
+
+See: `docs/checkpoints/C11F6_DAILY_INTERACTION_CLEANUP_SAFEPOINT.md`
+
+Next planned source stage: **C11-F7 — Full Responsive & Visual Matrix**.

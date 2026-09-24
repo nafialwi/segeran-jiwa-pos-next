@@ -7,6 +7,7 @@ import {
   type FormEvent,
 } from 'react';
 import { ControlCenterNav } from '../components/ControlCenterNav';
+import { useActionDialog } from '../components/ActionDialogProvider';
 import { useAuth } from '../auth/AuthProvider';
 import type { PermissionCode, ProfileStatus } from '../auth/types';
 import { supabase } from '../lib/supabase';
@@ -215,6 +216,7 @@ async function edgeFunctionErrorMessage(
 
 export function OwnerUsersScreen() {
   const { refreshAuthority } = useAuth();
+  const { confirmAction, promptAction } = useActionDialog();
   const [users, setUsers] = useState<OwnerUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
   const [devicesLoading, setDevicesLoading] = useState(false);
@@ -425,9 +427,19 @@ export function OwnerUsersScreen() {
   }
 
   async function resetPassword(user: OwnerUser) {
-    const password = window.prompt(
-      `Password baru untuk ${user.display_name} (8–72 karakter):`,
-    );
+    const password = await promptAction({
+      title: 'Reset password staf',
+      description:
+        'Password baru akan langsung berlaku untuk ' + user.display_name + '.',
+      fieldLabel: 'Password baru',
+      inputType: 'password',
+      placeholder: '8–72 karakter',
+      required: true,
+      minLength: 8,
+      maxLength: 72,
+      confirmLabel: 'Simpan Password',
+      tone: 'danger',
+    });
     if (!password) return;
 
     await invokeAdmin({
@@ -459,10 +471,16 @@ export function OwnerUsersScreen() {
   }
 
   async function renameDevice(device: OwnerDevice) {
-    const friendlyName = window.prompt(
-      'Nama perangkat baru (1–64 karakter):',
-      device.friendly_name,
-    );
+    const friendlyName = await promptAction({
+      title: 'Ubah nama perangkat',
+      description: 'Gunakan nama yang mudah dikenali saat audit perangkat.',
+      fieldLabel: 'Nama perangkat',
+      initialValue: device.friendly_name,
+      required: true,
+      minLength: 1,
+      maxLength: 64,
+      confirmLabel: 'Simpan Nama',
+    });
     if (friendlyName === null) return;
 
     await invokeDeviceAdmin({
@@ -473,13 +491,17 @@ export function OwnerUsersScreen() {
   }
 
   async function revokeDevice(user: OwnerUser, device: OwnerDevice) {
-    if (
-      !window.confirm(
-        `Cabut akses ${device.friendly_name} untuk ${user.display_name}?`,
-      )
-    ) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: 'Cabut akses perangkat?',
+      description:
+        device.friendly_name +
+        ' tidak lagi dapat dipakai oleh ' +
+        user.display_name +
+        ' setelah akses dicabut.',
+      confirmLabel: 'Cabut Akses',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
 
     await invokeDeviceAdmin({
       action: 'revoke_device',
@@ -494,13 +516,15 @@ export function OwnerUsersScreen() {
       return;
     }
 
-    if (
-      !window.confirm(
-        `Hapus ${device.friendly_name} dari daftar perangkat aktif?`,
-      )
-    ) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: 'Hapus perangkat dari daftar?',
+      description:
+        device.friendly_name +
+        ' sudah dicabut aksesnya dan akan dihapus dari daftar perangkat aktif.',
+      confirmLabel: 'Hapus Perangkat',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
 
     await invokeDeviceAdmin({
       action: 'remove_device',
@@ -510,13 +534,17 @@ export function OwnerUsersScreen() {
   }
 
   async function revokeAndRemoveDevice(user: OwnerUser, device: OwnerDevice) {
-    if (
-      !window.confirm(
-        `Cabut akses dan hapus ${device.friendly_name} dari daftar?`,
-      )
-    ) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: 'Cabut dan hapus perangkat?',
+      description:
+        device.friendly_name +
+        ' akan langsung kehilangan akses dan dihapus dari daftar ' +
+        user.display_name +
+        '.',
+      confirmLabel: 'Cabut & Hapus',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
 
     await invokeDeviceAdmin({
       action: 'revoke_and_remove',

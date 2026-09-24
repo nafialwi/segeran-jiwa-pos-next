@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ControlCenterNav } from '../components/ControlCenterNav';
+import { useActionDialog } from '../components/ActionDialogProvider';
 import { supabase } from '../lib/supabase';
 import { requireOnlineAction } from '../health/online-action';
 import {
@@ -20,6 +21,7 @@ type ExistingImport = {
 };
 
 export function LegacyImportScreen() {
+  const { confirmAction } = useActionDialog();
   const [locations, setLocations] = useState<LocationOption[]>([]);
   const [locationId, setLocationId] = useState('');
   const [payload, setPayload] = useState<LegacyMasterPayload | null>(null);
@@ -83,11 +85,15 @@ export function LegacyImportScreen() {
     requireOnlineAction('Import master Legacy');
 
     const summary = legacyMasterSummary(payload);
-    const ok = window.confirm(
-      'Import satu kali ' +
+    const ok = await confirmAction({
+      title: 'Import Master Legacy?',
+      description:
+        'Import satu kali ' +
         summary.menuCount +
-        ' produk ke Next dan tempatkan saldo stok Legacy pada lokasi yang dipilih?',
-    );
+        ' produk ke Next dan tempatkan saldo stok Legacy pada lokasi yang dipilih. Pastikan file dan lokasi sudah benar.',
+      confirmLabel: 'Import Sekarang',
+      tone: 'danger',
+    });
     if (!ok) return;
 
     setBusy(true);

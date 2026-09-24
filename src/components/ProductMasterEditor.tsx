@@ -580,6 +580,7 @@ export function ProductMasterEditor({
                   Harga jual (Rp)
                   <input
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     step="1"
                     value={variantDraft.salePrice}
@@ -744,6 +745,7 @@ export function ProductMasterEditor({
                     Jumlah / produk
                     <input
                       type="number"
+                      inputMode="decimal"
                       min="0.001"
                       step="0.001"
                       value={componentQuantity}

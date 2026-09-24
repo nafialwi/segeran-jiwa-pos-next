@@ -8938,3 +8938,118 @@ p,
     min-width: 0;
   }
 }
+
+/* C11-F6 — daily interaction cleanup */
+.action-dialog-backdrop {
+  position: fixed;
+  z-index: 180;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-top: 48px;
+  background: rgb(17 34 25 / 46%);
+}
+
+.action-dialog-sheet {
+  width: min(100%, 560px);
+  max-height: min(86vh, 720px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--sj-border);
+  border-radius: var(--sj-radius-sheet) var(--sj-radius-sheet) 0 0;
+  background: var(--sj-surface);
+  box-shadow: 0 -16px 44px rgb(15 81 50 / 18%);
+}
+
+.action-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.action-dialog-header h2,
+.action-dialog-header p,
+.action-dialog-description {
+  margin-top: 0;
+}
+
+.action-dialog-header h2 {
+  margin-bottom: 0;
+  font-size: 1.04rem;
+  line-height: 1.25;
+}
+
+.action-dialog-description {
+  margin-bottom: 14px;
+  color: var(--sj-text-muted);
+  font-size: var(--sj-font-body);
+  line-height: 1.45;
+}
+
+.action-dialog-form,
+.action-dialog-field {
+  display: grid;
+  gap: 8px;
+}
+
+.action-dialog-field > span {
+  font-size: var(--sj-font-small);
+  font-weight: 800;
+}
+
+.action-dialog-field input,
+.action-dialog-field textarea {
+  width: 100%;
+  min-height: var(--sj-touch-min);
+}
+
+.action-dialog-field textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+.action-dialog-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.action-dialog-actions > button {
+  min-width: 0;
+}
+
+.action-dialog-danger {
+  border-color: #9d3c2d;
+  background: #9d3c2d;
+}
+
+.action-dialog-danger:hover:not(:disabled) {
+  background: #843124;
+}
+
+@media (min-width: 760px) {
+  .action-dialog-backdrop {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .action-dialog-sheet {
+    border-radius: var(--sj-radius-sheet);
+    box-shadow: 0 20px 64px rgb(15 81 50 / 20%);
+  }
+}
+
+@media (hover: none), (pointer: coarse) {
+  .action-dialog-danger:hover:not(:disabled) {
+    background: #9d3c2d;
+  }
+
+  button:focus:not(:focus-visible),
+  a[href]:focus:not(:focus-visible),
+  [role='button']:focus:not(:focus-visible) {
+    outline: none;
+  }
+}

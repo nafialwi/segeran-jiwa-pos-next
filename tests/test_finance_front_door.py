@@ -39,7 +39,7 @@ class FinanceFrontDoorTests(unittest.TestCase):
         s=SCREEN.read_text()
         self.assertIn("tidak diperlakukan sebagai biaya usaha",s)
         self.assertIn("tidak mengurangi laba usaha",s)
-        self.assertIn("window.confirm",s)
+        self.assertIn("confirmAction",s)
 
     def test_api_uses_canonical_finance_authority(self):
         s=API.read_text()

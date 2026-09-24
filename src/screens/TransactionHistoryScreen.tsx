@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { hasPermission } from '../auth/permission';
 import { useAuth } from '../auth/AuthProvider';
+import { useActionDialog } from '../components/ActionDialogProvider';
 import { Icon } from '../ui/Icon';
 import {
   correctSale,
@@ -43,6 +44,7 @@ const EMPTY = {
 };
 
 export function TransactionHistoryScreen() {
+  const { confirmAction } = useActionDialog();
   const { authority } = useAuth();
   const canRefund =
     Boolean(authority?.owner) ||
@@ -159,11 +161,15 @@ export function TransactionHistoryScreen() {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Refund ' +
+    const confirmed = await confirmAction({
+      title: 'Konfirmasi refund transaksi?',
+      description:
+        'Refund ' +
         refundTarget.invoice_number +
-        ' akan membuat fakta reversal baru. Transaksi asli tidak diubah. Lanjutkan?',
-    );
+        ' akan membuat fakta reversal baru. Transaksi asli tetap utuh.',
+      confirmLabel: 'Catat Refund',
+      tone: 'danger',
+    });
     if (!confirmed) return;
 
     setRefundBusy(true);
@@ -234,11 +240,15 @@ export function TransactionHistoryScreen() {
       return;
     }
 
-    const confirmed = window.confirm(
-      'Koreksi ' +
+    const confirmed = await confirmAction({
+      title: 'Konfirmasi koreksi transaksi?',
+      description:
+        'Koreksi ' +
         correctionTarget.invoice_number +
-        ' akan membuat pembalikan pencatatan. Ini bukan refund pelanggan dan transaksi asli tetap utuh. Lanjutkan?',
-    );
+        ' akan membuat pembalikan pencatatan. Ini bukan refund pelanggan dan transaksi asli tetap utuh.',
+      confirmLabel: 'Catat Koreksi',
+      tone: 'danger',
+    });
     if (!confirmed) return;
 
     setCorrectionBusy(true);
@@ -373,6 +383,7 @@ export function TransactionHistoryScreen() {
             Nominal minimum (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               value={filters.amountMin}
               onChange={(event) =>
@@ -387,6 +398,7 @@ export function TransactionHistoryScreen() {
             Nominal maksimum (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               value={filters.amountMax}
               onChange={(event) =>

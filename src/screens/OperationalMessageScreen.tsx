@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { Link } from 'react-router-dom';
 import { SearchablePicker } from '../components/SearchablePicker';
+import { useActionDialog } from '../components/ActionDialogProvider';
 import {
   cancelOperationalMessage,
   createOperationalMessage,
@@ -48,6 +49,7 @@ function targetLabel(message: OperationalMessageManagedItem): string {
 }
 
 export function OperationalMessageScreen() {
+  const { confirmAction } = useActionDialog();
   const [capability, setCapability] = useState<boolean | null>(null);
   const [profiles, setProfiles] = useState<OperationalMessageProfileOption[]>(
     [],
@@ -149,15 +151,16 @@ export function OperationalMessageScreen() {
   }
 
   async function cancel(message: OperationalMessageManagedItem) {
-    if (
-      !window.confirm(
-        'Batalkan pesan "' +
-          message.title +
-          '"? Pesan tidak akan muncul lagi di dashboard kasir.',
-      )
-    ) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: 'Batalkan pesan operasional?',
+      description:
+        'Pesan "' +
+        message.title +
+        '" tidak akan muncul lagi di dashboard kasir.',
+      confirmLabel: 'Batalkan Pesan',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     setBusy(true);
     setError('');
     setSuccess('');

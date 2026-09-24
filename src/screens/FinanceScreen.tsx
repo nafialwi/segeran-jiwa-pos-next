@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ControlCenterNav } from '../components/ControlCenterNav';
+import { useActionDialog } from '../components/ActionDialogProvider';
 import { Icon } from '../ui/Icon';
 import { SearchablePicker } from '../components/SearchablePicker';
 import {
@@ -39,6 +40,7 @@ function positiveAmount(value: string) {
 }
 
 export function FinanceScreen() {
+  const { confirmAction } = useActionDialog();
   const [overview, setOverview] = useState<FinanceOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -229,15 +231,17 @@ export function FinanceScreen() {
     });
   }
 
-  function submitPersonal(event: FormEvent) {
+  async function submitPersonal(event: FormEvent) {
     event.preventDefault();
-    if (
-      !window.confirm(
-        'Pengeluaran Pribadi Owner tidak diperlakukan sebagai biaya usaha dan tidak mengurangi laba usaha. Lanjutkan?',
-      )
-    ) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: 'Catat pengeluaran pribadi Owner?',
+      description:
+        'Pengeluaran ini bukan biaya usaha dan tidak mengurangi laba usaha. Dana tetap keluar dari akun yang dipilih.',
+      confirmLabel: 'Catat Pengeluaran',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
+
     void run('Pengeluaran Pribadi Owner', async () => {
       if (!personal.from) throw new Error('Pilih sumber dana pribadi.');
       await postOwnerPersonalWithdrawal({
@@ -464,6 +468,7 @@ export function FinanceScreen() {
             Jumlah (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={transfer.amount}
               onChange={(event) =>
@@ -524,6 +529,7 @@ export function FinanceScreen() {
             Jumlah (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={capital.amount}
               onChange={(event) =>
@@ -591,6 +597,7 @@ export function FinanceScreen() {
             Gross (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={qris.gross}
               onChange={(event) =>
@@ -603,6 +610,7 @@ export function FinanceScreen() {
             Biaya provider (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               value={qris.fee}
               onChange={(event) =>
@@ -659,6 +667,7 @@ export function FinanceScreen() {
             Kas dihitung (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               value={recon.countedCash}
               onChange={(event) =>
@@ -674,6 +683,7 @@ export function FinanceScreen() {
             Transfer diterima di Bank (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               value={recon.bankTransferReceived}
               onChange={(event) =>
@@ -780,6 +790,7 @@ export function FinanceScreen() {
             Jumlah (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={debtPayment.amount}
               onChange={(event) =>
@@ -855,6 +866,7 @@ export function FinanceScreen() {
             Jumlah (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={supplierPayment.amount}
               onChange={(event) =>
@@ -925,6 +937,7 @@ export function FinanceScreen() {
             Jumlah (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={kasbon.amount}
               onChange={(event) =>
@@ -1002,6 +1015,7 @@ export function FinanceScreen() {
             Jumlah (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="1"
               value={personal.amount}
               onChange={(event) =>

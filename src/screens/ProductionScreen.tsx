@@ -230,6 +230,7 @@ export function ProductionScreen() {
                 Target output
                 <input
                   type="number"
+                  inputMode="decimal"
                   min="0.001"
                   step="0.001"
                   value={plannedOutput}
@@ -349,6 +350,7 @@ export function ProductionScreen() {
                       Output aktual
                       <input
                         type="number"
+                        inputMode="decimal"
                         min="0.001"
                         step="0.001"
                         value={actualOutputs[batch.id] ?? batch.plannedOutput}

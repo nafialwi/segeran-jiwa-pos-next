@@ -43,7 +43,7 @@ class C11CPosHistoryTests(unittest.TestCase):
             "previewSaleCorrection(row.sale_id)",
             "correctSale({",
             "if (!navigator.onLine)",
-            "window.confirm(",
+            "confirmAction({",
         ]:
             self.assertIn(token, src)
         self.assertIn("history-payment-chip", src)

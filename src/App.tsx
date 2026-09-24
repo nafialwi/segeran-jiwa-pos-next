@@ -3,6 +3,7 @@ import { RequireAccess } from './auth/RequireAccess';
 import { useAuth } from './auth/AuthProvider';
 import { AppShell } from './components/AppShell';
 import { OperationalHealthBanner } from './components/OperationalHealthBanner';
+import { ActionDialogProvider } from './components/ActionDialogProvider';
 import { AccessDeniedScreen } from './screens/AccessDeniedScreen';
 import { AppearanceSettingsScreen } from './screens/AppearanceSettingsScreen';
 import { AttentionScreen } from './screens/AttentionScreen';
@@ -49,7 +50,7 @@ function AuthenticatedLayout() {
 
 export function App() {
   return (
-    <>
+    <ActionDialogProvider>
       <OperationalHealthBanner />
       <Routes>
         <Route path="/login" element={<LoginScreen />} />
@@ -262,6 +263,6 @@ export function App() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </ActionDialogProvider>
   );
 }

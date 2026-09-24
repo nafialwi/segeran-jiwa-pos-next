@@ -757,6 +757,7 @@ export function ProductOperationsScreen() {
                               Versi
                               <input
                                 type="number"
+                                inputMode="numeric"
                                 min="1"
                                 step="1"
                                 value={bomVersion}
@@ -769,6 +770,7 @@ export function ProductOperationsScreen() {
                               Yield
                               <input
                                 type="number"
+                                inputMode="decimal"
                                 min="0.001"
                                 step="0.001"
                                 value={bomYield}
@@ -808,6 +810,7 @@ export function ProductOperationsScreen() {
                               Jumlah dasar
                               <input
                                 type="number"
+                                inputMode="decimal"
                                 min="0.001"
                                 step="0.001"
                                 value={bomComponentQuantity}

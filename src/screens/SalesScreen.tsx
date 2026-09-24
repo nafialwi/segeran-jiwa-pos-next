@@ -847,6 +847,7 @@ export function SalesScreen() {
                           </span>
                           <input
                             type="number"
+                            inputMode="numeric"
                             min="0"
                             max={discountType === 'PERCENT' ? 100 : subtotal}
                             value={discountValue}
@@ -929,6 +930,7 @@ export function SalesScreen() {
                       <span>Uang diterima</span>
                       <input
                         type="number"
+                        inputMode="numeric"
                         min="0"
                         step="1000"
                         value={effectiveCashReceived}

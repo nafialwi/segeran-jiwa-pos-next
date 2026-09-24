@@ -62,7 +62,7 @@ class HrrP2SaleRefundTests(unittest.TestCase):
             "Dampak Hutang",
             "Dampak HPP / Laba",
             "Dampak Keuangan",
-            "window.confirm",
+            "confirmAction",
         ]:
             self.assertIn(token,screen)
 

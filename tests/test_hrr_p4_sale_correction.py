@@ -109,7 +109,7 @@ class HrrP4SaleCorrectionTests(unittest.TestCase):
             "Dampak HPP / Laba",
             "Dampak Keuangan",
             "bukan refund pelanggan",
-            "window.confirm",
+            "confirmAction",
         ]:
             self.assertIn(token, screen)
 

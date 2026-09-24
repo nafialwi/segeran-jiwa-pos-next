@@ -423,6 +423,7 @@ export function PurchaseScreen() {
                 Jumlah ({selectedItem?.base_unit ?? 'satuan'})
                 <input
                   type="number"
+                  inputMode="decimal"
                   min="0.001"
                   step="0.001"
                   value={quantity}
@@ -433,6 +434,7 @@ export function PurchaseScreen() {
                 Harga per Satuan
                 <input
                   type="number"
+                  inputMode="numeric"
                   min="0"
                   step="1"
                   value={unitPrice}
@@ -700,6 +702,7 @@ export function PurchaseScreen() {
                   Jumlah Diterima
                   <input
                     type="number"
+                    inputMode="decimal"
                     min="0.001"
                     step="0.001"
                     value={receiveQuantity}

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ControlCenterNav } from '../components/ControlCenterNav';
+import { useActionDialog } from '../components/ActionDialogProvider';
 import { supabase } from '../lib/supabase';
 import { requireOnlineAction } from '../health/online-action';
 
@@ -31,6 +32,7 @@ function formatIdr(value: number): string {
 }
 
 export function ExpenseApprovalScreen() {
+  const { promptAction } = useActionDialog();
   const [rules, setRules] = useState<ApprovalRule[]>([]);
   const [requests, setRequests] = useState<ApprovalRequest[]>([]);
   const [category, setCategory] = useState('*');
@@ -100,9 +102,18 @@ export function ExpenseApprovalScreen() {
 
   async function decide(requestId: string, approve: boolean) {
     requireOnlineAction('Keputusan approval pengeluaran');
-    const reason = approve
-      ? (window.prompt('Catatan approval (opsional):', '') ?? '')
-      : (window.prompt('Alasan penolakan (opsional):', '') ?? '');
+    const reason = await promptAction({
+      title: approve ? 'Setujui pengeluaran?' : 'Tolak pengeluaran?',
+      description: approve
+        ? 'Catatan bersifat opsional dan akan tersimpan bersama keputusan.'
+        : 'Tambahkan alasan bila diperlukan agar keputusan mudah diaudit.',
+      fieldLabel: approve ? 'Catatan approval' : 'Alasan penolakan',
+      inputType: 'textarea',
+      maxLength: 500,
+      confirmLabel: approve ? 'Setujui' : 'Tolak',
+      tone: approve ? 'default' : 'danger',
+    });
+    if (reason === null) return;
 
     setBusy(true);
     setMessage('');
@@ -161,6 +172,7 @@ export function ExpenseApprovalScreen() {
             Minimal Nominal (Rp)
             <input
               type="number"
+              inputMode="numeric"
               min="0"
               step="1000"
               value={minAmount}

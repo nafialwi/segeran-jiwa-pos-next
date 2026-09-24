@@ -523,6 +523,7 @@ export function InventoryControlScreen() {
                 Jumlah
                 <input
                   type="number"
+                  inputMode="decimal"
                   min="0.001"
                   step="0.001"
                   value={restockQuantity}
@@ -679,6 +680,7 @@ export function InventoryControlScreen() {
                 Jumlah
                 <input
                   type="number"
+                  inputMode="decimal"
                   min="0.001"
                   step="0.001"
                   value={transferQuantity}
@@ -901,6 +903,7 @@ export function InventoryControlScreen() {
                         {selectedCount.status === 'DRAFT' ? (
                           <input
                             type="number"
+                            inputMode="decimal"
                             min="0"
                             step="0.001"
                             value={
@@ -1059,6 +1062,7 @@ export function InventoryControlScreen() {
                 Perubahan jumlah
                 <input
                   type="number"
+                  inputMode="decimal"
                   step="0.001"
                   value={adjustDelta}
                   onChange={(event) =>
