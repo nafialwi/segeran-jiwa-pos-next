@@ -708,14 +708,14 @@ textarea {
 }
 
 .sales-v2-products {
-  padding: 9px 0 16px;
+  padding: 5px 0 16px;
 }
 
 .sales-v2-product-summary {
   display: flex;
   align-items: baseline;
   gap: 5px;
-  padding: 0 2px 8px;
+  padding: 0 2px 5px;
   color: #6b786f;
   font-size: 0.78rem;
 }

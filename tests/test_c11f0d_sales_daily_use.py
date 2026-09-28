@@ -58,6 +58,16 @@ class C11F0DSalesDailyUseTests(unittest.TestCase):
         self.assertIn("top: 5px;", final_rule)
         self.assertIn("right: 5px;", final_rule)
 
+    def test_sales_mobile_default_and_secondary_card_noise_follow_visual_roadmap(self):
+        source = SCREEN.read_text(encoding="utf-8")
+        self.assertIn("if (typeof window === 'undefined') return 2;", source)
+        self.assertIn("if (window.innerWidth < 700) return 2;", source)
+        self.assertIn("if (window.innerWidth < 960) return 3;", source)
+        self.assertNotIn("Pilih produk", source)
+        self.assertIn("const variantSummary =", source)
+        self.assertIn("{variantSummary && (", source)
+        self.assertIn('<span className="sales-v2-stock-badge empty">Habis</span>', source)
+
     def test_loading_is_visual_progress_not_blank_identity_card(self):
         source = SCREEN.read_text(encoding="utf-8")
         css = CSS.read_text(encoding="utf-8")

@@ -58,7 +58,7 @@ type GridDensity = 2 | 3 | 4;
 const GRID_DENSITY_STORAGE_KEY = 'sj.sales.gridDensity';
 
 function initialGridDensity(): GridDensity {
-  if (typeof window === 'undefined') return 3;
+  if (typeof window === 'undefined') return 2;
 
   try {
     const saved = Number(window.localStorage.getItem(GRID_DENSITY_STORAGE_KEY));
@@ -67,8 +67,8 @@ function initialGridDensity(): GridDensity {
     // Storage is only a per-device visual preference.
   }
 
-  if (window.innerWidth <= 360) return 2;
-  if (window.innerWidth < 700) return 3;
+  if (window.innerWidth < 700) return 2;
+  if (window.innerWidth < 960) return 3;
   return 4;
 }
 
@@ -791,6 +791,13 @@ export function SalesScreen() {
                   const minPrice = Math.min(
                     ...group.variants.map((item) => item.unit_price),
                   );
+                  const variantSummary =
+                    group.variants.length > 1
+                      ? group.variants.length + ' varian'
+                      : group.variants[0]?.variant_code !== 'DEFAULT' &&
+                          group.variants[0]?.variant_name !== group.productName
+                        ? group.variants[0]?.variant_name
+                        : '';
 
                   return (
                     <button
@@ -835,28 +842,20 @@ export function SalesScreen() {
                       <span className="sales-v2-product-name">
                         {group.productName}
                       </span>
-                      <span className="sales-v2-variant-name">
-                        {group.variants.length > 1
-                          ? group.variants.length + ' varian'
-                          : group.variants[0]?.variant_code !== 'DEFAULT' &&
-                              group.variants[0]?.variant_name !==
-                                group.productName
-                            ? group.variants[0]?.variant_name
-                            : group.categoryCode}
-                      </span>
+                      {variantSummary && (
+                        <span className="sales-v2-variant-name">
+                          {variantSummary}
+                        </span>
+                      )}
                       <strong>
                         {group.variants.length > 1 ? 'Mulai ' : ''}
                         {formatIdr(minPrice)}
                       </strong>
-                      <span
-                        className={
-                          unavailable
-                            ? 'sales-v2-stock-badge empty'
-                            : 'sales-v2-stock-badge'
-                        }
-                      >
-                        {unavailable ? 'Habis' : 'Pilih produk'}
-                      </span>
+                      {unavailable && (
+                        <span className="sales-v2-stock-badge empty">
+                          Habis
+                        </span>
+                      )}
                     </button>
                   );
                 })}
