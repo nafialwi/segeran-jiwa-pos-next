@@ -74,7 +74,19 @@
 - Weight: 5%
 - Completion: 0%
 - Earned: 0.0%
-- Note: P5A Operational Health, P5B Offline Action Boundaries, P5C real backup/restore evidence, and the P5D security review are closed at safe checkpoints. The final 5% bucket remains unearned until pre-UAT regression, immutable UAT candidate, official UAT, final regression, and cutover acceptance are all clear.
+- Note: P5A Operational Health, P5B Offline Action Boundaries, P5C real backup/restore evidence, and the P5D security review are closed at safe checkpoints. The final 5% bucket remains unearned until pre-UAT regression, visual/interaction acceptance, immutable UAT candidate, official UAT, final regression, and cutover acceptance are all clear.
+
+### C11 Visual Professionalization & Precision Gate
+
+- Weight: included inside the existing final 5% bucket; no additional roadmap weight.
+- Status: REQUIRED / VISUAL-INTERACTION ACCEPTANCE PENDING.
+- Detailed authority: `docs/checkpoints/C11_VISUAL_PROFESSIONALIZATION_ROADMAP_2026-09-28.md`.
+- V-P0: close the Sales quantity-badge positioning regression and verify Sales on real mobile viewports.
+- V-P1: simplify Sales hierarchy/product cards, reduce pre-catalog vertical space, establish safe mobile density, remove redundant visual noise, clean business-language copy, improve Owner/admin action hierarchy, and keep Reports/History compact for long lists.
+- V-P2: converge header/spacing/radius/typography/elevation rules and consolidate high-risk CSS authority without a risky rewrite.
+- Mandatory regression: payment/quantity/shift visual state must not leak into the next transaction or shift; software keyboard, sheets, touch feedback, and 2/3/4-column modes must be verified.
+- Exit rule: `V-PASS` requires V-P0=0, V-P1=0, accepted/documented V-P2 only, no functional/authority regression, and recorded real-device Owner/Kasir acceptance.
+- Rule: a commit, CSS rule, or automated source assertion does not close a visual complaint without intended-viewport verification.
 
 ## Current total
 
@@ -97,3 +109,4 @@
 - 2026-09-20: CS-05 & CS-06 final closure; progress moved from 54.0% to 78.0%.
 - 2026-09-20: FIN-P1 through FIN-P7 plus Finance closure hardening/front door accepted; Finance bucket earned 10.0% and whole-project progress moved from 78.0% to 88.0%.
 - 2026-09-21: HRR-P4 Correction/Reversal locked after pc-main full verify and hosted rollback regressions; the HRR bucket earned 7.0% and whole-project progress moved from 88.0% to 95.0%.
+- 2026-09-28: C11 Visual Professionalization & Precision Gate added inside the existing final 5% bucket. Whole-project earned progress remains 95.0%; visual complaints now require real-device closure and V-PASS before C11 Final Lock.
