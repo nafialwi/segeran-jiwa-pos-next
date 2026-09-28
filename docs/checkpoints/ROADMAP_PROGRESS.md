@@ -81,6 +81,7 @@
 - Weight: included inside the existing final 5% bucket; no additional roadmap weight.
 - Status: REQUIRED / VISUAL-INTERACTION ACCEPTANCE PENDING.
 - Detailed authority: `docs/checkpoints/C11_VISUAL_PROFESSIONALIZATION_ROADMAP_2026-09-28.md`.
+- Latest complete chat-resume handoff: `docs/checkpoints/C11_COMPLETE_CHAT_HANDOFF_2026-09-28.md`.
 - V-P0: close the Sales quantity-badge positioning regression and verify Sales on real mobile viewports.
 - V-P1: simplify Sales hierarchy/product cards, reduce pre-catalog vertical space, establish safe mobile density, remove redundant visual noise, clean business-language copy, improve Owner/admin action hierarchy, and keep Reports/History compact for long lists.
 - V-P2: converge header/spacing/radius/typography/elevation rules and consolidate high-risk CSS authority without a risky rewrite.
