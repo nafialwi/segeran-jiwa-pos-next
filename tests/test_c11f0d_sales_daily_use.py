@@ -36,6 +36,28 @@ class C11F0DSalesDailyUseTests(unittest.TestCase):
         for value in (2, 3, 4):
             self.assertIn(f".sales-v2-product-grid.sales-grid-{value}", css)
 
+    def test_product_quantity_badge_is_anchored_inside_visual_wrapper(self):
+        source = SCREEN.read_text(encoding="utf-8")
+        css = CSS.read_text(encoding="utf-8")
+        visual_start = source.index('className="sales-v2-product-visual"')
+        visual_end = source.index('</span>', visual_start)
+        badge = source.index('className="sales-v2-in-cart"', visual_start)
+        self.assertLess(badge, visual_end)
+        self.assertIn('.sales-v2-product-visual {', css)
+        self.assertRegex(
+            css,
+            r"\.sales-v2-product-visual \{[^}]*position: relative;[^}]*overflow: hidden;",
+        )
+        base_badge = css.index(".sales-v2-in-cart {")
+        base_end = css.index("}", base_badge)
+        self.assertIn("position: absolute;", css[base_badge:base_end])
+        final_badge = css.index(".sales-v2-in-cart {", base_end)
+        final_end = css.index("}", final_badge)
+        final_rule = css[final_badge:final_end]
+        self.assertIn("z-index: 3;", final_rule)
+        self.assertIn("top: 5px;", final_rule)
+        self.assertIn("right: 5px;", final_rule)
+
     def test_loading_is_visual_progress_not_blank_identity_card(self):
         source = SCREEN.read_text(encoding="utf-8")
         css = CSS.read_text(encoding="utf-8")

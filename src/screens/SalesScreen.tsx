@@ -828,6 +828,9 @@ export function SalesScreen() {
                           />
                         )}
                         <small>{group.categoryCode}</small>
+                        {inCart > 0 && (
+                          <span className="sales-v2-in-cart">{inCart}</span>
+                        )}
                       </span>
                       <span className="sales-v2-product-name">
                         {group.productName}
@@ -854,9 +857,6 @@ export function SalesScreen() {
                       >
                         {unavailable ? 'Habis' : 'Pilih produk'}
                       </span>
-                      {inCart > 0 && (
-                        <span className="sales-v2-in-cart">{inCart}</span>
-                      )}
                     </button>
                   );
                 })}
