@@ -9792,3 +9792,105 @@ pre {
     max-width: 100%;
   }
 }
+
+/* C11-F10 — progressive report/history discovery on phones.
+   Presentation only: server filters, report totals, permissions and export stay intact. */
+.report-filter-form .report-custom-date {
+  min-width: 0;
+}
+
+.report-filter-toggle {
+  justify-self: start;
+}
+
+.report-advanced-controls {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 9px;
+}
+
+.report-section-switcher,
+.history-period-presets {
+  display: flex;
+  min-width: 0;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 3px 1px 7px;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: thin;
+}
+
+.report-section-switcher {
+  margin: 0 0 10px;
+}
+
+.report-section-switcher > button {
+  min-height: 40px;
+  flex: 0 0 auto;
+  padding: 0 13px;
+  border: 1px solid var(--sj-border);
+  border-radius: 999px;
+  background: var(--sj-surface);
+  color: var(--sj-text-muted);
+  font: inherit;
+  font-size: var(--sj-font-caption);
+  font-weight: 800;
+}
+
+.report-section-switcher > button.active {
+  border-color: var(--sj-brand-900);
+  background: var(--sj-brand-soft);
+  color: var(--sj-brand-900);
+}
+
+.history-period-presets {
+  grid-column: 1 / -1;
+}
+
+.history-advanced-grid {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.history-advanced-toggle {
+  align-self: end;
+}
+
+@media (max-width: 620px) {
+  .reports-workspace .secondary-hero,
+  .history-workspace .secondary-hero {
+    padding-block: 10px;
+  }
+
+  .reports-workspace .secondary-filter-panel,
+  .history-filter-panel {
+    padding: 11px;
+  }
+
+  .report-filter-form,
+  .history-quick-form {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .report-filter-toggle,
+  .history-advanced-toggle {
+    width: 100%;
+  }
+
+  .report-filter-form > .button-row > button {
+    flex: 1 1 auto;
+  }
+
+  .history-advanced-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .report-section-switcher > button,
+  .history-period-presets > button {
+    min-height: var(--sj-touch-min);
+  }
+}

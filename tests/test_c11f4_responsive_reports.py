@@ -13,7 +13,9 @@ class C11F4ResponsiveReportsTests(unittest.TestCase):
         self.assertIn('className="report-mobile-list"', source)
         self.assertIn("<ReportCompactRow", source)
         self.assertIn('className="data-table report-desktop-table"', source)
-        self.assertIn("displaySections.map((section)", source)
+        self.assertIn("displaySections.map((section, index)", source)
+        self.assertIn("selectedSectionKey === 'ALL'", source)
+        self.assertIn("Semua bagian", source)
 
     def test_display_controls_are_client_side_only(self):
         source = REPORTS.read_text(encoding="utf-8")

@@ -839,6 +839,8 @@ export function ReportsScreen() {
   const [reportQuery, setReportQuery] = useState('');
   const [reportFilter, setReportFilter] = useState('ALL');
   const [reportSort, setReportSort] = useState<ReportSortMode>('DEFAULT');
+  const [showDisplayFilters, setShowDisplayFilters] = useState(false);
+  const [selectedSectionKey, setSelectedSectionKey] = useState('FIRST');
   const resultRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
@@ -896,6 +898,8 @@ export function ReportsScreen() {
     setReportQuery('');
     setReportFilter('ALL');
     setReportSort('DEFAULT');
+    setShowDisplayFilters(false);
+    setSelectedSectionKey('FIRST');
   }
 
   function applyPeriodPreset(preset: ReportPeriodPreset) {
@@ -949,12 +953,8 @@ export function ReportsScreen() {
       <header className="topbar secondary-hero">
         <div>
           <Link to="/">Beranda</Link>
-          <p className="eyebrow">READ MODEL</p>
           <h1>Laporan</h1>
-          <p className="muted">
-            Laporan membaca fakta yang sama dengan operasional. Tidak ada ledger
-            laporan terpisah.
-          </p>
+          <p className="muted">Pilih periode untuk melihat ringkasan bisnis.</p>
         </div>
       </header>
 
@@ -1005,34 +1005,38 @@ export function ReportsScreen() {
               ))}
             </select>
           </label>
-          <label className="field-label">
-            Dari
-            <input
-              type="date"
-              value={dateFrom}
-              onChange={(event) => {
-                setDateFrom(event.target.value);
-                setPeriodPreset('CUSTOM');
-                setReport(null);
-                resetDisplayControls();
-                setError('');
-              }}
-            />
-          </label>
-          <label className="field-label">
-            Sampai
-            <input
-              type="date"
-              value={dateTo}
-              onChange={(event) => {
-                setDateTo(event.target.value);
-                setPeriodPreset('CUSTOM');
-                setReport(null);
-                resetDisplayControls();
-                setError('');
-              }}
-            />
-          </label>
+          {periodPreset === 'CUSTOM' && (
+            <>
+              <label className="field-label report-custom-date">
+                Dari
+                <input
+                  type="date"
+                  value={dateFrom}
+                  onChange={(event) => {
+                    setDateFrom(event.target.value);
+                    setPeriodPreset('CUSTOM');
+                    setReport(null);
+                    resetDisplayControls();
+                    setError('');
+                  }}
+                />
+              </label>
+              <label className="field-label report-custom-date">
+                Sampai
+                <input
+                  type="date"
+                  value={dateTo}
+                  onChange={(event) => {
+                    setDateTo(event.target.value);
+                    setPeriodPreset('CUSTOM');
+                    setReport(null);
+                    resetDisplayControls();
+                    setError('');
+                  }}
+                />
+              </label>
+            </>
+          )}
           <div className="button-row">
             <button className="primary-button" type="submit" disabled={loading}>
               {loading ? 'Memuat...' : 'Tampilkan Laporan'}
@@ -1118,109 +1122,168 @@ export function ReportsScreen() {
                 onChange={(event) => setReportQuery(event.target.value)}
               />
             </label>
-
-            {reportFilterOptions.length > 0 && (
-              <div
-                className="report-display-chips"
-                role="group"
-                aria-label="Filter tampilan"
-              >
-                <button
-                  type="button"
-                  className={
-                    reportFilter === 'ALL'
-                      ? 'report-display-chip active'
-                      : 'report-display-chip'
-                  }
-                  aria-pressed={reportFilter === 'ALL'}
-                  onClick={() => setReportFilter('ALL')}
-                >
-                  Semua
-                </button>
-                {reportFilterOptions.map((option) => (
-                  <button
-                    type="button"
-                    className={
-                      reportFilter === option
-                        ? 'report-display-chip active'
-                        : 'report-display-chip'
-                    }
-                    aria-pressed={reportFilter === option}
-                    onClick={() => setReportFilter(option)}
-                    key={option}
+            <button
+              type="button"
+              className="secondary-button report-filter-toggle"
+              aria-expanded={showDisplayFilters}
+              onClick={() => setShowDisplayFilters((open) => !open)}
+            >
+              {showDisplayFilters
+                ? 'Tutup Filter & Urutan'
+                : reportFilter !== 'ALL' || reportSort !== 'DEFAULT'
+                  ? 'Filter aktif · Ubah'
+                  : 'Filter & Urutkan'}
+            </button>
+            {showDisplayFilters && (
+              <div className="report-advanced-controls">
+                {reportFilterOptions.length > 0 && (
+                  <div
+                    className="report-display-chips"
+                    role="group"
+                    aria-label="Filter tampilan"
                   >
-                    {option}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {(report.report_code === 'PRODUCT' ||
-              report.report_code === 'SALES') && (
-              <div
-                className="report-display-chips"
-                role="group"
-                aria-label="Urutan tampilan"
-              >
-                <button
-                  type="button"
-                  className={
-                    reportSort === 'DEFAULT'
-                      ? 'report-display-chip active'
-                      : 'report-display-chip'
-                  }
-                  aria-pressed={reportSort === 'DEFAULT'}
-                  onClick={() => setReportSort('DEFAULT')}
-                >
-                  Urutan asli
-                </button>
-                {report.report_code === 'PRODUCT' && (
-                  <button
-                    type="button"
-                    className={
-                      reportSort === 'QTY_DESC'
-                        ? 'report-display-chip active'
-                        : 'report-display-chip'
-                    }
-                    aria-pressed={reportSort === 'QTY_DESC'}
-                    onClick={() => setReportSort('QTY_DESC')}
-                  >
-                    Qty terbanyak
-                  </button>
+                    <button
+                      type="button"
+                      className={
+                        reportFilter === 'ALL'
+                          ? 'report-display-chip active'
+                          : 'report-display-chip'
+                      }
+                      aria-pressed={reportFilter === 'ALL'}
+                      onClick={() => setReportFilter('ALL')}
+                    >
+                      Semua
+                    </button>
+                    {reportFilterOptions.map((option) => (
+                      <button
+                        type="button"
+                        className={
+                          reportFilter === option
+                            ? 'report-display-chip active'
+                            : 'report-display-chip'
+                        }
+                        aria-pressed={reportFilter === option}
+                        onClick={() => setReportFilter(option)}
+                        key={option}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
                 )}
-                <button
-                  type="button"
-                  className={
-                    reportSort === 'VALUE_DESC'
-                      ? 'report-display-chip active'
-                      : 'report-display-chip'
-                  }
-                  aria-pressed={reportSort === 'VALUE_DESC'}
-                  onClick={() => setReportSort('VALUE_DESC')}
-                >
-                  Nilai terbesar
-                </button>
-              </div>
-            )}
 
-            {(reportQuery ||
-              reportFilter !== 'ALL' ||
-              reportSort !== 'DEFAULT') && (
-              <p className="muted report-display-note">
-                Filter dan urutan hanya mengubah tampilan. Ringkasan dan ekspor
-                tetap memuat seluruh data laporan.
-              </p>
+                {(report.report_code === 'PRODUCT' ||
+                  report.report_code === 'SALES') && (
+                  <div
+                    className="report-display-chips"
+                    role="group"
+                    aria-label="Urutan tampilan"
+                  >
+                    <button
+                      type="button"
+                      className={
+                        reportSort === 'DEFAULT'
+                          ? 'report-display-chip active'
+                          : 'report-display-chip'
+                      }
+                      aria-pressed={reportSort === 'DEFAULT'}
+                      onClick={() => setReportSort('DEFAULT')}
+                    >
+                      Urutan asli
+                    </button>
+                    {report.report_code === 'PRODUCT' && (
+                      <button
+                        type="button"
+                        className={
+                          reportSort === 'QTY_DESC'
+                            ? 'report-display-chip active'
+                            : 'report-display-chip'
+                        }
+                        aria-pressed={reportSort === 'QTY_DESC'}
+                        onClick={() => setReportSort('QTY_DESC')}
+                      >
+                        Qty terbanyak
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className={
+                        reportSort === 'VALUE_DESC'
+                          ? 'report-display-chip active'
+                          : 'report-display-chip'
+                      }
+                      aria-pressed={reportSort === 'VALUE_DESC'}
+                      onClick={() => setReportSort('VALUE_DESC')}
+                    >
+                      Nilai terbesar
+                    </button>
+                  </div>
+                )}
+
+                {(reportQuery ||
+                  reportFilter !== 'ALL' ||
+                  reportSort !== 'DEFAULT') && (
+                  <p className="muted report-display-note">
+                    Filter dan urutan hanya mengubah tampilan. Ringkasan dan
+                    ekspor tetap memuat seluruh data laporan.
+                  </p>
+                )}
+              </div>
             )}
           </section>
 
-          {displaySections.map((section) => (
-            <ReportSectionView
-              reportCode={report.report_code}
-              section={section}
-              resetKey={`${report.report_code}|${reportQuery}|${reportFilter}|${reportSort}`}
-              key={section.key}
-            />
-          ))}
+          {displaySections.length > 1 && (
+            <nav
+              className="report-section-switcher"
+              aria-label="Pilih bagian laporan"
+            >
+              <button
+                type="button"
+                className={selectedSectionKey === 'ALL' ? 'active' : ''}
+                aria-pressed={selectedSectionKey === 'ALL'}
+                onClick={() => setSelectedSectionKey('ALL')}
+              >
+                Semua bagian
+              </button>
+              {displaySections.map((section, index) => (
+                <button
+                  type="button"
+                  key={section.key}
+                  className={
+                    (
+                      selectedSectionKey === 'FIRST'
+                        ? index === 0
+                        : selectedSectionKey === section.key
+                    )
+                      ? 'active'
+                      : ''
+                  }
+                  aria-pressed={
+                    selectedSectionKey === 'FIRST'
+                      ? index === 0
+                      : selectedSectionKey === section.key
+                  }
+                  onClick={() => setSelectedSectionKey(section.key)}
+                >
+                  {reportSectionTitle(report.report_code, section)}
+                </button>
+              ))}
+            </nav>
+          )}
+
+          {displaySections.map((section, index) =>
+            selectedSectionKey === 'ALL' ||
+            (selectedSectionKey === 'FIRST'
+              ? index === 0
+              : selectedSectionKey === section.key) ? (
+              <ReportSectionView
+                reportCode={report.report_code}
+                section={section}
+                resetKey={`${report.report_code}|${reportQuery}|${reportFilter}|${reportSort}`}
+                key={section.key}
+              />
+            ) : null,
+          )}
         </>
       )}
     </main>

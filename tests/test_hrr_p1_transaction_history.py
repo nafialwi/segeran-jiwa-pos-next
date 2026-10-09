@@ -55,7 +55,8 @@ class HrrP1TransactionHistoryTests(unittest.TestCase):
             "Status",
         ]:
             self.assertIn(label,screen)
-        self.assertIn("Pencarian transaksi individual",screen)
+        self.assertIn("Cari transaksi dan lihat rincian pembayarannya.",screen)
+        self.assertIn("history-advanced-grid",screen)
         self.assertNotIn("Laporan Penjualan",screen)
 
     def test_permission_surface_supports_history_any_of(self):

@@ -32,6 +32,15 @@ function formatTime(value: string) {
   }).format(new Date(value));
 }
 
+function historyLocalDate(date: Date) {
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
+    .toISOString()
+    .slice(0, 10);
+}
+
+type HistoryQuickPeriod = 'ALL' | 'TODAY' | 'LAST_7_DAYS' | 'CUSTOM';
+const HISTORY_PAGE_SIZE = 10;
+
 const EMPTY = {
   dateFrom: '',
   dateTo: '',
@@ -52,7 +61,10 @@ export function TransactionHistoryScreen() {
     Boolean(authority && hasPermission(authority, 'CORRECTION_LIMITED'));
   const canCorrect = canRefund;
   const [filters, setFilters] = useState(EMPTY);
+  const [quickPeriod, setQuickPeriod] = useState<HistoryQuickPeriod>('ALL');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [rows, setRows] = useState<TransactionHistoryRow[]>([]);
+  const [historyPage, setHistoryPage] = useState(0);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [refundTarget, setRefundTarget] =
     useState<TransactionHistoryRow | null>(null);
@@ -70,6 +82,7 @@ export function TransactionHistoryScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const historyResultsRef = useRef<HTMLElement | null>(null);
   const refundPanelRef = useRef<HTMLElement | null>(null);
   const correctionPanelRef = useRef<HTMLElement | null>(null);
 
@@ -108,6 +121,8 @@ export function TransactionHistoryScreen() {
         limit: 100,
       };
       setRows(await searchTransactionHistory(query));
+      setHistoryPage(0);
+      setExpanded(null);
     } catch (cause) {
       setError(
         cause instanceof Error ? cause.message : 'Gagal memuat Riwayat.',
@@ -121,6 +136,13 @@ export function TransactionHistoryScreen() {
     void search(EMPTY);
   }, []);
 
+  const pageCount = Math.max(1, Math.ceil(rows.length / HISTORY_PAGE_SIZE));
+  const visiblePage = Math.min(historyPage, pageCount - 1);
+  const visibleRows = rows.slice(
+    visiblePage * HISTORY_PAGE_SIZE,
+    (visiblePage + 1) * HISTORY_PAGE_SIZE,
+  );
+
   const refundImpact = useMemo(() => {
     if (!refundTarget) return null;
     const debt = refundTarget.customer_debt;
@@ -133,6 +155,16 @@ export function TransactionHistoryScreen() {
     return { payout, debtCancel };
   }, [refundTarget]);
 
+  function goToHistoryPage(next: number) {
+    setHistoryPage(Math.max(0, Math.min(pageCount - 1, next)));
+    window.requestAnimationFrame(() => {
+      historyResultsRef.current?.scrollIntoView({
+        block: 'start',
+        behavior: 'smooth',
+      });
+    });
+  }
+
   function submit(event: FormEvent) {
     event.preventDefault();
     void search();
@@ -140,7 +172,27 @@ export function TransactionHistoryScreen() {
 
   function reset() {
     setFilters(EMPTY);
+    setQuickPeriod('ALL');
+    setShowAdvancedFilters(false);
     void search(EMPTY);
+  }
+
+  function applyQuickPeriod(period: HistoryQuickPeriod) {
+    setQuickPeriod(period);
+    if (period === 'CUSTOM') {
+      setShowAdvancedFilters(true);
+      return;
+    }
+    const today = new Date();
+    const from = new Date(today);
+    if (period === 'LAST_7_DAYS') from.setDate(from.getDate() - 6);
+    const next = {
+      ...filters,
+      dateFrom: period === 'ALL' ? '' : historyLocalDate(from),
+      dateTo: period === 'ALL' ? '' : historyLocalDate(today),
+    };
+    setFilters(next);
+    void search(next);
   }
 
   function openRefund(row: TransactionHistoryRow) {
@@ -279,10 +331,9 @@ export function TransactionHistoryScreen() {
             <Icon name="receipt" size={24} />
           </span>
           <Link to="/">Beranda</Link>
-          <p className="eyebrow">TRANSAKSI</p>
           <h1>Riwayat</h1>
           <p className="muted">
-            Pencarian transaksi individual, refund, dan koreksi terkontrol.
+            Cari transaksi dan lihat rincian pembayarannya.
           </p>
         </div>
       </header>
@@ -299,33 +350,39 @@ export function TransactionHistoryScreen() {
       )}
 
       <section className="identity-card history-filter-panel">
-        <form className="compact-grid-form" onSubmit={submit}>
-          <label className="field-label">
-            Tanggal / Hari Usaha - dari
-            <input
-              type="date"
-              value={filters.dateFrom}
-              onChange={(event) =>
-                setFilters((value) => ({
-                  ...value,
-                  dateFrom: event.target.value,
-                }))
-              }
-            />
-          </label>
-          <label className="field-label">
-            Tanggal / Hari Usaha - sampai
-            <input
-              type="date"
-              value={filters.dateTo}
-              onChange={(event) =>
-                setFilters((value) => ({
-                  ...value,
-                  dateTo: event.target.value,
-                }))
-              }
-            />
-          </label>
+        <form
+          className="compact-grid-form history-quick-form"
+          onSubmit={submit}
+        >
+          <div
+            className="history-period-presets"
+            role="group"
+            aria-label="Periode riwayat"
+          >
+            {(
+              [
+                ['ALL', 'Semua tanggal'],
+                ['TODAY', 'Hari ini'],
+                ['LAST_7_DAYS', '7 hari'],
+                ['CUSTOM', 'Atur tanggal'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={
+                  quickPeriod === value
+                    ? 'report-period-chip active'
+                    : 'report-period-chip'
+                }
+                aria-pressed={quickPeriod === value}
+                disabled={loading}
+                onClick={() => applyQuickPeriod(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <label className="field-label">
             Nomor Transaksi
             <input
@@ -339,95 +396,147 @@ export function TransactionHistoryScreen() {
               }
             />
           </label>
-          <label className="field-label">
-            Produk
-            <input
-              value={filters.product}
-              placeholder="Nama / kode produk"
-              onChange={(event) =>
-                setFilters((value) => ({
-                  ...value,
-                  product: event.target.value,
-                }))
-              }
-            />
-          </label>
-          <label className="field-label">
-            Pengguna
-            <input
-              value={filters.user}
-              placeholder="Nama / username"
-              onChange={(event) =>
-                setFilters((value) => ({ ...value, user: event.target.value }))
-              }
-            />
-          </label>
-          <label className="field-label">
-            Metode Pembayaran
-            <select
-              value={filters.paymentMethod}
-              onChange={(event) =>
-                setFilters((value) => ({
-                  ...value,
-                  paymentMethod: event.target.value,
-                }))
-              }
-            >
-              <option value="">Semua</option>
-              <option value="CASH">Tunai</option>
-              <option value="QRIS">QRIS</option>
-              <option value="TRANSFER">Transfer</option>
-              <option value="CREDIT">Hutang</option>
-            </select>
-          </label>
-          <label className="field-label">
-            Nominal minimum (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="0"
-              value={filters.amountMin}
-              onChange={(event) =>
-                setFilters((value) => ({
-                  ...value,
-                  amountMin: event.target.value,
-                }))
-              }
-            />
-          </label>
-          <label className="field-label">
-            Nominal maksimum (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="0"
-              value={filters.amountMax}
-              onChange={(event) =>
-                setFilters((value) => ({
-                  ...value,
-                  amountMax: event.target.value,
-                }))
-              }
-            />
-          </label>
-          <label className="field-label">
-            Status
-            <select
-              value={filters.status}
-              onChange={(event) =>
-                setFilters((value) => ({
-                  ...value,
-                  status: event.target.value,
-                }))
-              }
-            >
-              <option value="">Semua</option>
-              <option value="COMPLETED">Selesai</option>
-              <option value="VOID">Batal</option>
-              <option value="REFUNDED">Dikembalikan</option>
-              <option value="CORRECTED">Dikoreksi</option>
-            </select>
-          </label>
+          <button
+            type="button"
+            className="secondary-button history-advanced-toggle"
+            aria-expanded={showAdvancedFilters}
+            onClick={() => setShowAdvancedFilters((open) => !open)}
+          >
+            {showAdvancedFilters
+              ? 'Tutup Filter Lanjutan'
+              : filters.product ||
+                  filters.user ||
+                  filters.paymentMethod ||
+                  filters.amountMin ||
+                  filters.amountMax ||
+                  filters.status
+                ? 'Filter tambahan aktif · Ubah'
+                : 'Filter Lanjutan'}
+          </button>
+          {showAdvancedFilters && (
+            <div className="history-advanced-grid">
+              <label className="field-label">
+                Tanggal / Hari Usaha - dari
+                <input
+                  type="date"
+                  value={filters.dateFrom}
+                  onChange={(event) => {
+                    setQuickPeriod('CUSTOM');
+                    setFilters((value) => ({
+                      ...value,
+                      dateFrom: event.target.value,
+                    }));
+                  }}
+                />
+              </label>
+              <label className="field-label">
+                Tanggal / Hari Usaha - sampai
+                <input
+                  type="date"
+                  value={filters.dateTo}
+                  onChange={(event) => {
+                    setQuickPeriod('CUSTOM');
+                    setFilters((value) => ({
+                      ...value,
+                      dateTo: event.target.value,
+                    }));
+                  }}
+                />
+              </label>
+              <label className="field-label">
+                Produk
+                <input
+                  value={filters.product}
+                  placeholder="Nama / kode produk"
+                  onChange={(event) =>
+                    setFilters((value) => ({
+                      ...value,
+                      product: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="field-label">
+                Pengguna
+                <input
+                  value={filters.user}
+                  placeholder="Nama / username"
+                  onChange={(event) =>
+                    setFilters((value) => ({
+                      ...value,
+                      user: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="field-label">
+                Metode Pembayaran
+                <select
+                  value={filters.paymentMethod}
+                  onChange={(event) =>
+                    setFilters((value) => ({
+                      ...value,
+                      paymentMethod: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Semua</option>
+                  <option value="CASH">Tunai</option>
+                  <option value="QRIS">QRIS</option>
+                  <option value="TRANSFER">Transfer</option>
+                  <option value="CREDIT">Hutang</option>
+                </select>
+              </label>
+              <label className="field-label">
+                Nominal minimum (Rp)
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={filters.amountMin}
+                  onChange={(event) =>
+                    setFilters((value) => ({
+                      ...value,
+                      amountMin: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="field-label">
+                Nominal maksimum (Rp)
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  min="0"
+                  value={filters.amountMax}
+                  onChange={(event) =>
+                    setFilters((value) => ({
+                      ...value,
+                      amountMax: event.target.value,
+                    }))
+                  }
+                />
+              </label>
+              <label className="field-label">
+                Status
+                <select
+                  value={filters.status}
+                  onChange={(event) =>
+                    setFilters((value) => ({
+                      ...value,
+                      status: event.target.value,
+                    }))
+                  }
+                >
+                  <option value="">Semua</option>
+                  <option value="COMPLETED">Selesai</option>
+                  <option value="VOID">Batal</option>
+                  <option value="REFUNDED">Dikembalikan</option>
+                  <option value="CORRECTED">Dikoreksi</option>
+                </select>
+              </label>
+            </div>
+          )}
           <div className="button-row">
             <button className="primary-button" type="submit" disabled={loading}>
               <Icon name="search" size={17} />
@@ -446,11 +555,16 @@ export function TransactionHistoryScreen() {
         </form>
       </section>
 
-      <section className="identity-card history-results-panel">
+      <section
+        className="identity-card history-results-panel"
+        ref={historyResultsRef}
+      >
         <div className="section-heading">
           <div>
             <h2>Transaksi</h2>
-            <p className="muted">{rows.length} transaksi ditampilkan.</p>
+            <p className="muted">
+              {rows.length} transaksi ditemukan (maks. 100 hasil).
+            </p>
           </div>
         </div>
 
@@ -468,7 +582,7 @@ export function TransactionHistoryScreen() {
           />
         ) : (
           <div className="stack-list">
-            {rows.map((row) => (
+            {visibleRows.map((row) => (
               <article
                 className="list-card history-transaction-card"
                 key={row.sale_id}
@@ -669,6 +783,36 @@ export function TransactionHistoryScreen() {
                 )}
               </article>
             ))}
+            {rows.length > HISTORY_PAGE_SIZE && (
+              <nav
+                className="report-pagination history-pagination"
+                aria-label="Halaman riwayat transaksi"
+              >
+                <span>
+                  {visiblePage * HISTORY_PAGE_SIZE + 1}–
+                  {Math.min((visiblePage + 1) * HISTORY_PAGE_SIZE, rows.length)}{' '}
+                  dari {rows.length}
+                </span>
+                <div>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    disabled={visiblePage === 0}
+                    onClick={() => goToHistoryPage(visiblePage - 1)}
+                  >
+                    Sebelumnya
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    disabled={visiblePage >= pageCount - 1}
+                    onClick={() => goToHistoryPage(visiblePage + 1)}
+                  >
+                    Berikutnya
+                  </button>
+                </div>
+              </nav>
+            )}
           </div>
         )}
       </section>
