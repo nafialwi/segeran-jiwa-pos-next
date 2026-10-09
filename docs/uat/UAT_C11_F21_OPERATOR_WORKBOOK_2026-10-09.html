@@ -1,0 +1,1041 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="color-scheme" content="light" />
+    <title>Segeran Jiwa POS · UAT F21</title>
+    <style>
+      :root {
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Arial,
+          sans-serif;
+        color: #1e322d;
+        background: #f7f5ef;
+        font-synthesis: none;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        line-height: 1.5;
+      }
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
+      }
+      button {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      textarea:focus-visible {
+        outline: 3px solid #21865b;
+        outline-offset: 2px;
+      }
+      header {
+        background: #11543b;
+        color: #fff;
+        padding: 16px max(16px, calc((100vw - 940px) / 2));
+        border-radius: 0 0 18px 18px;
+      }
+      header small {
+        letter-spacing: 0.11em;
+        font-size: 11px;
+        font-weight: 800;
+        color: #c5efdd;
+      }
+      header h1 {
+        font-size: clamp(20px, 4.6vw, 30px);
+        margin: 5px 0;
+      }
+      header p {
+        margin: 0;
+        color: #deefe6;
+        font-size: 14px;
+        max-width: 670px;
+      }
+      main {
+        max-width: 960px;
+        margin: auto;
+        padding: 10px 14px 80px;
+      }
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 8px 0;
+      }
+      .chip {
+        padding: 4px 9px;
+        border: 1px solid #b6c7bd;
+        border-radius: 99px;
+        font-size: 12px;
+        background: #fff;
+      }
+      .warning {
+        border-left: 4px solid #a75b1f;
+        background: #fff8e8;
+        border-radius: 12px;
+        padding: 9px 11px;
+        margin: 10px 0;
+        font-size: 12px;
+      }
+      .card {
+        background: white;
+        border: 1px solid #dde5dd;
+        border-radius: 16px;
+        padding: 11px;
+        margin: 9px 0;
+        box-shadow: 0 5px 15px #1b39240a;
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+      .metric {
+        padding: 8px;
+        background: #eef3ed;
+        border-radius: 12px;
+      }
+      .metric b {
+        display: block;
+        font-size: 19px;
+        font-variant-numeric: tabular-nums;
+      }
+      .metric span {
+        font-size: 11px;
+        color: #52665a;
+      }
+      .progress {
+        background: #dce7df;
+        border-radius: 99px;
+        height: 7px;
+        overflow: hidden;
+        margin: 8px 0;
+      }
+      .progress > div {
+        height: 100%;
+        width: 0;
+        background: #227450;
+        transition: width 0.2s;
+      }
+      .toolbar {
+        display: grid;
+        gap: 9px;
+        grid-template-columns: minmax(0, 1fr);
+      }
+      input[type='search'],
+      input[type='text'],
+      select,
+      textarea {
+        width: 100%;
+        min-width: 0;
+        border: 1px solid #b9cbc0;
+        background: #fff;
+        border-radius: 10px;
+        padding: 10px 11px;
+        min-height: 44px;
+        color: #1c322a;
+      }
+      .filters {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9px;
+      }
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .btn {
+        min-height: 42px;
+        border: 1px solid #b9cbc0;
+        border-radius: 10px;
+        background: white;
+        padding: 9px 12px;
+        color: #1b4a35;
+        font-weight: 750;
+        font-size: 13px;
+      }
+      .btn.main {
+        background: #145941;
+        color: white;
+        border-color: #145941;
+      }
+      .btn:disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+      }
+      .section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 0 2px;
+      }
+      .section h2 {
+        font-size: 17px;
+        margin: 0;
+      }
+      .section span {
+        font-size: 12px;
+        color: #6b7b73;
+      }
+      .item {
+        border: 1px solid #dbe5dc;
+        background: white;
+        border-radius: 15px;
+        margin: 9px 0;
+        overflow: hidden;
+      }
+      .item[hidden] {
+        display: none;
+      }
+      .item-head {
+        padding: 13px 14px;
+      }
+      .item-head b {
+        display: block;
+        font-size: 14px;
+      }
+      .item-head p {
+        font-size: 13px;
+        color: #54665a;
+        margin: 8px 0;
+      }
+      .item-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        font-size: 11px;
+        color: #5c6d61;
+        font-weight: 800;
+      }
+      .item-select {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 9px;
+      }
+      .item-select select {
+        flex: 1;
+      }
+      .item-note {
+        margin-top: 8px;
+        resize: vertical;
+        min-height: 66px;
+      }
+      .pill {
+        padding: 2px 7px;
+        border-radius: 99px;
+        background: #e9efea;
+        border: 1px solid #dae4dc;
+      }
+      .pill.p0 {
+        color: #8b301f;
+        background: #fff0e8;
+      }
+      .pill.p1 {
+        color: #83601b;
+        background: #fff6dc;
+      }
+      .flag {
+        font-size: 12px;
+        color: #7c3424;
+        font-weight: 700;
+      }
+      footer {
+        padding: 20px;
+        text-align: center;
+        color: #54685a;
+        font-size: 12px;
+      }
+      .empty {
+        padding: 20px;
+        text-align: center;
+        color: #7a7769;
+      }
+      [aria-live] {
+        min-height: 18px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      @media (min-width: 680px) {
+        .toolbar {
+          grid-template-columns: 1.4fr 1fr;
+        }
+        .metrics {
+          grid-template-columns: repeat(4, 1fr);
+        }
+        main {
+          padding: 22px 20px 80px;
+        }
+        .item-head {
+          padding: 18px;
+        }
+        .item-controls {
+          display: grid;
+          grid-template-columns: 1fr 1.8fr;
+          gap: 12px;
+        }
+        .item-select {
+          align-self: start;
+        }
+        .item-note {
+          margin-top: 9px;
+        }
+      }
+      .warning summary {
+        cursor: pointer;
+        font-weight: 700;
+      }
+      .warning p {
+        margin: 9px 0 0;
+      }
+      header p {
+        font-size: 12px;
+      }
+      header small {
+        font-size: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <small>SEGERAN JIWA · POS NEXT</small>
+      <h1>UAT F21 · Checklist</h1>
+      <p>
+        44 skenario Owner, Kasir, keamanan &amp; perangkat. Semua mulai
+        <b>Belum diuji</b>.
+      </p>
+    </header>
+    <main>
+      <div class="meta">
+        <span class="chip">Baseline: <code>0fafee4</code></span
+        ><span class="chip">Offline · tanpa server</span>
+      </div>
+      <details class="warning">
+        <summary>
+          <strong>Wajib: transaksi hanya di staging. Lihat aturan aman.</strong>
+        </summary>
+        <p>
+          Branch: <code>work/c11e-preuat-readiness-termux</code>. Pengujian yang
+          menulis transaksi, uang atau stok wajib di staging / lingkungan uji
+          yang diizinkan. Jangan memasukkan password, token, data pelanggan asli
+          atau bukti rahasia dalam catatan. Workbook menyimpan progres hanya di
+          browser perangkat ini bila penyimpanan diizinkan; ekspor JSON
+          dilakukan manual.
+        </p>
+      </details>
+      <section class="card">
+        <h2 style="margin: 0 0 8px; font-size: 16px">
+          Progres UAT · belum disetujui
+        </h2>
+        <div class="metrics">
+          <div class="metric"><b id="total">0</b><span>Skenario</span></div>
+          <div class="metric"><b id="passed">0</b><span>Lulus</span></div>
+          <div class="metric"><b id="failed">0</b><span>Gagal</span></div>
+          <div class="metric">
+            <b id="remaining">0</b><span>Belum selesai / terblokir</span>
+          </div>
+        </div>
+        <div
+          class="progress"
+          role="progressbar"
+          aria-label="Kemajuan pengujian"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+          id="bar"
+        >
+          <div id="progress-fill"></div>
+        </div>
+        <p id="gate-text" class="flag" role="status" aria-live="polite"></p>
+      </section>
+      <section class="card">
+        <div class="toolbar">
+          <input
+            type="search"
+            id="search"
+            placeholder="Cari skenario, langkah, kode…"
+            aria-label="Cari skenario"
+          />
+          <div class="filters">
+            <select id="group" aria-label="Kelompok">
+              <option value="">Semua kelompok</option></select
+            ><select id="statusFilter" aria-label="Status">
+              <option value="">Semua status</option>
+              <option value="PENDING">Belum diuji</option>
+              <option value="PASS">Lulus</option>
+              <option value="FAIL">Gagal</option>
+              <option value="BLOCKED">Terblokir</option>
+            </select>
+          </div>
+        </div>
+        <div class="actions" style="margin-top: 12px">
+          <button type="button" class="btn main" id="export">
+            Ekspor hasil JSON</button
+          ><button type="button" class="btn" id="importBtn">
+            Impor hasil JSON</button
+          ><button type="button" class="btn" id="reset">
+            Kosongkan progres</button
+          ><input
+            id="importFile"
+            type="file"
+            accept="application/json,.json"
+            class="hidden"
+            aria-label="Impor hasil"
+          />
+        </div>
+        <p
+          id="storage-status"
+          style="font-size: 12px; color: #64796b; margin: 8px 0 0"
+          aria-live="polite"
+        ></p>
+      </section>
+      <div id="groups"></div>
+      <p id="none" class="empty hidden">Tidak ada skenario sesuai filter.</p>
+    </main>
+    <footer>
+      UAT F21 — dokumen operasional lokal · bukan tanda persetujuan cutover
+    </footer>
+    <script id="uat-cases" type="application/json">
+      [
+        {
+          "id": "A01",
+          "group": "Akun",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Login dan logout normal",
+          "steps": "Gunakan akun Kasir uji yang sah; masuk, periksa peran, keluar, lalu pastikan rute terbatas kembali ke Login."
+        },
+        {
+          "id": "A02",
+          "group": "Akun",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Login Owner dan halaman terbatas",
+          "steps": "Gunakan akun Owner uji; buka Menu, Pengguna, Pengaturan; periksa informasi peran dan otorisasi rute."
+        },
+        {
+          "id": "A03",
+          "group": "Akun",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Pemulihan sesi saat refresh",
+          "steps": "Masuk Kasir; refresh, tutup dan buka kembali browser/PWA; tidak boleh tampil logout palsu."
+        },
+        {
+          "id": "A04",
+          "group": "Akun",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Gangguan koneksi dan pemulihan sesi",
+          "steps": "Pada lingkungan uji, putus sambungan saat verifikasi otoritas; pastikan sesi tetap tersimpan dan dapat diverifikasi ulang."
+        },
+        {
+          "id": "A05",
+          "group": "Akun",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Pencabutan sesi/perangkat",
+          "steps": "Cabut sesi pada akun uji lain; sesi lama harus tertolak meskipun sebelumnya tersimpan."
+        },
+        {
+          "id": "K01",
+          "group": "Kasir",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Beranda, notifikasi, dan pesan",
+          "steps": "Buka Beranda, Perhatian dan Pesan yang dapat diakses; periksa unread dan tidak ada rute Owner yang bocor."
+        },
+        {
+          "id": "K02",
+          "group": "Kasir",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Shift buka dan saldo awal",
+          "steps": "Buka shift uji, pastikan status, saldo awal, dan gerai terkait benar; jangan gunakan gerai produksi."
+        },
+        {
+          "id": "K03",
+          "group": "Kasir",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Cari, filter, densitas katalog",
+          "steps": "Cari nama produk, pilih kategori, ubah 2/3/4 kolom; periksa hasil dan status stok habis."
+        },
+        {
+          "id": "K04",
+          "group": "Kasir",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Keranjang dan varian",
+          "steps": "Tambahkan dua produk/varian, ubah jumlah, hapus baris, isi catatan; hitung totalnya."
+        },
+        {
+          "id": "K05",
+          "group": "Kasir",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Keranjang setelah reload",
+          "steps": "Simpan keranjang tanpa bayar, refresh/tutup PWA; draft hanya pulih untuk akun dan shift yang sama."
+        },
+        {
+          "id": "K06",
+          "group": "Kasir",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Isolasi draft lintas akun dan shift",
+          "steps": "Ganti ke Kasir uji lain atau shift berbeda; keranjang dan konfirmasi tidak boleh terbawa."
+        },
+        {
+          "id": "K07",
+          "group": "Kasir",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Checkout tunai dan stok",
+          "steps": "Transaksi uji tunai; validasi kembalian, satu invoice, satu pengurangan stok, riwayat, bukti transaksi."
+        },
+        {
+          "id": "K08",
+          "group": "Kasir",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "QRIS dengan konfirmasi ulang",
+          "steps": "Di staging, pilih QRIS, periksa status verifikasi manual; reload tidak boleh menyimpan centang verifikasi lama."
+        },
+        {
+          "id": "K09",
+          "group": "Kasir",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Transfer dengan konfirmasi ulang",
+          "steps": "Di staging, transfer harus mengharuskan verifikasi penerimaan; refresh tidak mempertahankan centang."
+        },
+        {
+          "id": "K10",
+          "group": "Kasir",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Kasbon pelanggan dan izin",
+          "steps": "Uji Kasbon dengan pelanggan yang sesuai izin; akun tanpa izin tidak boleh membuka maupun memprosesnya."
+        },
+        {
+          "id": "K11",
+          "group": "Kasir",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Diskon dan batas otorisasi",
+          "steps": "Uji nilai/alasan diskon dan kasus tanpa izin; backend harus menolak tindakan terlarang."
+        },
+        {
+          "id": "K12",
+          "group": "Kasir",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Respons checkout ambigu dan idempotensi",
+          "steps": "Di staging, simulasikan hilangnya respons setelah commit; ulangi memakai operation ID sama; harus tepat 1 invoice dan 1 efek stok."
+        },
+        {
+          "id": "K13",
+          "group": "Kasir",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Riwayat dan struk",
+          "steps": "Temukan invoice uji; periksa filter, detail, catatan, metode, dan cetak/bagikan struk bila didukung."
+        },
+        {
+          "id": "K14",
+          "group": "Kasir",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Ganti akun dengan draft/shift aktif",
+          "steps": "Coba ganti akun saat ada draft/shift uji; guard harus jelas dan tidak kehilangan transaksi."
+        },
+        {
+          "id": "K15",
+          "group": "Kasir",
+          "priority": "P0",
+          "role": "Kasir",
+          "title": "Tutup shift dan rekonsiliasi kas",
+          "steps": "Tutup shift staging setelah transaksi; kas diharapkan, pengeluaran, selisih dan bukti harus konsisten."
+        },
+        {
+          "id": "O01",
+          "group": "Owner",
+          "priority": "P1",
+          "role": "Owner",
+          "title": "Pusat Kontrol dan kategori Menu",
+          "steps": "Uji pencarian Menu, kategori, tautan Izin/Perangkat; pastikan konteks tab tepat dan tidak ada daftar panjang tak perlu."
+        },
+        {
+          "id": "O02",
+          "group": "Owner",
+          "priority": "P1",
+          "role": "Owner",
+          "title": "Produk, varian, dan resep",
+          "steps": "Edit produk dan varian contoh, cek validasi, media produk, BOM dan data yang tampil."
+        },
+        {
+          "id": "O03",
+          "group": "Owner",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Hak akses, pengguna dan perangkat",
+          "steps": "Atur izin akun uji; uji penolakan untuk Kasir dan rute langsung; cabut perangkat uji, bukan perangkat aktif kerja nyata."
+        },
+        {
+          "id": "O04",
+          "group": "Owner",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Persediaan dan penyesuaian stok",
+          "steps": "Uji hitung stok, approval, penyesuaian, dan audit log; pastikan saldo konsisten."
+        },
+        {
+          "id": "O05",
+          "group": "Owner",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Pembelian dan penerimaan",
+          "steps": "Buat PO contoh dan penerimaan di staging; stok naik tepat sesuai kuantitas sah."
+        },
+        {
+          "id": "O06",
+          "group": "Owner",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Produksi rencana sampai posting",
+          "steps": "Buat batch contoh dari BOM yang sah; bahan berkurang dan barang jadi bertambah sekali."
+        },
+        {
+          "id": "O07",
+          "group": "Owner",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Keuangan dan perpindahan uang",
+          "steps": "Di staging, periksa saldo, piutang, pemasok, pindah uang, QRIS dan saldo setelah pencatatan."
+        },
+        {
+          "id": "O08",
+          "group": "Owner",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Retur dan koreksi transaksi",
+          "steps": "Pada invoice staging, uji retur/koreksi, idempotensi, perubahan kas/stok, serta fakta asli tidak berubah."
+        },
+        {
+          "id": "O09",
+          "group": "Owner",
+          "priority": "P1",
+          "role": "Owner",
+          "title": "Laporan dan ekspor",
+          "steps": "Verifikasi angka dari transaksi staging di 6+ laporan, periode, filter, export Excel, warning HPP."
+        },
+        {
+          "id": "O10",
+          "group": "Owner",
+          "priority": "P1",
+          "role": "Owner",
+          "title": "Approval dan serah terima",
+          "steps": "Uji approval pengeluaran, Serah Terima, Rekonsiliasi, pesan operasional, dan status Perhatian."
+        },
+        {
+          "id": "O11",
+          "group": "Owner",
+          "priority": "P1",
+          "role": "Owner",
+          "title": "Backup, restore dan kesehatan",
+          "steps": "Tinjau status backup/restore, Health, Offline/Sync dan Diagnostik; jangan restore di database produksi."
+        },
+        {
+          "id": "S01",
+          "group": "Keamanan",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Kasir tidak mengakses halaman Owner",
+          "steps": "Coba rute langsung /pengguna, /keuangan dan /pengaturan/backup dari sesi Kasir; tidak boleh ada akses data."
+        },
+        {
+          "id": "S02",
+          "group": "Keamanan",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Hak akses diverifikasi server",
+          "steps": "Dengan kredensial uji yang kurang izin, jalankan panggilan yang ditolak; tidak cukup hanya sembunyikan tombol."
+        },
+        {
+          "id": "S03",
+          "group": "Keamanan",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Checkout tanpa koneksi gagal tertutup",
+          "steps": "Pada staging, putus koneksi sebelum aksi bisnis; tidak boleh antre otomatis, mengulang tanpa izin, atau menyimpan efek ganda."
+        },
+        {
+          "id": "S04",
+          "group": "Keamanan",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Audit log dan integritas fakta",
+          "steps": "Kaji jejak pengguna/waktu/aksi untuk checkout, stok, refund, dan perubahan izin dengan bukti staging."
+        },
+        {
+          "id": "S05",
+          "group": "Keamanan",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Backup/restore terkini dan akses credential",
+          "steps": "Pastikan cadangan terbaru, verifikasi restore terisolasi dan peninjauan permission/RLS terbaru."
+        },
+        {
+          "id": "D01",
+          "group": "Perangkat",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Android 320px dan 360–412px",
+          "steps": "Uji layar nyata, keyboard, klik tombol bawah, dialog, nama panjang, scroll, dan inset sistem."
+        },
+        {
+          "id": "D02",
+          "group": "Perangkat",
+          "priority": "P1",
+          "role": "Owner",
+          "title": "Tablet dan desktop Owner",
+          "steps": "Uji navigasi sidebar, tabel, modal, filter, field, dan pengaturan pada tablet/desktop."
+        },
+        {
+          "id": "D03",
+          "group": "Perangkat",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Sinyal lemah saat memuat halaman",
+          "steps": "Batasi jaringan, buka modul yang belum dipakai; pesan pemulihan harus muncul tanpa transaksi ganda."
+        },
+        {
+          "id": "D04",
+          "group": "Perangkat",
+          "priority": "P1",
+          "role": "Kasir",
+          "title": "Offline/online dan status layanan",
+          "steps": "Periksa indikator offline, pemulihan status, tidak ada klaim transaksi sukses sebelum konfirmasi server."
+        },
+        {
+          "id": "G01",
+          "group": "Rilis",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Verifikasi commit kandidat terkunci",
+          "steps": "Cocokkan branch, commit SHA, environment, dan preview yang benar saat UAT."
+        },
+        {
+          "id": "G02",
+          "group": "Rilis",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Regresi lengkap pasca UAT",
+          "steps": "Setelah temuan diperbaiki: Prettier, lint, tsc, seluruh tes JS/Python, production build dan CI harus hijau."
+        },
+        {
+          "id": "G03",
+          "group": "Rilis",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Revalidasi keamanan dan backup",
+          "steps": "Perbarui bukti security, RLS, SQL migrations, data staging, backup dan restore untuk kandidat final."
+        },
+        {
+          "id": "G04",
+          "group": "Rilis",
+          "priority": "P0",
+          "role": "Owner",
+          "title": "Manifest dan persetujuan produksi",
+          "steps": "Setelah UAT lulus dan commit final immutable, sinkronkan manifest; butuh persetujuan eksplisit sebelum deploy."
+        }
+      ]
+    </script>
+    <script>
+      (() => {
+        'use strict';
+        const cases = JSON.parse(
+          document.getElementById('uat-cases').textContent,
+        );
+        const key = 'SJPOSNEXT_F21_UAT_0fafee4';
+        const allowed = ['PENDING', 'PASS', 'FAIL', 'BLOCKED'];
+        const state = {};
+        let storageOK = false;
+        try {
+          const old = JSON.parse(localStorage.getItem(key) || '{}');
+          for (const test of cases) {
+            const r = old[test.id];
+            if (r && allowed.includes(r.status))
+              state[test.id] = {
+                status: r.status,
+                note: String(r.note || '').slice(0, 1500),
+              };
+          }
+          storageOK = true;
+        } catch (e) {}
+        const el = (id) => document.getElementById(id);
+        const t = (tag, text = '', cls = '') => {
+          const node = document.createElement(tag);
+          node.textContent = text;
+          if (cls) node.className = cls;
+          return node;
+        };
+        const groups = [...new Set(cases.map((x) => x.group))];
+        for (const group of groups) {
+          const op = t('option', group);
+          op.value = group;
+          el('group').append(op);
+        }
+        const container = el('groups');
+        const root = new Map();
+        for (const group of groups) {
+          const section = t('section');
+          const heading = t('div', '', 'section');
+          heading.append(t('h2', group), t('span', ''));
+          section.append(heading);
+          const body = t('div');
+          section.append(body);
+          container.append(section);
+          root.set(group, { section, heading, body });
+        }
+        function save() {
+          if (!storageOK) return;
+          try {
+            localStorage.setItem(key, JSON.stringify(state));
+          } catch (e) {
+            storageOK = false;
+          }
+          el('storage-status').textContent = storageOK
+            ? 'Progres tersimpan di browser ini. Gunakan Ekspor untuk cadangan.'
+            : 'Penyimpanan browser tidak tersedia. Gunakan Ekspor agar hasil tidak hilang.';
+        }
+        const rows = new Map();
+        for (const x of cases) {
+          const article = t('article', '', 'item');
+          article.dataset.id = x.id;
+          const wrap = t('div', '', 'item-head');
+          const top = t('div', '', 'item-top');
+          top.append(
+            t('span', x.id + ' · ' + x.role),
+            t('span', x.priority, 'pill ' + x.priority.toLowerCase()),
+          );
+          wrap.append(top, t('b', x.title), t('p', x.steps));
+          const ctrl = t('div', '', 'item-controls');
+          const statusBox = t('label', 'Status hasil', '', '');
+          statusBox.className = 'item-select';
+          const select = t('select');
+          select.setAttribute('aria-label', 'Status ' + x.id);
+          for (const [code, label] of [
+            ['PENDING', 'Belum diuji'],
+            ['PASS', 'Lulus'],
+            ['FAIL', 'Gagal'],
+            ['BLOCKED', 'Terblokir'],
+          ]) {
+            const option = t('option', label);
+            option.value = code;
+            select.append(option);
+          }
+          statusBox.append(select);
+          const note = t('textarea');
+          note.className = 'item-note';
+          note.setAttribute('aria-label', 'Catatan ' + x.id);
+          note.placeholder =
+            'Temuan, bukti aman, dan tindakan lanjut (tanpa rahasia)';
+          note.maxLength = 1500;
+          note.rows = 2;
+          ctrl.append(statusBox, note);
+          wrap.append(ctrl);
+          article.append(wrap);
+          root.get(x.group).body.append(article);
+          rows.set(x.id, { article, select, note });
+          const current = state[x.id] || { status: 'PENDING', note: '' };
+          select.value = current.status;
+          note.value = current.note;
+          select.addEventListener('change', () => {
+            state[x.id] = { status: select.value, note: note.value };
+            save();
+            update();
+          });
+          note.addEventListener('change', () => {
+            state[x.id] = { status: select.value, note: note.value };
+            save();
+            update();
+          });
+        }
+        function update() {
+          let pass = 0,
+            fail = 0,
+            blocked = 0,
+            p0fail = 0;
+          for (const x of cases) {
+            const status = state[x.id]?.status || 'PENDING';
+            if (status === 'PASS') pass++;
+            if (status === 'FAIL') {
+              fail++;
+              if (x.priority === 'P0') p0fail++;
+            }
+            if (status === 'BLOCKED') blocked++;
+          }
+          const rem = cases.length - pass - fail;
+          el('total').textContent = cases.length;
+          el('passed').textContent = pass;
+          el('failed').textContent = fail;
+          el('remaining').textContent = rem;
+          const percent = Math.round((pass / cases.length) * 100);
+          el('progress-fill').style.width = percent + '%';
+          el('bar').setAttribute('aria-valuenow', percent);
+          el('gate-text').textContent =
+            cases.length === pass
+              ? 'Semua skenario tercatat lulus. Masih perlu audit bukti, regresi final dan persetujuan manusia — cutover belum otomatis diizinkan.'
+              : (p0fail
+                  ? 'Ada ' +
+                    p0fail +
+                    ' kegagalan P0. STOP: cutover tidak boleh dilakukan. '
+                  : '') +
+                'Pengujian belum lengkap. ' +
+                pass +
+                ' lulus, ' +
+                fail +
+                ' gagal, ' +
+                blocked +
+                ' terblokir. CUTOVER_READY=NO.';
+          filter();
+        }
+        function filter() {
+          const term = el('search').value.trim().toLocaleLowerCase('id-ID'),
+            group = el('group').value,
+            sts = el('statusFilter').value;
+          let visible = 0;
+          for (const x of cases) {
+            const row = rows.get(x.id);
+            const status = state[x.id]?.status || 'PENDING';
+            const match =
+              (!group || group === x.group) &&
+              (!sts || sts === status) &&
+              (!term ||
+                [x.id, x.group, x.priority, x.role, x.title, x.steps]
+                  .join(' ')
+                  .toLocaleLowerCase('id-ID')
+                  .includes(term));
+            row.article.hidden = !match;
+            if (match) visible++;
+          }
+          for (const g of groups) {
+            const o = root.get(g);
+            const count = [...o.body.children].filter((x) => !x.hidden).length;
+            o.section.hidden = !count;
+            o.heading.lastChild.textContent = count + ' skenario';
+          }
+          el('none').classList.toggle('hidden', visible > 0);
+        }
+        el('search').addEventListener('input', filter);
+        el('group').addEventListener('change', filter);
+        el('statusFilter').addEventListener('change', filter);
+        el('export').addEventListener('click', () => {
+          const records = {};
+          for (const x of cases) {
+            const row = rows.get(x.id);
+            records[x.id] = {
+              status: row.select.value,
+              note: row.note.value.slice(0, 1500),
+            };
+          }
+          const payload = {
+            format: 'SJPOSNEXT_F21_UAT_V1',
+            candidate: '0fafee4',
+            createdAt: new Date().toISOString(),
+            releaseApproved: false,
+            records,
+          };
+          const url = URL.createObjectURL(
+            new Blob([JSON.stringify(payload, null, 2)], {
+              type: 'application/json',
+            }),
+          );
+          const a = t('a');
+          a.href = url;
+          a.download =
+            'SJPOSNEXT_UAT_F21_' +
+            new Date().toISOString().slice(0, 10) +
+            '.json';
+          document.body.append(a);
+          a.click();
+          a.remove();
+          setTimeout(() => URL.revokeObjectURL(url), 2000);
+        });
+        el('importBtn').addEventListener('click', () =>
+          el('importFile').click(),
+        );
+        el('importFile').addEventListener('change', async (event) => {
+          const file = event.target.files?.[0];
+          if (!file) return;
+          if (file.size > 2_000_000) {
+            alert('File terlalu besar.');
+            return;
+          }
+          try {
+            const data = JSON.parse(await file.text());
+            if (
+              data.format !== 'SJPOSNEXT_F21_UAT_V1' ||
+              data.candidate !== '0fafee4' ||
+              !data.records ||
+              typeof data.records !== 'object'
+            )
+              throw Error('Format atau kandidat tidak sesuai');
+            for (const x of cases) {
+              const item = data.records[x.id];
+              if (item && allowed.includes(item.status)) {
+                const row = rows.get(x.id);
+                row.select.value = item.status;
+                row.note.value = String(item.note || '').slice(0, 1500);
+                state[x.id] = { status: item.status, note: row.note.value };
+              }
+            }
+            save();
+            update();
+            alert('Hasil UAT berhasil diimpor.');
+          } catch (e) {
+            alert('Impor ditolak: ' + e.message);
+          }
+          event.target.value = '';
+        });
+        el('reset').addEventListener('click', () => {
+          if (
+            !confirm(
+              'Kosongkan seluruh progres lokal F21? Ekspor cadangan terlebih dahulu.',
+            )
+          )
+            return;
+          for (const x of cases) {
+            rows.get(x.id).select.value = 'PENDING';
+            rows.get(x.id).note.value = '';
+            delete state[x.id];
+          }
+          save();
+          update();
+        });
+        save();
+        update();
+      })();
+    </script>
+  </body>
+</html>
