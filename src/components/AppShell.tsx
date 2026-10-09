@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { initializeControlPreferences } from '../control/preferences';
@@ -79,7 +79,15 @@ export function AppShell() {
         </header>
 
         <div className="app-route-content">
-          <Outlet />
+          <Suspense
+            fallback={
+              <main className="center-card" role="status">
+                Memuat halaman…
+              </main>
+            }
+          >
+            <Outlet />
+          </Suspense>
         </div>
       </div>
 
