@@ -10223,3 +10223,23 @@ pre {
   outline: 3px solid var(--sj-brand-900);
   outline-offset: 2px;
 }
+
+/* C11-F18 — horizontal controls stay swipeable without prominent scroll tracks */
+.report-period-presets,
+.history-period-presets,
+.report-section-switcher {
+  scrollbar-width: none;
+}
+
+.report-period-presets::-webkit-scrollbar,
+.history-period-presets::-webkit-scrollbar,
+.report-section-switcher::-webkit-scrollbar {
+  display: none;
+}
+
+.report-period-presets button:focus-visible,
+.history-period-presets button:focus-visible,
+.report-section-switcher button:focus-visible {
+  outline: 3px solid var(--sj-brand-900);
+  outline-offset: 2px;
+}
