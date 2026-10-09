@@ -28,7 +28,7 @@ class FinanceFrontDoorTests(unittest.TestCase):
             "Pengeluaran Pribadi Owner",
             "Settlement QRIS",
             "Rekonsiliasi Harian",
-            "Hutang Pelanggan",
+            "Piutang Pelanggan",
             "Utang Pemasok",
             "Kasbon Karyawan",
             "Approval Pengeluaran",

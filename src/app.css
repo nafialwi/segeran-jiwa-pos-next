@@ -9894,3 +9894,84 @@ pre {
     min-height: var(--sj-touch-min);
   }
 }
+
+/* C11-F11 — single-workflow finance and shift panels, mobile-first */
+.finance-workspace .finance-flow-tabs,
+.shift-operations-screen .shift-flow-tabs {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 7px;
+  margin: 11px 0 12px;
+  border: 1px solid var(--sj-border);
+  border-radius: 14px;
+  background: var(--sj-surface);
+  scrollbar-width: thin;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-inline: contain;
+}
+
+.finance-workspace .finance-flow-tabs {
+  position: relative;
+  top: auto;
+  z-index: 1;
+}
+
+.finance-workspace .finance-flow-tabs > button,
+.shift-operations-screen .shift-flow-tabs > button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--sj-touch-min);
+  padding: 0 13px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--sj-text-muted);
+  font: inherit;
+  font-size: var(--sj-font-caption);
+  font-weight: 800;
+  white-space: nowrap;
+  scroll-snap-align: center;
+  touch-action: manipulation;
+}
+
+.finance-workspace .finance-flow-tabs > button.active,
+.shift-operations-screen .shift-flow-tabs > button.active {
+  border-color: var(--sj-brand-900);
+  background: var(--sj-brand-soft);
+  color: var(--sj-brand-900);
+}
+
+.finance-workspace .finance-flow-tabs > button:focus-visible,
+.shift-operations-screen .shift-flow-tabs > button:focus-visible {
+  outline: 3px solid var(--sj-brand-900);
+  outline-offset: 2px;
+}
+
+.shift-operations-screen .shift-flow-tabs > button:last-child {
+  margin-right: 2px;
+}
+
+.shift-operations-screen .shift-flow-tabs > button:nth-last-child(2) {
+  color: var(--sj-danger, #a1232b);
+}
+
+@media (max-width: 620px) {
+  .finance-workspace .finance-hero,
+  .shift-operations-screen .operations-header {
+    padding-block: 11px;
+  }
+
+  .finance-workspace .finance-summary-grid > article {
+    min-height: 100px;
+  }
+
+  .shift-operations-screen .shift-kpi-grid > article {
+    min-height: 94px;
+  }
+}

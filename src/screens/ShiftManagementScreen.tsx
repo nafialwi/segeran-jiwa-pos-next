@@ -33,6 +33,9 @@ import {
   type ShiftPackagingReconciliation,
 } from '../shift/shift-api';
 
+type ShiftFlow =
+  'overview' | 'cash' | 'expense' | 'packaging' | 'closing' | 'more';
+
 export function ShiftManagementScreen() {
   const { authority } = useAuth();
   const [shift, setShift] = useState<Shift | null>(null);
@@ -45,6 +48,7 @@ export function ShiftManagementScreen() {
   const [locationId, setLocationId] = useState('');
   const [locations, setLocations] = useState<LocationOption[]>([]);
   const [openingBalance, setOpeningBalance] = useState(0);
+  const [shiftFlow, setShiftFlow] = useState<ShiftFlow>('overview');
   const [submitting, setSubmitting] = useState(false);
 
   const [actualCashInput, setActualCashInput] = useState('');
@@ -168,6 +172,7 @@ export function ShiftManagementScreen() {
       setOpeningBalance(0);
       setActualCashInput('');
       setShift(updated);
+      setShiftFlow('overview');
       setShiftMessage('Shift berhasil dibuka. Saldo awal sudah dikunci.');
     } catch (err) {
       setError(toShiftErrorMessage(err));
@@ -198,6 +203,7 @@ export function ShiftManagementScreen() {
       setActualCashInput('');
       setOpeningBalance(0);
       setShift(null);
+      setShiftFlow('overview');
       setShiftMessage(
         'Shift berhasil ditutup. Varians kas: ' + formatVariance(variance),
       );
@@ -408,10 +414,7 @@ export function ShiftManagementScreen() {
         <div>
           <p className="eyebrow">OPERASIONAL · SHIFT</p>
           <h1>Shift Saya</h1>
-          <p className="muted">
-            Opening, kas berjalan, pengeluaran, closing, dan rekonsiliasi dalam
-            satu alur.
-          </p>
+          <p className="muted">Pantau kas dan pilih pekerjaan shift.</p>
         </div>
         {shift && <span className="operations-status">SHIFT AKTIF</span>}
       </header>
@@ -481,79 +484,111 @@ export function ShiftManagementScreen() {
             </article>
           </section>
 
-          <section className="shift-action-grid">
-            <Link to="/rekonsiliasi" className="shift-action-card">
-              <span className="shift-action-icon">
-                <Icon name="cash-payment" size={22} />
-              </span>
-              <strong>Rekonsiliasi</strong>
-              <span>Expected, aktual, dan varians shift</span>
-            </Link>
-            <Link
-              to="/stok/kontrol?tab=COUNT&kind=PACKAGING"
-              className="shift-action-card"
-            >
-              <span className="shift-action-icon">
-                <Icon name="inventory" size={22} />
-              </span>
-              <strong>Kontrol Kemasan</strong>
-              <span>Hitung fisik cup/kemasan melalui inventory Stock Item</span>
-            </Link>
-            <Link to="/handover" className="shift-action-card">
-              <span className="shift-action-icon">
-                <Icon name="share" size={22} />
-              </span>
-              <strong>Handover</strong>
-              <span>Serah terima operasional tanpa mengubah fakta shift</span>
-            </Link>
-          </section>
+          <nav className="shift-flow-tabs" aria-label="Pilih pekerjaan Shift">
+            {(
+              [
+                ['overview', 'Ringkasan'],
+                ['cash', 'Kas Shift'],
+                ...(canCreateShiftExpense ? [['expense', 'Pengeluaran']] : []),
+                ['packaging', 'Kemasan'],
+                ['closing', 'Tutup Shift'],
+                ['more', 'Lainnya'],
+              ] as Array<[ShiftFlow, string]>
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={shiftFlow === value}
+                className={shiftFlow === value ? 'active' : ''}
+                onClick={() => setShiftFlow(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </nav>
 
-          <section className="operations-panel shift-reconciliation-panel">
-            <header className="operations-panel-header">
-              <div>
-                <p className="eyebrow">REKONSILIASI BERJALAN</p>
-                <h2>Kas Shift</h2>
-              </div>
-              <Link className="secondary-button link-button" to="/rekonsiliasi">
-                Rekonsiliasi
+          {shiftFlow === 'more' && (
+            <section className="shift-action-grid">
+              <Link to="/rekonsiliasi" className="shift-action-card">
+                <span className="shift-action-icon">
+                  <Icon name="cash-payment" size={22} />
+                </span>
+                <strong>Rekonsiliasi</strong>
+                <span>Expected, aktual, dan varians shift</span>
               </Link>
-            </header>
-            <p className="muted">
-              Kas Berjalan = saldo awal + transaksi tunai + uang masuk - refund
-              - uang keluar + penyesuaian. QRIS, transfer, dan kasbon tidak
-              menambah kas laci.
-            </p>
-            {runningReconciliation && (
-              <dl className="shift-reconciliation-breakdown">
-                <div>
-                  <dt>Penjualan Tunai</dt>
-                  <dd>{formatIdr(runningReconciliation.sale_total)}</dd>
-                </div>
-                <div>
-                  <dt>Refund</dt>
-                  <dd>-{formatIdr(runningReconciliation.refund_total)}</dd>
-                </div>
-                <div>
-                  <dt>Uang Masuk</dt>
-                  <dd>{formatIdr(runningReconciliation.cash_in_total)}</dd>
-                </div>
-                <div>
-                  <dt>Uang Keluar</dt>
-                  <dd>-{formatIdr(runningReconciliation.cash_out_total)}</dd>
-                </div>
-                <div>
-                  <dt>Penyesuaian</dt>
-                  <dd>{formatIdr(runningReconciliation.adjustment_total)}</dd>
-                </div>
-                <div className="strong">
-                  <dt>Expected Cash</dt>
-                  <dd>{formatIdr(runningReconciliation.expected_cash)}</dd>
-                </div>
-              </dl>
-            )}
-          </section>
+              <Link
+                to="/stok/kontrol?tab=COUNT&kind=PACKAGING"
+                className="shift-action-card"
+              >
+                <span className="shift-action-icon">
+                  <Icon name="inventory" size={22} />
+                </span>
+                <strong>Kontrol Kemasan</strong>
+                <span>
+                  Hitung fisik cup/kemasan melalui inventory Stock Item
+                </span>
+              </Link>
+              <Link to="/handover" className="shift-action-card">
+                <span className="shift-action-icon">
+                  <Icon name="share" size={22} />
+                </span>
+                <strong>Handover</strong>
+                <span>Serah terima operasional tanpa mengubah fakta shift</span>
+              </Link>
+            </section>
+          )}
 
-          {canCreateShiftExpense && (
+          {shiftFlow === 'cash' && (
+            <section className="operations-panel shift-reconciliation-panel">
+              <header className="operations-panel-header">
+                <div>
+                  <p className="eyebrow">REKONSILIASI BERJALAN</p>
+                  <h2>Kas Shift</h2>
+                </div>
+                <Link
+                  className="secondary-button link-button"
+                  to="/rekonsiliasi"
+                >
+                  Rekonsiliasi
+                </Link>
+              </header>
+              <p className="muted">
+                Kas Berjalan = saldo awal + transaksi tunai + uang masuk -
+                refund - uang keluar + penyesuaian. QRIS, transfer, dan kasbon
+                tidak menambah kas laci.
+              </p>
+              {runningReconciliation && (
+                <dl className="shift-reconciliation-breakdown">
+                  <div>
+                    <dt>Penjualan Tunai</dt>
+                    <dd>{formatIdr(runningReconciliation.sale_total)}</dd>
+                  </div>
+                  <div>
+                    <dt>Refund</dt>
+                    <dd>-{formatIdr(runningReconciliation.refund_total)}</dd>
+                  </div>
+                  <div>
+                    <dt>Uang Masuk</dt>
+                    <dd>{formatIdr(runningReconciliation.cash_in_total)}</dd>
+                  </div>
+                  <div>
+                    <dt>Uang Keluar</dt>
+                    <dd>-{formatIdr(runningReconciliation.cash_out_total)}</dd>
+                  </div>
+                  <div>
+                    <dt>Penyesuaian</dt>
+                    <dd>{formatIdr(runningReconciliation.adjustment_total)}</dd>
+                  </div>
+                  <div className="strong">
+                    <dt>Expected Cash</dt>
+                    <dd>{formatIdr(runningReconciliation.expected_cash)}</dd>
+                  </div>
+                </dl>
+              )}
+            </section>
+          )}
+
+          {canCreateShiftExpense && shiftFlow === 'expense' && (
             <section className="operations-panel shift-expense-panel">
               <header className="operations-panel-header">
                 <div>
@@ -668,145 +703,273 @@ export function ShiftManagementScreen() {
             </section>
           )}
 
-          <section className="operations-panel shift-packaging-panel">
-            <header className="operations-panel-header">
-              <div>
-                <p className="eyebrow">KEMASAN SHIFT</p>
-                <h2>Rekonsiliasi Kemasan</h2>
-              </div>
-              <Link
-                className="secondary-button link-button"
-                to="/stok/kontrol?tab=COUNT&kind=PACKAGING"
-              >
-                Kontrol Stok
-              </Link>
-            </header>
+          {shiftFlow === 'packaging' && (
+            <section className="operations-panel shift-packaging-panel">
+              <header className="operations-panel-header">
+                <div>
+                  <p className="eyebrow">KEMASAN SHIFT</p>
+                  <h2>Rekonsiliasi Kemasan</h2>
+                </div>
+                <Link
+                  className="secondary-button link-button"
+                  to="/stok/kontrol?tab=COUNT&kind=PACKAGING"
+                >
+                  Kontrol Stok
+                </Link>
+              </header>
 
-            {packagingMessage && (
-              <p className="success-banner shift-inline-message">
-                {packagingMessage}
-              </p>
-            )}
+              {packagingMessage && (
+                <p className="success-banner shift-inline-message">
+                  {packagingMessage}
+                </p>
+              )}
 
-            {packagingReconciliation === null ? (
-              <div
-                className="operations-card-skeleton shift-packaging-loading"
-                aria-label="Memuat rekonsiliasi kemasan"
-              >
-                <span />
-                <span />
-              </div>
-            ) : !packagingReconciliation.ready ? (
-              <>
+              {packagingReconciliation === null ? (
+                <div
+                  className="operations-card-skeleton shift-packaging-loading"
+                  aria-label="Memuat rekonsiliasi kemasan"
+                >
+                  <span />
+                  <span />
+                </div>
+              ) : !packagingReconciliation.ready ? (
+                <>
+                  <div className="empty-state">
+                    <strong>
+                      Rekonsiliasi fisik per shift belum tersedia pada backend
+                      ini.
+                    </strong>
+                    <p>
+                      Preview lama tetap fail-closed. Pemakaian teoritis di
+                      bawah ini berasal dari authority C10 dan tidak dianggap
+                      sebagai hitungan fisik.
+                    </p>
+                  </div>
+                  {packagingReconciliation.items.length > 0 && (
+                    <div className="shift-packaging-list legacy">
+                      {packagingReconciliation.items.map((item) => (
+                        <article key={item.stockItemId}>
+                          <span
+                            className="shift-packaging-icon"
+                            aria-hidden="true"
+                          >
+                            <Icon name="product" size={18} />
+                          </span>
+                          <span>
+                            <strong>{item.name}</strong>
+                            <small>{item.code}</small>
+                          </span>
+                          <span>
+                            <small>Pemakaian teoritis</small>
+                            <strong>{item.theoreticalUsage}</strong>
+                          </span>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </>
+              ) : packagingReconciliation.items.length === 0 ? (
                 <div className="empty-state">
-                  <strong>
-                    Rekonsiliasi fisik per shift belum tersedia pada backend
-                    ini.
-                  </strong>
+                  <strong>Belum ada Stock Item jenis PACKAGING.</strong>
                   <p>
-                    Preview lama tetap fail-closed. Pemakaian teoritis di bawah
-                    ini berasal dari authority C10 dan tidak dianggap sebagai
-                    hitungan fisik.
+                    Tambahkan cup/kemasan sebagai Stock Item yang dilacak
+                    inventory sebelum menggunakan rekonsiliasi shift.
                   </p>
                 </div>
-                {packagingReconciliation.items.length > 0 && (
-                  <div className="shift-packaging-list legacy">
-                    {packagingReconciliation.items.map((item) => (
-                      <article key={item.stockItemId}>
-                        <span
-                          className="shift-packaging-icon"
-                          aria-hidden="true"
-                        >
-                          <Icon name="product" size={18} />
+              ) : (
+                <>
+                  <div className="shift-packaging-checkpoints">
+                    <article
+                      className={
+                        'shift-packaging-checkpoint' +
+                        (packagingReconciliation.openingCount?.status ===
+                        'POSTED'
+                          ? ' complete'
+                          : '')
+                      }
+                    >
+                      <header>
+                        <span className="shift-packaging-icon">
+                          <Icon name="inventory" size={18} />
                         </span>
                         <span>
-                          <strong>{item.name}</strong>
-                          <small>{item.code}</small>
+                          <strong>Opening Fisik</strong>
+                          <small>
+                            Baseline kemasan sebelum transaksi pertama
+                          </small>
                         </span>
-                        <span>
-                          <small>Pemakaian teoritis</small>
-                          <strong>{item.theoreticalUsage}</strong>
+                        <span className="operations-status">
+                          {packagingReconciliation.openingCount?.status ??
+                            (packagingReconciliation.openingTooLate
+                              ? 'TERLEWAT'
+                              : 'BELUM')}
                         </span>
-                      </article>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : packagingReconciliation.items.length === 0 ? (
-              <div className="empty-state">
-                <strong>Belum ada Stock Item jenis PACKAGING.</strong>
-                <p>
-                  Tambahkan cup/kemasan sebagai Stock Item yang dilacak
-                  inventory sebelum menggunakan rekonsiliasi shift.
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="shift-packaging-checkpoints">
-                  <article
-                    className={
-                      'shift-packaging-checkpoint' +
-                      (packagingReconciliation.openingCount?.status === 'POSTED'
-                        ? ' complete'
-                        : '')
-                    }
-                  >
-                    <header>
-                      <span className="shift-packaging-icon">
-                        <Icon name="inventory" size={18} />
-                      </span>
-                      <span>
-                        <strong>Opening Fisik</strong>
-                        <small>
-                          Baseline kemasan sebelum transaksi pertama
-                        </small>
-                      </span>
-                      <span className="operations-status">
-                        {packagingReconciliation.openingCount?.status ??
-                          (packagingReconciliation.openingTooLate
-                            ? 'TERLEWAT'
-                            : 'BELUM')}
-                      </span>
-                    </header>
+                      </header>
 
-                    {packagingReconciliation.openingTooLate && (
-                      <p className="shift-packaging-warning">
-                        Opening fisik tidak boleh direkonstruksi setelah
-                        transaksi pertama. Lakukan closing fisik pada shift ini,
-                        lalu mulai shift berikutnya dengan checkpoint opening.
-                      </p>
-                    )}
-
-                    {!packagingReconciliation.openingCount &&
-                      !packagingReconciliation.openingTooLate &&
-                      canCountPackaging && (
-                        <button
-                          className="secondary-button"
-                          type="button"
-                          disabled={packagingBusy}
-                          onClick={() =>
-                            void createPackagingCheckpoint('OPENING')
-                          }
-                        >
-                          Mulai Hitung Opening
-                        </button>
+                      {packagingReconciliation.openingTooLate && (
+                        <p className="shift-packaging-warning">
+                          Opening fisik tidak boleh direkonstruksi setelah
+                          transaksi pertama. Lakukan closing fisik pada shift
+                          ini, lalu mulai shift berikutnya dengan checkpoint
+                          opening.
+                        </p>
                       )}
 
-                    {packagingReconciliation.openingCount?.status === 'DRAFT' &&
-                      !packagingReconciliation.openingTooLate && (
+                      {!packagingReconciliation.openingCount &&
+                        !packagingReconciliation.openingTooLate &&
+                        canCountPackaging && (
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            disabled={packagingBusy}
+                            onClick={() =>
+                              void createPackagingCheckpoint('OPENING')
+                            }
+                          >
+                            Mulai Hitung Opening
+                          </button>
+                        )}
+
+                      {packagingReconciliation.openingCount?.status ===
+                        'DRAFT' &&
+                        !packagingReconciliation.openingTooLate && (
+                          <div className="shift-packaging-count-form">
+                            {packagingReconciliation.items
+                              .filter(
+                                (item) => item.openingExpectedQuantity !== null,
+                              )
+                              .map((item) => (
+                                <label key={item.stockItemId}>
+                                  <span>
+                                    <strong>{item.name}</strong>
+                                    <small>
+                                      Sistem{' '}
+                                      {packagingQuantity(
+                                        item.openingExpectedQuantity,
+                                        item.baseUnit,
+                                      )}
+                                    </small>
+                                  </span>
+                                  <input
+                                    type="number"
+                                    min="0"
+                                    step="0.001"
+                                    inputMode="decimal"
+                                    placeholder="Fisik"
+                                    value={
+                                      openingPackagingPhysical[
+                                        item.stockItemId
+                                      ] ?? ''
+                                    }
+                                    onChange={(event) =>
+                                      setOpeningPackagingPhysical(
+                                        (current) => ({
+                                          ...current,
+                                          [item.stockItemId]:
+                                            event.target.value,
+                                        }),
+                                      )
+                                    }
+                                  />
+                                </label>
+                              ))}
+                            <button
+                              className="primary-button"
+                              type="button"
+                              disabled={packagingBusy}
+                              onClick={() =>
+                                void savePackagingPhysical('OPENING')
+                              }
+                            >
+                              Simpan Hitungan Opening
+                            </button>
+                          </div>
+                        )}
+
+                      {packagingReconciliation.openingCount?.status ===
+                        'COUNTED' &&
+                        !packagingReconciliation.openingTooLate && (
+                          <div className="shift-packaging-post-row">
+                            <span>
+                              Fisik sudah dicatat. Posting untuk mengunci
+                              baseline.
+                            </span>
+                            <button
+                              className="primary-button"
+                              type="button"
+                              disabled={packagingBusy}
+                              onClick={() =>
+                                void postPackagingCheckpoint('OPENING')
+                              }
+                            >
+                              Posting Opening
+                            </button>
+                          </div>
+                        )}
+
+                      {packagingReconciliation.openingCount?.status ===
+                        'POSTED' && (
+                        <p className="shift-packaging-complete-note">
+                          Opening terkunci pada inventory authority.
+                        </p>
+                      )}
+                    </article>
+
+                    <article
+                      className={
+                        'shift-packaging-checkpoint' +
+                        (packagingClosingComplete ? ' complete' : '')
+                      }
+                    >
+                      <header>
+                        <span className="shift-packaging-icon">
+                          <Icon name="check" size={18} />
+                        </span>
+                        <span>
+                          <strong>Closing Fisik</strong>
+                          <small>
+                            Hitung setelah transaksi selesai, sebelum tutup
+                            shift
+                          </small>
+                        </span>
+                        <span className="operations-status">
+                          {packagingReconciliation.closingCount?.status ??
+                            'BELUM'}
+                        </span>
+                      </header>
+
+                      {(!packagingReconciliation.closingCount ||
+                        packagingClosingStale) &&
+                        canCountPackaging && (
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            disabled={packagingBusy}
+                            onClick={() =>
+                              void createPackagingCheckpoint('CLOSING')
+                            }
+                          >
+                            {packagingClosingStale
+                              ? 'Hitung Ulang Closing'
+                              : 'Mulai Hitung Closing'}
+                          </button>
+                        )}
+
+                      {packagingReconciliation.closingCount?.status ===
+                        'DRAFT' && (
                         <div className="shift-packaging-count-form">
                           {packagingReconciliation.items
                             .filter(
-                              (item) => item.openingExpectedQuantity !== null,
+                              (item) => item.closingExpectedQuantity !== null,
                             )
                             .map((item) => (
                               <label key={item.stockItemId}>
                                 <span>
                                   <strong>{item.name}</strong>
                                   <small>
-                                    Sistem{' '}
+                                    Expected{' '}
                                     {packagingQuantity(
-                                      item.openingExpectedQuantity,
+                                      item.closingExpectedQuantity,
                                       item.baseUnit,
                                     )}
                                   </small>
@@ -818,12 +981,12 @@ export function ShiftManagementScreen() {
                                   inputMode="decimal"
                                   placeholder="Fisik"
                                   value={
-                                    openingPackagingPhysical[
+                                    closingPackagingPhysical[
                                       item.stockItemId
                                     ] ?? ''
                                   }
                                   onChange={(event) =>
-                                    setOpeningPackagingPhysical((current) => ({
+                                    setClosingPackagingPhysical((current) => ({
                                       ...current,
                                       [item.stockItemId]: event.target.value,
                                     }))
@@ -836,371 +999,260 @@ export function ShiftManagementScreen() {
                             type="button"
                             disabled={packagingBusy}
                             onClick={() =>
-                              void savePackagingPhysical('OPENING')
+                              void savePackagingPhysical('CLOSING')
                             }
                           >
-                            Simpan Hitungan Opening
+                            Simpan Hitungan Closing
                           </button>
                         </div>
                       )}
 
-                    {packagingReconciliation.openingCount?.status ===
-                      'COUNTED' &&
-                      !packagingReconciliation.openingTooLate && (
+                      {packagingReconciliation.closingCount?.status ===
+                        'COUNTED' && (
                         <div className="shift-packaging-post-row">
                           <span>
-                            Fisik sudah dicatat. Posting untuk mengunci
-                            baseline.
+                            Fisik sudah dicatat. Posting untuk menyimpan varians
+                            sebagai fakta inventory.
                           </span>
                           <button
                             className="primary-button"
                             type="button"
                             disabled={packagingBusy}
                             onClick={() =>
-                              void postPackagingCheckpoint('OPENING')
+                              void postPackagingCheckpoint('CLOSING')
                             }
                           >
-                            Posting Opening
+                            Posting Closing
                           </button>
                         </div>
                       )}
 
-                    {packagingReconciliation.openingCount?.status ===
-                      'POSTED' && (
-                      <p className="shift-packaging-complete-note">
-                        Opening terkunci pada inventory authority.
-                      </p>
-                    )}
-                  </article>
-
-                  <article
-                    className={
-                      'shift-packaging-checkpoint' +
-                      (packagingClosingComplete ? ' complete' : '')
-                    }
-                  >
-                    <header>
-                      <span className="shift-packaging-icon">
-                        <Icon name="check" size={18} />
-                      </span>
-                      <span>
-                        <strong>Closing Fisik</strong>
-                        <small>
-                          Hitung setelah transaksi selesai, sebelum tutup shift
-                        </small>
-                      </span>
-                      <span className="operations-status">
-                        {packagingReconciliation.closingCount?.status ??
-                          'BELUM'}
-                      </span>
-                    </header>
-
-                    {(!packagingReconciliation.closingCount ||
-                      packagingClosingStale) &&
-                      canCountPackaging && (
-                        <button
-                          className="secondary-button"
-                          type="button"
-                          disabled={packagingBusy}
-                          onClick={() =>
-                            void createPackagingCheckpoint('CLOSING')
-                          }
-                        >
-                          {packagingClosingStale
-                            ? 'Hitung Ulang Closing'
-                            : 'Mulai Hitung Closing'}
-                        </button>
+                      {packagingClosingStale && (
+                        <p className="shift-packaging-warning">
+                          Ada pergerakan stok setelah snapshot closing. Gunakan
+                          Hitung Ulang Closing agar expected dan fisik memakai
+                          snapshot terbaru.
+                        </p>
                       )}
 
-                    {packagingReconciliation.closingCount?.status ===
-                      'DRAFT' && (
-                      <div className="shift-packaging-count-form">
-                        {packagingReconciliation.items
-                          .filter(
-                            (item) => item.closingExpectedQuantity !== null,
-                          )
-                          .map((item) => (
-                            <label key={item.stockItemId}>
-                              <span>
-                                <strong>{item.name}</strong>
-                                <small>
-                                  Expected{' '}
-                                  {packagingQuantity(
-                                    item.closingExpectedQuantity,
-                                    item.baseUnit,
-                                  )}
-                                </small>
-                              </span>
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.001"
-                                inputMode="decimal"
-                                placeholder="Fisik"
-                                value={
-                                  closingPackagingPhysical[item.stockItemId] ??
-                                  ''
-                                }
-                                onChange={(event) =>
-                                  setClosingPackagingPhysical((current) => ({
-                                    ...current,
-                                    [item.stockItemId]: event.target.value,
-                                  }))
-                                }
-                              />
-                            </label>
-                          ))}
-                        <button
-                          className="primary-button"
-                          type="button"
-                          disabled={packagingBusy}
-                          onClick={() => void savePackagingPhysical('CLOSING')}
-                        >
-                          Simpan Hitungan Closing
-                        </button>
-                      </div>
-                    )}
+                      {packagingClosingComplete && (
+                        <p className="shift-packaging-complete-note">
+                          Closing terposting dan tidak ada pergerakan stok
+                          sesudah snapshot.
+                        </p>
+                      )}
+                    </article>
+                  </div>
 
-                    {packagingReconciliation.closingCount?.status ===
-                      'COUNTED' && (
-                      <div className="shift-packaging-post-row">
-                        <span>
-                          Fisik sudah dicatat. Posting untuk menyimpan varians
-                          sebagai fakta inventory.
-                        </span>
-                        <button
-                          className="primary-button"
-                          type="button"
-                          disabled={packagingBusy}
-                          onClick={() =>
-                            void postPackagingCheckpoint('CLOSING')
+                  <div
+                    className="shift-packaging-reconciliation-grid"
+                    aria-label="Rekonsiliasi kemasan per item"
+                  >
+                    {packagingReconciliation.items.map((item) => {
+                      const expectedClosing =
+                        item.closingExpectedQuantity ??
+                        item.currentExpectedQuantity;
+                      return (
+                        <article
+                          className={
+                            'shift-packaging-reconciliation-card' +
+                            (item.closingStale ? ' stale' : '')
                           }
+                          key={item.stockItemId}
                         >
-                          Posting Closing
-                        </button>
-                      </div>
-                    )}
-
-                    {packagingClosingStale && (
-                      <p className="shift-packaging-warning">
-                        Ada pergerakan stok setelah snapshot closing. Gunakan
-                        Hitung Ulang Closing agar expected dan fisik memakai
-                        snapshot terbaru.
-                      </p>
-                    )}
-
-                    {packagingClosingComplete && (
-                      <p className="shift-packaging-complete-note">
-                        Closing terposting dan tidak ada pergerakan stok sesudah
-                        snapshot.
-                      </p>
-                    )}
-                  </article>
-                </div>
-
-                <div
-                  className="shift-packaging-reconciliation-grid"
-                  aria-label="Rekonsiliasi kemasan per item"
-                >
-                  {packagingReconciliation.items.map((item) => {
-                    const expectedClosing =
-                      item.closingExpectedQuantity ??
-                      item.currentExpectedQuantity;
-                    return (
-                      <article
-                        className={
-                          'shift-packaging-reconciliation-card' +
-                          (item.closingStale ? ' stale' : '')
-                        }
-                        key={item.stockItemId}
-                      >
-                        <header>
-                          <span className="shift-packaging-icon">
-                            <Icon name="product" size={18} />
-                          </span>
-                          <span>
-                            <strong>{item.name}</strong>
-                            <small>
-                              {item.code} · {item.baseUnit}
-                            </small>
-                          </span>
-                          {!item.inventoryTracked && (
-                            <span className="operations-status warning">
-                              TIDAK DILACAK
+                          <header>
+                            <span className="shift-packaging-icon">
+                              <Icon name="product" size={18} />
                             </span>
-                          )}
-                        </header>
-                        <dl>
-                          <div>
-                            <dt>Awal Fisik</dt>
-                            <dd>
-                              {packagingQuantity(
-                                item.openingPhysicalQuantity,
-                                item.baseUnit,
-                              )}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>Pemakaian Teoritis</dt>
-                            <dd>
-                              {packagingQuantity(
-                                item.theoreticalUsage,
-                                item.baseUnit,
-                              )}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>Expected Closing</dt>
-                            <dd>
-                              {packagingQuantity(
-                                expectedClosing,
-                                item.baseUnit,
-                              )}
-                            </dd>
-                          </div>
-                          <div>
-                            <dt>Fisik Closing</dt>
-                            <dd>
-                              {packagingQuantity(
-                                item.closingPhysicalQuantity,
-                                item.baseUnit,
-                              )}
-                            </dd>
-                          </div>
-                          <div
-                            className={
-                              item.variance === null
-                                ? 'variance neutral'
-                                : item.variance === 0
+                            <span>
+                              <strong>{item.name}</strong>
+                              <small>
+                                {item.code} · {item.baseUnit}
+                              </small>
+                            </span>
+                            {!item.inventoryTracked && (
+                              <span className="operations-status warning">
+                                TIDAK DILACAK
+                              </span>
+                            )}
+                          </header>
+                          <dl>
+                            <div>
+                              <dt>Awal Fisik</dt>
+                              <dd>
+                                {packagingQuantity(
+                                  item.openingPhysicalQuantity,
+                                  item.baseUnit,
+                                )}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Pemakaian Teoritis</dt>
+                              <dd>
+                                {packagingQuantity(
+                                  item.theoreticalUsage,
+                                  item.baseUnit,
+                                )}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Expected Closing</dt>
+                              <dd>
+                                {packagingQuantity(
+                                  expectedClosing,
+                                  item.baseUnit,
+                                )}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt>Fisik Closing</dt>
+                              <dd>
+                                {packagingQuantity(
+                                  item.closingPhysicalQuantity,
+                                  item.baseUnit,
+                                )}
+                              </dd>
+                            </div>
+                            <div
+                              className={
+                                item.variance === null
                                   ? 'variance neutral'
-                                  : item.variance > 0
-                                    ? 'variance positive'
-                                    : 'variance negative'
-                            }
-                          >
-                            <dt>Selisih</dt>
-                            <dd>
-                              {packagingQuantity(item.variance, item.baseUnit)}
-                            </dd>
-                          </div>
-                        </dl>
-                      </article>
-                    );
-                  })}
-                </div>
+                                  : item.variance === 0
+                                    ? 'variance neutral'
+                                    : item.variance > 0
+                                      ? 'variance positive'
+                                      : 'variance negative'
+                              }
+                            >
+                              <dt>Selisih</dt>
+                              <dd>
+                                {packagingQuantity(
+                                  item.variance,
+                                  item.baseUnit,
+                                )}
+                              </dd>
+                            </div>
+                          </dl>
+                        </article>
+                      );
+                    })}
+                  </div>
 
-                <div className="purchase-authority-note">
+                  <div className="purchase-authority-note">
+                    <strong>
+                      Satu authority inventory, bukan engine cup kedua.
+                    </strong>
+                    <span>
+                      Opening dan closing adalah Stock Opname yang ditautkan ke
+                      shift. Pemakaian teoritis berasal dari snapshot komponen
+                      transaksi. Selisih hanya muncul setelah jumlah fisik benar
+                      benar dicatat.
+                    </span>
+                  </div>
+                </>
+              )}
+            </section>
+          )}
+
+          {shiftFlow === 'closing' && (
+            <section className="operations-panel shift-closing-card">
+              <header className="operations-panel-header">
+                <div>
+                  <p className="eyebrow">CLOSING</p>
+                  <h2>Tutup Shift</h2>
+                </div>
+                <span className="operations-status">HITUNG FISIK</span>
+              </header>
+
+              <div className="shift-closing-summary">
+                <div>
+                  <span>Expected Cash</span>
                   <strong>
-                    Satu authority inventory, bukan engine cup kedua.
+                    {runningReconciliation
+                      ? formatIdr(runningReconciliation.expected_cash)
+                      : 'Memuat...'}
                   </strong>
-                  <span>
-                    Opening dan closing adalah Stock Opname yang ditautkan ke
-                    shift. Pemakaian teoritis berasal dari snapshot komponen
-                    transaksi. Selisih hanya muncul setelah jumlah fisik benar
-                    benar dicatat.
-                  </span>
                 </div>
-              </>
-            )}
-          </section>
-
-          <section className="operations-panel shift-closing-card">
-            <header className="operations-panel-header">
-              <div>
-                <p className="eyebrow">CLOSING</p>
-                <h2>Tutup Shift</h2>
-              </div>
-              <span className="operations-status">HITUNG FISIK</span>
-            </header>
-
-            <div className="shift-closing-summary">
-              <div>
-                <span>Expected Cash</span>
-                <strong>
-                  {runningReconciliation
-                    ? formatIdr(runningReconciliation.expected_cash)
-                    : 'Memuat...'}
-                </strong>
-              </div>
-              <div>
-                <span>Uang Aktual di Laci</span>
-                <strong>
-                  {actualCashValid && parsedActualCash !== null
-                    ? formatIdr(parsedActualCash)
-                    : 'Belum diisi'}
-                </strong>
-              </div>
-              <div
-                className={
-                  previewVariance === null || previewVariance === 0
-                    ? 'variance neutral'
-                    : previewVariance > 0
-                      ? 'variance positive'
-                      : 'variance negative'
-                }
-              >
-                <span>Preview Varians</span>
-                <strong>
-                  {previewVariance === null
-                    ? '—'
-                    : formatVariance(previewVariance)}
-                </strong>
-              </div>
-            </div>
-
-            <form onSubmit={handleClose} className="stack-form">
-              <label>
-                Uang Aktual di Laci
-                <input
-                  type="number"
-                  step="1000"
-                  min="0"
-                  inputMode="numeric"
-                  value={actualCashInput}
-                  placeholder="Masukkan hasil hitung fisik"
-                  onChange={(e) => {
-                    setError(null);
-                    setActualCashInput(e.target.value);
-                  }}
-                  required
-                />
-              </label>
-              <div
-                className={
-                  'shift-closing-warning' +
-                  (packagingClosingComplete ? ' complete' : '')
-                }
-              >
-                <strong>
-                  {packagingClosingComplete
-                    ? 'Kas dan kemasan siap ditinjau'
-                    : 'Sebelum menutup shift'}
-                </strong>
-                <span>
-                  {packagingClosingComplete
-                    ? 'Closing kemasan sudah terposting tanpa pergerakan stok setelah snapshot. Tetap pastikan kas fisik sudah dihitung.'
-                    : 'Pastikan kas fisik sudah dihitung. Jika kemasan dilacak, selesaikan closing fisik di Rekonsiliasi Kemasan. Shift tidak mengarang angka fisik yang belum dicatat.'}
-                </span>
-              </div>
-              <div className="button-row">
-                <Link
-                  className="secondary-button link-button"
-                  to="/stok/kontrol?tab=COUNT&kind=PACKAGING"
-                >
-                  Kontrol Kemasan
-                </Link>
-                <button
-                  className="primary-button"
-                  type="submit"
-                  disabled={
-                    closing || !runningReconciliation || !actualCashValid
+                <div>
+                  <span>Uang Aktual di Laci</span>
+                  <strong>
+                    {actualCashValid && parsedActualCash !== null
+                      ? formatIdr(parsedActualCash)
+                      : 'Belum diisi'}
+                  </strong>
+                </div>
+                <div
+                  className={
+                    previewVariance === null || previewVariance === 0
+                      ? 'variance neutral'
+                      : previewVariance > 0
+                        ? 'variance positive'
+                        : 'variance negative'
                   }
                 >
-                  {closing ? 'Menutup…' : 'Tutup Shift'}
-                </button>
+                  <span>Preview Varians</span>
+                  <strong>
+                    {previewVariance === null
+                      ? '—'
+                      : formatVariance(previewVariance)}
+                  </strong>
+                </div>
               </div>
-            </form>
-          </section>
+
+              <form onSubmit={handleClose} className="stack-form">
+                <label>
+                  Uang Aktual di Laci
+                  <input
+                    type="number"
+                    step="1000"
+                    min="0"
+                    inputMode="numeric"
+                    value={actualCashInput}
+                    placeholder="Masukkan hasil hitung fisik"
+                    onChange={(e) => {
+                      setError(null);
+                      setActualCashInput(e.target.value);
+                    }}
+                    required
+                  />
+                </label>
+                <div
+                  className={
+                    'shift-closing-warning' +
+                    (packagingClosingComplete ? ' complete' : '')
+                  }
+                >
+                  <strong>
+                    {packagingClosingComplete
+                      ? 'Kas dan kemasan siap ditinjau'
+                      : 'Sebelum menutup shift'}
+                  </strong>
+                  <span>
+                    {packagingClosingComplete
+                      ? 'Closing kemasan sudah terposting tanpa pergerakan stok setelah snapshot. Tetap pastikan kas fisik sudah dihitung.'
+                      : 'Pastikan kas fisik sudah dihitung. Jika kemasan dilacak, selesaikan closing fisik di Rekonsiliasi Kemasan. Shift tidak mengarang angka fisik yang belum dicatat.'}
+                  </span>
+                </div>
+                <div className="button-row">
+                  <Link
+                    className="secondary-button link-button"
+                    to="/stok/kontrol?tab=COUNT&kind=PACKAGING"
+                  >
+                    Kontrol Kemasan
+                  </Link>
+                  <button
+                    className="primary-button"
+                    type="submit"
+                    disabled={
+                      closing || !runningReconciliation || !actualCashValid
+                    }
+                  >
+                    {closing ? 'Menutup…' : 'Tutup Shift'}
+                  </button>
+                </div>
+              </form>
+            </section>
+          )}
         </>
       ) : (
         <section className="operations-panel shift-opening-card">

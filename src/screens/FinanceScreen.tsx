@@ -40,6 +40,29 @@ function positiveAmount(value: string) {
   return amount;
 }
 
+type FinanceFlow =
+  | 'balances'
+  | 'transfer'
+  | 'qris'
+  | 'receivables'
+  | 'payables'
+  | 'recon'
+  | 'kasbon'
+  | 'owner'
+  | 'approval';
+
+const FINANCE_FLOWS: Array<{ id: FinanceFlow; label: string }> = [
+  { id: 'balances', label: 'Saldo' },
+  { id: 'transfer', label: 'Pindah Uang' },
+  { id: 'qris', label: 'QRIS' },
+  { id: 'receivables', label: 'Piutang' },
+  { id: 'payables', label: 'Utang Pemasok' },
+  { id: 'recon', label: 'Rekonsiliasi' },
+  { id: 'kasbon', label: 'Kasbon' },
+  { id: 'owner', label: 'Owner' },
+  { id: 'approval', label: 'Approval' },
+];
+
 export function FinanceScreen() {
   const { confirmAction } = useActionDialog();
   const [overview, setOverview] = useState<FinanceOverview | null>(null);
@@ -47,6 +70,7 @@ export function FinanceScreen() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState('');
+  const [financeFlow, setFinanceFlow] = useState<FinanceFlow>('balances');
 
   const [transfer, setTransfer] = useState({
     from: '',
@@ -281,8 +305,8 @@ export function FinanceScreen() {
 
   function submitDebtPayment(event: FormEvent) {
     event.preventDefault();
-    void run('Pembayaran Hutang Pelanggan', async () => {
-      if (!debtPayment.debtId) throw new Error('Pilih Hutang Pelanggan.');
+    void run('Pembayaran Piutang Pelanggan', async () => {
+      if (!debtPayment.debtId) throw new Error('Pilih piutang pelanggan.');
       await payCustomerDebt({
         debtId: debtPayment.debtId,
         method: debtPayment.method,
@@ -324,11 +348,10 @@ export function FinanceScreen() {
       <header className="topbar secondary-hero finance-hero">
         <div className="finance-hero-copy">
           <Link to="/pengaturan">Kembali ke Pusat Kontrol</Link>
-          <p className="eyebrow">OWNER FINANCE</p>
+
           <h1>Keuangan</h1>
           <p className="muted">
-            Pantau saldo dan jalankan tindakan keuangan dari money ledger yang
-            sama.
+            Lihat saldo lalu pilih pekerjaan yang ingin dilakukan.
           </p>
         </div>
         <span className="finance-hero-icon" aria-hidden="true">
@@ -371,7 +394,7 @@ export function FinanceScreen() {
               accountByCode.get('QRIS_BELUM_CAIR')?.balance ?? 0,
               'qris',
             ],
-            ['Hutang Pelanggan', customerDebtTotal, 'credit-debt'],
+            ['Piutang Pelanggan', customerDebtTotal, 'credit-debt'],
             ['Utang Pemasok', supplierPayableTotal, 'debt'],
           ].map(([label, value, icon]) => (
             <article key={String(label)}>
@@ -396,660 +419,708 @@ export function FinanceScreen() {
         </section>
       )}
 
-      <nav className="secondary-workflow-nav" aria-label="Alur Keuangan">
-        <a href="#finance-balances">Ringkasan</a>
-        <a href="#finance-transfer">Pindah Uang</a>
-        <a href="#finance-qris">QRIS</a>
-        <a href="#finance-reconciliation">Rekonsiliasi</a>
-        <a href="#finance-receivables">Piutang & Utang</a>
-        <a href="#finance-kasbon">Kasbon</a>
-        <a href="#finance-owner">Owner</a>
+      <nav
+        className="secondary-workflow-nav finance-flow-tabs"
+        aria-label="Pilih pekerjaan Keuangan"
+      >
+        {FINANCE_FLOWS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={financeFlow === item.id ? 'active' : ''}
+            aria-pressed={financeFlow === item.id}
+            onClick={() => setFinanceFlow(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
       </nav>
 
-      <section className="identity-card secondary-panel" id="finance-balances">
-        <div>
-          <h2>Saldo Keuangan</h2>
-          <p className="muted">
-            Satu sumber kebenaran dari money ledger. Pindah uang tidak dihitung
-            sebagai pemasukan atau pengeluaran baru.
-          </p>
-        </div>
-        <div className="list-cards">
-          {(overview?.accounts ?? []).map((account) => (
-            <article className="list-card" key={account.id}>
-              <strong>{account.display_name}</strong>
-              <span className="muted">{account.code}</span>
-              <strong>{formatIdr(account.balance)}</strong>
-            </article>
-          ))}
-        </div>
-      </section>
+      {financeFlow === 'balances' && (
+        <section
+          className="identity-card secondary-panel"
+          id="finance-balances"
+        >
+          <div>
+            <h2>Saldo Keuangan</h2>
+            <p className="muted">
+              Saldo berasal dari catatan keuangan usaha. Pindah uang tidak
+              dihitung sebagai pendapatan atau pengeluaran baru.
+            </p>
+          </div>
+          <div className="list-cards">
+            {(overview?.accounts ?? []).map((account) => (
+              <article className="list-card" key={account.id}>
+                <strong>{account.display_name}</strong>
+                <span className="muted">{account.code}</span>
+                <strong>{formatIdr(account.balance)}</strong>
+              </article>
+            ))}
+          </div>
+        </section>
+      )}
 
-      <section className="identity-card secondary-panel" id="finance-transfer">
-        <div>
-          <h2>Pindah Uang</h2>
-          <p className="muted">Kas Utama, Kas Shift, dan Bank.</p>
-        </div>
-        <form className="stack-form" onSubmit={submitTransfer}>
-          <label className="field-label">
-            Dari
-            <select
-              value={transfer.from}
-              onChange={(event) =>
-                setTransfer((value) => ({ ...value, from: event.target.value }))
-              }
-              required
-            >
-              <option value="">Pilih sumber</option>
-              {liquidAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.display_name} · {formatIdr(account.balance)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label">
-            Ke
-            <select
-              value={transfer.to}
-              onChange={(event) =>
-                setTransfer((value) => ({ ...value, to: event.target.value }))
-              }
-              required
-            >
-              <option value="">Pilih tujuan</option>
-              {liquidAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.display_name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label">
-            Jumlah (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={transfer.amount}
-              onChange={(event) =>
-                setTransfer((value) => ({
-                  ...value,
-                  amount: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Keterangan
-            <input
-              value={transfer.reason}
-              onChange={(event) =>
-                setTransfer((value) => ({
-                  ...value,
-                  reason: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <button className="primary-button" disabled={!!busy}>
-            Simpan Pindah Uang
-          </button>
-        </form>
-      </section>
+      {financeFlow === 'transfer' && (
+        <section
+          className="identity-card secondary-panel"
+          id="finance-transfer"
+        >
+          <div>
+            <h2>Pindah Uang</h2>
+            <p className="muted">Kas Utama, Kas Shift, dan Bank.</p>
+          </div>
+          <form className="stack-form" onSubmit={submitTransfer}>
+            <label className="field-label">
+              Dari
+              <select
+                value={transfer.from}
+                onChange={(event) =>
+                  setTransfer((value) => ({
+                    ...value,
+                    from: event.target.value,
+                  }))
+                }
+                required
+              >
+                <option value="">Pilih sumber</option>
+                {liquidAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.display_name} · {formatIdr(account.balance)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field-label">
+              Ke
+              <select
+                value={transfer.to}
+                onChange={(event) =>
+                  setTransfer((value) => ({ ...value, to: event.target.value }))
+                }
+                required
+              >
+                <option value="">Pilih tujuan</option>
+                {liquidAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.display_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field-label">
+              Jumlah (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={transfer.amount}
+                onChange={(event) =>
+                  setTransfer((value) => ({
+                    ...value,
+                    amount: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Keterangan
+              <input
+                value={transfer.reason}
+                onChange={(event) =>
+                  setTransfer((value) => ({
+                    ...value,
+                    reason: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <button className="primary-button" disabled={!!busy}>
+              Simpan Pindah Uang
+            </button>
+          </form>
+        </section>
+      )}
 
-      <section className="identity-card secondary-panel" id="finance-owner">
-        <div>
-          <h2>Modal Owner</h2>
-          <p className="muted">
-            Penambahan modal menambah aset usaha, tetapi bukan pendapatan
-            operasional.
-          </p>
-        </div>
-        <form className="stack-form" onSubmit={submitCapital}>
-          <label className="field-label">
-            Masuk ke
-            <select
-              value={capital.to}
-              onChange={(event) =>
-                setCapital((value) => ({ ...value, to: event.target.value }))
-              }
-              required
-            >
-              <option value="">Pilih akun</option>
-              {ownerCashAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.display_name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label">
-            Jumlah (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={capital.amount}
-              onChange={(event) =>
-                setCapital((value) => ({
-                  ...value,
-                  amount: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Keterangan
-            <input
-              value={capital.reason}
-              onChange={(event) =>
-                setCapital((value) => ({
-                  ...value,
-                  reason: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <button className="primary-button" disabled={!!busy}>
-            Catat Modal Owner
-          </button>
-        </form>
-      </section>
+      {financeFlow === 'owner' && (
+        <section className="identity-card secondary-panel" id="finance-owner">
+          <div>
+            <h2>Modal Owner</h2>
+            <p className="muted">
+              Penambahan modal menambah aset usaha, tetapi bukan pendapatan
+              operasional.
+            </p>
+          </div>
+          <form className="stack-form" onSubmit={submitCapital}>
+            <label className="field-label">
+              Masuk ke
+              <select
+                value={capital.to}
+                onChange={(event) =>
+                  setCapital((value) => ({ ...value, to: event.target.value }))
+                }
+                required
+              >
+                <option value="">Pilih akun</option>
+                {ownerCashAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.display_name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field-label">
+              Jumlah (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={capital.amount}
+                onChange={(event) =>
+                  setCapital((value) => ({
+                    ...value,
+                    amount: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Keterangan
+              <input
+                value={capital.reason}
+                onChange={(event) =>
+                  setCapital((value) => ({
+                    ...value,
+                    reason: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <button className="primary-button" disabled={!!busy}>
+              Catat Modal Owner
+            </button>
+          </form>
+        </section>
+      )}
 
-      <section className="identity-card secondary-panel" id="finance-qris">
-        <div>
-          <h2>Settlement QRIS</h2>
-          <p className="muted">
-            QRIS Belum Cair settlement! Bank. Biaya provider dicatat terpisah.
-          </p>
-        </div>
-        <form className="stack-form" onSubmit={submitQris}>
-          <label className="field-label">
-            Tanggal
-            <input
-              type="date"
-              max={localDate()}
-              value={qris.date}
-              onChange={(event) =>
-                setQris((value) => ({ ...value, date: event.target.value }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Referensi provider
-            <input
-              value={qris.reference}
-              onChange={(event) =>
-                setQris((value) => ({
-                  ...value,
-                  reference: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Gross (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={qris.gross}
-              onChange={(event) =>
-                setQris((value) => ({ ...value, gross: event.target.value }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Biaya provider (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="0"
-              value={qris.fee}
-              onChange={(event) =>
-                setQris((value) => ({ ...value, fee: event.target.value }))
-              }
-              required
-            />
-          </label>
-          <button className="primary-button" disabled={!!busy}>
-            Catat Settlement QRIS
-          </button>
-        </form>
-        {(overview?.qrisSettlements ?? []).length > 0 && (
+      {financeFlow === 'qris' && (
+        <section className="identity-card secondary-panel" id="finance-qris">
+          <div>
+            <h2>Settlement QRIS</h2>
+            <p className="muted">
+              Catat pencairan QRIS ke Bank; biaya penyedia dicatat terpisah.
+            </p>
+          </div>
+          <form className="stack-form" onSubmit={submitQris}>
+            <label className="field-label">
+              Tanggal
+              <input
+                type="date"
+                max={localDate()}
+                value={qris.date}
+                onChange={(event) =>
+                  setQris((value) => ({ ...value, date: event.target.value }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Referensi provider
+              <input
+                value={qris.reference}
+                onChange={(event) =>
+                  setQris((value) => ({
+                    ...value,
+                    reference: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Gross (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={qris.gross}
+                onChange={(event) =>
+                  setQris((value) => ({ ...value, gross: event.target.value }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Biaya provider (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="0"
+                value={qris.fee}
+                onChange={(event) =>
+                  setQris((value) => ({ ...value, fee: event.target.value }))
+                }
+                required
+              />
+            </label>
+            <button className="primary-button" disabled={!!busy}>
+              Catat Settlement QRIS
+            </button>
+          </form>
+          {(overview?.qrisSettlements ?? []).length > 0 && (
+            <div className="stack-list">
+              {overview?.qrisSettlements.map((item) => (
+                <article className="list-card" key={item.id}>
+                  <strong>{item.settlement_date}</strong>
+                  <span>{item.provider_reference}</span>
+                  <span>
+                    Gross {formatIdr(item.gross_amount)} Fee{' '}
+                    {formatIdr(item.provider_fee)} Net{' '}
+                    {formatIdr(item.net_amount)}
+                  </span>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
+
+      {financeFlow === 'recon' && (
+        <section
+          className="identity-card secondary-panel"
+          id="finance-reconciliation"
+        >
+          <div>
+            <h2>Rekonsiliasi Harian</h2>
+            <p className="muted">
+              Membandingkan kas, QRIS, transfer, dan status pemeriksaan stok.
+            </p>
+          </div>
+          <form className="stack-form" onSubmit={submitReconciliation}>
+            <label className="field-label">
+              Tanggal bisnis
+              <input
+                type="date"
+                max={localDate()}
+                value={recon.date}
+                onChange={(event) =>
+                  setRecon((value) => ({ ...value, date: event.target.value }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Kas dihitung (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="0"
+                value={recon.countedCash}
+                onChange={(event) =>
+                  setRecon((value) => ({
+                    ...value,
+                    countedCash: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Transfer diterima di Bank (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="0"
+                value={recon.bankTransferReceived}
+                onChange={(event) =>
+                  setRecon((value) => ({
+                    ...value,
+                    bankTransferReceived: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Status stok
+              <select
+                value={recon.stockStatus}
+                onChange={(event) =>
+                  setRecon((value) => ({
+                    ...value,
+                    stockStatus: event.target.value as typeof value.stockStatus,
+                  }))
+                }
+              >
+                <option value="NOT_CHECKED">Belum diperiksa</option>
+                <option value="SESUAI">Sesuai</option>
+                <option value="PERLU_DIPERIKSA">Perlu diperiksa</option>
+              </select>
+            </label>
+            <button className="primary-button" disabled={!!busy}>
+              Simpan Rekonsiliasi Harian
+            </button>
+          </form>
           <div className="stack-list">
-            {overview?.qrisSettlements.map((item) => (
+            {(overview?.reconciliations ?? []).map((item) => (
               <article className="list-card" key={item.id}>
-                <strong>{item.settlement_date}</strong>
-                <span>{item.provider_reference}</span>
+                <strong>
+                  {item.business_date} · {item.result}
+                </strong>
                 <span>
-                  Gross {formatIdr(item.gross_amount)} Fee{' '}
-                  {formatIdr(item.provider_fee)} Net{' '}
-                  {formatIdr(item.net_amount)}
+                  Kas {formatIdr(item.expected_cash)} / hitung{' '}
+                  {formatIdr(item.counted_cash)} selisih{' '}
+                  {formatIdr(item.cash_variance)}
+                </span>
+                <span>
+                  QRIS selisih {formatIdr(item.qris_variance)} Transfer selisih{' '}
+                  {formatIdr(item.transfer_variance)}
                 </span>
               </article>
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section
-        className="identity-card secondary-panel"
-        id="finance-reconciliation"
-      >
-        <div>
-          <h2>Rekonsiliasi Harian</h2>
-          <p className="muted">
-            Membandingkan kas, QRIS, transfer, dan status pemeriksaan stok.
-          </p>
-        </div>
-        <form className="stack-form" onSubmit={submitReconciliation}>
-          <label className="field-label">
-            Tanggal bisnis
-            <input
-              type="date"
-              max={localDate()}
-              value={recon.date}
-              onChange={(event) =>
-                setRecon((value) => ({ ...value, date: event.target.value }))
+      {financeFlow === 'receivables' && (
+        <section
+          className="identity-card secondary-panel"
+          id="finance-receivables"
+        >
+          <div>
+            <h2>Piutang Pelanggan</h2>
+            <p className="muted">
+              Pembayaran pelanggan mengurangi piutang; bukan penjualan baru.
+            </p>
+          </div>
+          <div className="stack-list">
+            {(overview?.customerDebts ?? []).map((item) => (
+              <article className="list-card" key={item.debt_id}>
+                <strong>{item.customer_name}</strong>
+                <span>Sisa {formatIdr(item.balance)}</span>
+                <span className={operationalStatusClass(item.status)}>
+                  {statusLabel(item.status)}
+                </span>
+              </article>
+            ))}
+            {(overview?.customerDebts ?? []).length === 0 && (
+              <p className="muted">
+                Tidak ada piutang pelanggan yang belum lunas.
+              </p>
+            )}
+          </div>
+          <form className="stack-form" onSubmit={submitDebtPayment}>
+            <SearchablePicker
+              label="Piutang"
+              value={debtPayment.debtId}
+              options={customerDebtOptions}
+              onChange={(debtId) =>
+                setDebtPayment((value) => ({ ...value, debtId }))
               }
-              required
+              placeholder="Pilih piutang pelanggan"
+              eyebrow="PILIH PIUTANG"
+              searchPlaceholder="Cari nama pelanggan…"
+              emptyLabel="Hutang pelanggan tidak ditemukan."
+              noun="hutang"
             />
-          </label>
-          <label className="field-label">
-            Kas dihitung (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="0"
-              value={recon.countedCash}
-              onChange={(event) =>
-                setRecon((value) => ({
-                  ...value,
-                  countedCash: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Transfer diterima di Bank (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="0"
-              value={recon.bankTransferReceived}
-              onChange={(event) =>
-                setRecon((value) => ({
-                  ...value,
-                  bankTransferReceived: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Status stok
-            <select
-              value={recon.stockStatus}
-              onChange={(event) =>
-                setRecon((value) => ({
-                  ...value,
-                  stockStatus: event.target.value as typeof value.stockStatus,
-                }))
-              }
-            >
-              <option value="NOT_CHECKED">Belum diperiksa</option>
-              <option value="SESUAI">Sesuai</option>
-              <option value="PERLU_DIPERIKSA">Perlu diperiksa</option>
-            </select>
-          </label>
-          <button className="primary-button" disabled={!!busy}>
-            Simpan Rekonsiliasi Harian
-          </button>
-        </form>
-        <div className="stack-list">
-          {(overview?.reconciliations ?? []).map((item) => (
-            <article className="list-card" key={item.id}>
-              <strong>
-                {item.business_date} · {item.result}
-              </strong>
-              <span>
-                Kas {formatIdr(item.expected_cash)} / hitung{' '}
-                {formatIdr(item.counted_cash)} selisih{' '}
-                {formatIdr(item.cash_variance)}
-              </span>
-              <span>
-                QRIS selisih {formatIdr(item.qris_variance)} Transfer selisih{' '}
-                {formatIdr(item.transfer_variance)}
-              </span>
-            </article>
-          ))}
-        </div>
-      </section>
+            <label className="field-label">
+              Metode
+              <select
+                value={debtPayment.method}
+                onChange={(event) =>
+                  setDebtPayment((value) => ({
+                    ...value,
+                    method: event.target.value as 'CASH' | 'TRANSFER',
+                  }))
+                }
+              >
+                <option value="CASH">Tunai</option>
+                <option value="TRANSFER">Transfer</option>
+              </select>
+            </label>
+            <label className="field-label">
+              Jumlah (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={debtPayment.amount}
+                onChange={(event) =>
+                  setDebtPayment((value) => ({
+                    ...value,
+                    amount: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <button className="primary-button" disabled={!!busy}>
+              Catat Pembayaran Pelanggan
+            </button>
+          </form>
+        </section>
+      )}
 
-      <section
-        className="identity-card secondary-panel"
-        id="finance-receivables"
-      >
-        <div>
-          <h2>Hutang Pelanggan</h2>
-          <p className="muted">
-            Pembayaran hutang mengurangi piutang; bukan penjualan baru.
-          </p>
-        </div>
-        <div className="stack-list">
-          {(overview?.customerDebts ?? []).map((item) => (
-            <article className="list-card" key={item.debt_id}>
-              <strong>{item.customer_name}</strong>
-              <span>Sisa {formatIdr(item.balance)}</span>
-              <span className={operationalStatusClass(item.status)}>
-                {statusLabel(item.status)}
-              </span>
-            </article>
-          ))}
-          {(overview?.customerDebts ?? []).length === 0 && (
-            <p className="muted">Tidak ada Hutang Pelanggan terbuka.</p>
-          )}
-        </div>
-        <form className="stack-form" onSubmit={submitDebtPayment}>
-          <SearchablePicker
-            label="Hutang"
-            value={debtPayment.debtId}
-            options={customerDebtOptions}
-            onChange={(debtId) =>
-              setDebtPayment((value) => ({ ...value, debtId }))
-            }
-            placeholder="Pilih hutang pelanggan"
-            eyebrow="PILIH HUTANG"
-            searchPlaceholder="Cari nama pelanggan…"
-            emptyLabel="Hutang pelanggan tidak ditemukan."
-            noun="hutang"
-          />
-          <label className="field-label">
-            Metode
-            <select
-              value={debtPayment.method}
-              onChange={(event) =>
-                setDebtPayment((value) => ({
-                  ...value,
-                  method: event.target.value as 'CASH' | 'TRANSFER',
-                }))
+      {financeFlow === 'payables' && (
+        <section
+          className="identity-card secondary-panel"
+          id="finance-payables"
+        >
+          <div>
+            <h2>Utang Pemasok</h2>
+            <p className="muted">
+              Pembayaran utang pemasok memindahkan uang dan tidak membuat biaya
+              usaha baru.
+            </p>
+            <Link className="primary-link" to="/pembelian">
+              Buka Pembelian
+            </Link>
+          </div>
+          <div className="stack-list">
+            {(overview?.supplierPayables ?? []).map((item) => (
+              <article className="list-card" key={item.payable_id}>
+                <strong>{item.supplier_name}</strong>
+                <span>Sisa {formatIdr(item.balance)}</span>
+                <span className="muted">
+                  {item.invoice_reference || 'Tanpa referensi invoice'}
+                </span>
+              </article>
+            ))}
+            {(overview?.supplierPayables ?? []).length === 0 && (
+              <p className="muted">Tidak ada Utang Pemasok terbuka.</p>
+            )}
+          </div>
+          <form className="stack-form" onSubmit={submitSupplierPayment}>
+            <SearchablePicker
+              label="Utang"
+              value={supplierPayment.payableId}
+              options={supplierPayableOptions}
+              onChange={(payableId) =>
+                setSupplierPayment((value) => ({ ...value, payableId }))
               }
-            >
-              <option value="CASH">Tunai</option>
-              <option value="TRANSFER">Transfer</option>
-            </select>
-          </label>
-          <label className="field-label">
-            Jumlah (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={debtPayment.amount}
-              onChange={(event) =>
-                setDebtPayment((value) => ({
-                  ...value,
-                  amount: event.target.value,
-                }))
-              }
-              required
+              placeholder="Pilih utang pemasok"
+              eyebrow="PILIH UTANG"
+              searchPlaceholder="Cari pemasok atau referensi…"
+              emptyLabel="Utang pemasok tidak ditemukan."
+              noun="utang"
             />
-          </label>
-          <button className="primary-button" disabled={!!busy}>
-            Catat Pembayaran Hutang
-          </button>
-        </form>
-      </section>
+            <label className="field-label">
+              Metode
+              <select
+                value={supplierPayment.method}
+                onChange={(event) =>
+                  setSupplierPayment((value) => ({
+                    ...value,
+                    method: event.target.value as 'CASH' | 'TRANSFER',
+                  }))
+                }
+              >
+                <option value="CASH">Kas Utama</option>
+                <option value="TRANSFER">Bank</option>
+              </select>
+            </label>
+            <label className="field-label">
+              Jumlah (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={supplierPayment.amount}
+                onChange={(event) =>
+                  setSupplierPayment((value) => ({
+                    ...value,
+                    amount: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <button className="primary-button" disabled={!!busy}>
+              Bayar Utang Pemasok
+            </button>
+          </form>
+        </section>
+      )}
 
-      <section className="identity-card secondary-panel" id="finance-payables">
-        <div>
-          <h2>Utang Pemasok</h2>
-          <p className="muted">
-            Pembayaran utang pemasok memindahkan uang dan tidak membuat biaya
-            usaha baru.
-          </p>
-          <Link className="primary-link" to="/pembelian">
-            Buka Pembelian
-          </Link>
-        </div>
-        <div className="stack-list">
-          {(overview?.supplierPayables ?? []).map((item) => (
-            <article className="list-card" key={item.payable_id}>
-              <strong>{item.supplier_name}</strong>
-              <span>Sisa {formatIdr(item.balance)}</span>
-              <span className="muted">
-                {item.invoice_reference || 'Tanpa referensi invoice'}
-              </span>
-            </article>
-          ))}
-          {(overview?.supplierPayables ?? []).length === 0 && (
-            <p className="muted">Tidak ada Utang Pemasok terbuka.</p>
-          )}
-        </div>
-        <form className="stack-form" onSubmit={submitSupplierPayment}>
-          <SearchablePicker
-            label="Utang"
-            value={supplierPayment.payableId}
-            options={supplierPayableOptions}
-            onChange={(payableId) =>
-              setSupplierPayment((value) => ({ ...value, payableId }))
-            }
-            placeholder="Pilih utang pemasok"
-            eyebrow="PILIH UTANG"
-            searchPlaceholder="Cari pemasok atau referensi…"
-            emptyLabel="Utang pemasok tidak ditemukan."
-            noun="utang"
-          />
-          <label className="field-label">
-            Metode
-            <select
-              value={supplierPayment.method}
-              onChange={(event) =>
-                setSupplierPayment((value) => ({
-                  ...value,
-                  method: event.target.value as 'CASH' | 'TRANSFER',
-                }))
+      {financeFlow === 'kasbon' && (
+        <section className="identity-card secondary-panel" id="finance-kasbon">
+          <div>
+            <h2>Kasbon Karyawan</h2>
+            <p className="muted">
+              Berbeda dari piutang pelanggan. Saat ini hanya pencairan kasbon
+              yang tersedia; mekanisme pembayaran atau potongan belum
+              ditetapkan.
+            </p>
+          </div>
+          <div className="stack-list">
+            {(overview?.employeeKasbons ?? []).map((item) => (
+              <article className="list-card" key={item.kasbon_id}>
+                <strong>{item.employee_name}</strong>
+                <span>Sisa {formatIdr(item.balance)}</span>
+                <span className={operationalStatusClass(item.status)}>
+                  {statusLabel(item.status)}
+                </span>
+              </article>
+            ))}
+            {(overview?.employeeKasbons ?? []).length === 0 && (
+              <p className="muted">Belum ada Kasbon Karyawan.</p>
+            )}
+          </div>
+          <form className="stack-form" onSubmit={submitKasbon}>
+            <SearchablePicker
+              label="Karyawan"
+              value={kasbon.employeeProfileId}
+              options={employeePickerOptions}
+              onChange={(employeeProfileId) =>
+                setKasbon((value) => ({ ...value, employeeProfileId }))
               }
-            >
-              <option value="CASH">Kas Utama</option>
-              <option value="TRANSFER">Bank</option>
-            </select>
-          </label>
-          <label className="field-label">
-            Jumlah (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={supplierPayment.amount}
-              onChange={(event) =>
-                setSupplierPayment((value) => ({
-                  ...value,
-                  amount: event.target.value,
-                }))
-              }
-              required
+              placeholder="Pilih karyawan"
+              eyebrow="PILIH KARYAWAN"
+              searchPlaceholder="Cari nama atau username…"
+              emptyLabel="Karyawan tidak ditemukan."
+              noun="karyawan"
             />
-          </label>
-          <button className="primary-button" disabled={!!busy}>
-            Bayar Utang Pemasok
-          </button>
-        </form>
-      </section>
+            <label className="field-label">
+              Sumber dana
+              <select
+                value={kasbon.sourceMethod}
+                onChange={(event) =>
+                  setKasbon((value) => ({
+                    ...value,
+                    sourceMethod: event.target.value as 'CASH' | 'TRANSFER',
+                  }))
+                }
+              >
+                <option value="CASH">Kas Utama</option>
+                <option value="TRANSFER">Bank</option>
+              </select>
+            </label>
+            <label className="field-label">
+              Jumlah (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={kasbon.amount}
+                onChange={(event) =>
+                  setKasbon((value) => ({
+                    ...value,
+                    amount: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Catatan
+              <input
+                value={kasbon.note}
+                onChange={(event) =>
+                  setKasbon((value) => ({
+                    ...value,
+                    note: event.target.value,
+                  }))
+                }
+              />
+            </label>
+            <button className="primary-button" disabled={!!busy}>
+              Catat Kasbon Karyawan
+            </button>
+          </form>
+        </section>
+      )}
 
-      <section className="identity-card secondary-panel" id="finance-kasbon">
-        <div>
-          <h2>Kasbon Karyawan</h2>
-          <p className="muted">
-            Terpisah dari Hutang Pelanggan. Foundation ini hanya mencatat
-            pencairan Kasbon; mekanisme pembayaran/potongan belum ditetapkan.
-          </p>
-        </div>
-        <div className="stack-list">
-          {(overview?.employeeKasbons ?? []).map((item) => (
-            <article className="list-card" key={item.kasbon_id}>
-              <strong>{item.employee_name}</strong>
-              <span>Sisa {formatIdr(item.balance)}</span>
-              <span className={operationalStatusClass(item.status)}>
-                {statusLabel(item.status)}
-              </span>
-            </article>
-          ))}
-          {(overview?.employeeKasbons ?? []).length === 0 && (
-            <p className="muted">Belum ada Kasbon Karyawan.</p>
-          )}
-        </div>
-        <form className="stack-form" onSubmit={submitKasbon}>
-          <SearchablePicker
-            label="Karyawan"
-            value={kasbon.employeeProfileId}
-            options={employeePickerOptions}
-            onChange={(employeeProfileId) =>
-              setKasbon((value) => ({ ...value, employeeProfileId }))
-            }
-            placeholder="Pilih karyawan"
-            eyebrow="PILIH KARYAWAN"
-            searchPlaceholder="Cari nama atau username…"
-            emptyLabel="Karyawan tidak ditemukan."
-            noun="karyawan"
-          />
-          <label className="field-label">
-            Sumber dana
-            <select
-              value={kasbon.sourceMethod}
-              onChange={(event) =>
-                setKasbon((value) => ({
-                  ...value,
-                  sourceMethod: event.target.value as 'CASH' | 'TRANSFER',
-                }))
-              }
-            >
-              <option value="CASH">Kas Utama</option>
-              <option value="TRANSFER">Bank</option>
-            </select>
-          </label>
-          <label className="field-label">
-            Jumlah (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={kasbon.amount}
-              onChange={(event) =>
-                setKasbon((value) => ({
-                  ...value,
-                  amount: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Catatan
-            <input
-              value={kasbon.note}
-              onChange={(event) =>
-                setKasbon((value) => ({
-                  ...value,
-                  note: event.target.value,
-                }))
-              }
-            />
-          </label>
-          <button className="primary-button" disabled={!!busy}>
-            Catat Kasbon Karyawan
-          </button>
-        </form>
-      </section>
+      {financeFlow === 'approval' && (
+        <section
+          className="identity-card secondary-panel"
+          id="finance-approval"
+        >
+          <div>
+            <h2>Approval Pengeluaran</h2>
+            <p className="muted">
+              Pengeluaran usaha yang melewati aturan approval diproses di jalur
+              terpisah.
+            </p>
+            <Link className="primary-link" to="/expense-approval">
+              Buka Approval Pengeluaran
+            </Link>
+          </div>
+        </section>
+      )}
 
-      <section className="identity-card secondary-panel" id="finance-approval">
-        <div>
-          <h2>Approval Pengeluaran</h2>
-          <p className="muted">
-            Pengeluaran usaha yang melewati aturan approval diproses di jalur
-            terpisah.
-          </p>
-          <Link className="primary-link" to="/expense-approval">
-            Buka Approval Pengeluaran
-          </Link>
-        </div>
-      </section>
-
-      <section className="identity-card secondary-panel" id="finance-personal">
-        <div>
-          <h2>Pengeluaran Pribadi Owner</h2>
-          <p>
-            Pengeluaran Pribadi Owner{' '}
-            <strong>tidak diperlakukan sebagai biaya usaha</strong> dan{' '}
-            <strong>tidak mengurangi laba usaha</strong>. Dana berpindah dari
-            Kas Utama/Bank ke akun Pengeluaran Pribadi.
-          </p>
-        </div>
-        <form className="stack-form" onSubmit={submitPersonal}>
-          <label className="field-label">
-            Sumber
-            <select
-              value={personal.from}
-              onChange={(event) =>
-                setPersonal((value) => ({
-                  ...value,
-                  from: event.target.value,
-                }))
-              }
-              required
-            >
-              <option value="">Pilih akun</option>
-              {ownerCashAccounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.display_name} · {formatIdr(account.balance)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="field-label">
-            Jumlah (Rp)
-            <input
-              type="number"
-              inputMode="numeric"
-              min="1"
-              value={personal.amount}
-              onChange={(event) =>
-                setPersonal((value) => ({
-                  ...value,
-                  amount: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <label className="field-label">
-            Keterangan
-            <input
-              value={personal.reason}
-              onChange={(event) =>
-                setPersonal((value) => ({
-                  ...value,
-                  reason: event.target.value,
-                }))
-              }
-              required
-            />
-          </label>
-          <button className="secondary-button" disabled={!!busy}>
-            Catat Pengeluaran Pribadi
-          </button>
-        </form>
-      </section>
+      {financeFlow === 'owner' && (
+        <section
+          className="identity-card secondary-panel"
+          id="finance-personal"
+        >
+          <div>
+            <h2>Pengeluaran Pribadi Owner</h2>
+            <p>
+              Pengeluaran Pribadi Owner{' '}
+              <strong>tidak diperlakukan sebagai biaya usaha</strong> dan{' '}
+              <strong>tidak mengurangi laba usaha</strong>. Dana berpindah dari
+              Kas Utama/Bank ke akun Pengeluaran Pribadi.
+            </p>
+          </div>
+          <form className="stack-form" onSubmit={submitPersonal}>
+            <label className="field-label">
+              Sumber
+              <select
+                value={personal.from}
+                onChange={(event) =>
+                  setPersonal((value) => ({
+                    ...value,
+                    from: event.target.value,
+                  }))
+                }
+                required
+              >
+                <option value="">Pilih akun</option>
+                {ownerCashAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.display_name} · {formatIdr(account.balance)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="field-label">
+              Jumlah (Rp)
+              <input
+                type="number"
+                inputMode="numeric"
+                min="1"
+                value={personal.amount}
+                onChange={(event) =>
+                  setPersonal((value) => ({
+                    ...value,
+                    amount: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <label className="field-label">
+              Keterangan
+              <input
+                value={personal.reason}
+                onChange={(event) =>
+                  setPersonal((value) => ({
+                    ...value,
+                    reason: event.target.value,
+                  }))
+                }
+                required
+              />
+            </label>
+            <button className="secondary-button" disabled={!!busy}>
+              Catat Pengeluaran Pribadi
+            </button>
+          </form>
+        </section>
+      )}
     </main>
   );
 }
