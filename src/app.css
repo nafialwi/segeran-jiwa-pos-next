@@ -10072,3 +10072,25 @@ pre {
     min-height: var(--sj-touch-min);
   }
 }
+
+/* C11-F15 — clear recovery controls for interrupted route downloads */
+.route-load-error {
+  max-width: 600px;
+  margin-top: clamp(22px, 7vh, 74px);
+}
+
+.route-load-error h1 {
+  font-size: clamp(1.18rem, 3.5vw, 1.55rem);
+}
+
+.route-load-error .button-row {
+  margin-top: 18px;
+}
+
+@media (max-width: 480px) {
+  .route-load-error .button-row > * {
+    flex: 1 1 100%;
+    justify-content: center;
+    text-align: center;
+  }
+}

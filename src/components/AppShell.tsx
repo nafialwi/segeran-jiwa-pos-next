@@ -7,6 +7,7 @@ import {
   isPrimaryNavigationActive,
 } from '../navigation/appNavigation';
 import { Icon } from '../ui/Icon';
+import { RouteErrorBoundary } from './RouteErrorBoundary';
 
 function BrandBlock() {
   return (
@@ -79,15 +80,17 @@ export function AppShell() {
         </header>
 
         <div className="app-route-content">
-          <Suspense
-            fallback={
-              <main className="center-card" role="status">
-                Memuat halaman…
-              </main>
-            }
-          >
-            <Outlet />
-          </Suspense>
+          <RouteErrorBoundary key={location.pathname}>
+            <Suspense
+              fallback={
+                <main className="center-card" role="status">
+                  Memuat halaman…
+                </main>
+              }
+            >
+              <Outlet />
+            </Suspense>
+          </RouteErrorBoundary>
         </div>
       </div>
 
