@@ -66,7 +66,28 @@ class C11F0DSalesDailyUseTests(unittest.TestCase):
         self.assertNotIn("Pilih produk", source)
         self.assertIn("const variantSummary =", source)
         self.assertIn("{variantSummary && (", source)
-        self.assertIn('<span className="sales-v2-stock-badge empty">Habis</span>', source)
+        self.assertRegex(
+            source,
+            r'<span className="sales-v2-stock-badge empty">\s*Habis\s*</span>',
+        )
+
+    def test_sales_mobile_header_keeps_shift_visible_on_small_screens(self):
+        css = CSS.read_text(encoding="utf-8")
+        self.assertNotRegex(
+            css,
+            r"@media \(max-width: 360px\)\s*\{\s*\.sales-v2-header-meta\s*\{\s*display:\s*none",
+        )
+        sales_header_css = css.split(
+            "/* C11 mobile Sales: one-row title and shift status, matching approved UI. */", 1
+        )[1]
+        self.assertRegex(
+            sales_header_css,
+            r"@media \(max-width: 520px\)\s*\{\s*\.sales-v2-header\s*\{[^}]*flex-direction: row;",
+        )
+        self.assertRegex(
+            sales_header_css,
+            r"\.sales-v2-header-meta\s*\{[^}]*display: inline-flex;",
+        )
 
     def test_loading_is_visual_progress_not_blank_identity_card(self):
         source = SCREEN.read_text(encoding="utf-8")

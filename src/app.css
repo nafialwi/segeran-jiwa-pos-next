@@ -5312,10 +5312,6 @@ body,
 }
 
 @media (max-width: 360px) {
-  .sales-v2-header-meta {
-    display: none;
-  }
-
   .sales-v2-product-card {
     min-height: 168px;
   }
@@ -9298,6 +9294,35 @@ pre {
   font-size: 0.74rem;
 }
 
+/* C11 mobile Sales: one-row title and shift status, matching approved UI. */
+@media (max-width: 520px) {
+  .sales-v2-header {
+    min-height: 36px;
+    align-items: center;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 3px 2px 5px;
+  }
+
+  .sales-v2-header h1 {
+    min-width: 0;
+    margin: 0;
+    font-size: 1.3rem;
+    line-height: 1.05;
+    text-align: left;
+  }
+
+  .sales-v2-header-meta {
+    display: inline-flex;
+    flex: 0 1 auto;
+    min-width: 0;
+    min-height: 28px;
+    padding-inline: 8px;
+    font-size: 0.68rem;
+  }
+}
+
 .sales-v2-toolbar {
   margin-top: 0;
   padding-top: 6px;
@@ -9337,11 +9362,18 @@ pre {
 
 @media (max-width: 360px) {
   .sales-v2-header {
-    min-height: 38px;
+    min-height: 34px;
+    gap: 6px;
   }
 
   .sales-v2-header h1 {
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+  }
+
+  .sales-v2-header-meta {
+    min-height: 26px;
+    padding-inline: 6px;
+    font-size: 0.62rem;
   }
 
   .sales-v2-toolbar {
