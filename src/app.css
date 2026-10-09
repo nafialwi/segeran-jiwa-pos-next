@@ -6278,7 +6278,13 @@ body,
   width: 126px;
   height: 126px;
   border-radius: 34px;
-  background: url('/brand/segeran-jiwa-logo.png') center/cover no-repeat;
+  background-image: image-set(
+    url('/brand/segeran-jiwa-logo-384.webp') type('image/webp'),
+    url('/brand/segeran-jiwa-logo.png') type('image/png')
+  );
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
   content: '';
   opacity: 0.07;
 }

@@ -15,6 +15,7 @@ function BrandBlock() {
         <img
           className="app-brand-logo"
           src="/brand/segeran-jiwa-logo.png"
+          srcSet="/brand/segeran-jiwa-logo-384.webp"
           alt=""
           loading="eager"
         />

@@ -728,7 +728,11 @@ export function HomeScreen() {
           </p>
         </div>
         <div className="dashboard-hero-brand" aria-hidden="true">
-          <img src="/brand/segeran-jiwa-logo.png" alt="" />
+          <img
+            src="/brand/segeran-jiwa-logo.png"
+            srcSet="/brand/segeran-jiwa-logo-384.webp"
+            alt=""
+          />
         </div>
         <span className="role-badge">{authority.role_code}</span>
       </header>
