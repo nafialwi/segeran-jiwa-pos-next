@@ -10207,3 +10207,19 @@ pre {
     flex: 1 1 auto;
   }
 }
+
+/* C11-F17 — clean horizontal category scroller on compact phones */
+.menu-category-tabs {
+  scrollbar-width: none;
+}
+
+.menu-category-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.menu-category-tabs > button:focus-visible,
+.production-flow-tabs > button:focus-visible,
+.production-batch-filters > button:focus-visible {
+  outline: 3px solid var(--sj-brand-900);
+  outline-offset: 2px;
+}

@@ -1,0 +1,14 @@
+/* UI test only: never imported by the production entrypoint. */
+.fixture-notice {
+  position: relative;
+  z-index: 2;
+  padding: 6px 12px;
+  border-bottom: 1px solid #e3cf82;
+  background: #fff3bf;
+  color: #594200;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+  line-height: 1.3;
+  text-align: center;
+}
