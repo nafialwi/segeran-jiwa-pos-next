@@ -25,6 +25,13 @@ function formatDateTime(value: string): string {
 
 export function ProductionScreen() {
   const [overview, setOverview] = useState<ProductionOverview>(EMPTY);
+  const [productionFlow, setProductionFlow] = useState<
+    'plan' | 'batches' | 'recipes'
+  >('plan');
+  const [batchFilter, setBatchFilter] = useState<'DRAFT' | 'POSTED' | 'ALL'>(
+    'DRAFT',
+  );
+  const [batchPage, setBatchPage] = useState(0);
   const [locationId, setLocationId] = useState('');
   const [finishedGoodId, setFinishedGoodId] = useState('');
   const [plannedOutput, setPlannedOutput] = useState(1);
@@ -79,6 +86,19 @@ export function ProductionScreen() {
     producibleGoods.find((good) => good.id === finishedGoodId) ?? null;
   const selectedBom = selectedGood ? activeBomMap.get(selectedGood.id) : null;
 
+  const batchList = overview.batches.filter(
+    (batch) => batchFilter === 'ALL' || batch.status === batchFilter,
+  );
+  const pageCount = Math.max(1, Math.ceil(batchList.length / 10));
+  const visiblePage = Math.min(batchPage, pageCount - 1);
+  const visibleBatches = batchList.slice(
+    visiblePage * 10,
+    (visiblePage + 1) * 10,
+  );
+  const pendingCount = overview.batches.filter(
+    (batch) => batch.status === 'DRAFT',
+  ).length;
+
   async function createBatch(event: React.FormEvent) {
     event.preventDefault();
     if (!locationId || !finishedGoodId || plannedOutput <= 0) return;
@@ -98,6 +118,9 @@ export function ProductionScreen() {
           : 'Rencana produksi berhasil dibuat.',
       );
       setPlannedOutput(1);
+      setProductionFlow('batches');
+      setBatchFilter('DRAFT');
+      setBatchPage(0);
       await load();
     } catch (cause) {
       setError(
@@ -122,6 +145,8 @@ export function ProductionScreen() {
           ? 'Batch sudah pernah diposting.'
           : 'Produksi diposting. Bahan berkurang dan barang jadi bertambah.',
       );
+      setBatchFilter('POSTED');
+      setBatchPage(0);
       await load();
     } catch (cause) {
       setError(
@@ -139,7 +164,7 @@ export function ProductionScreen() {
           <p className="eyebrow">OPERASIONAL · PRODUKSI</p>
           <h1>Produksi</h1>
           <p className="muted">
-            Satu batch mengikat satu BOM Aktif dan satu inventory movement.
+            Buat rencana, periksa batch, lalu catat hasil produksi.
           </p>
         </div>
       </header>
@@ -157,245 +182,338 @@ export function ProductionScreen() {
         </p>
       )}
 
+      <nav
+        className="production-flow-tabs"
+        aria-label="Pilih pekerjaan produksi"
+      >
+        {(
+          [
+            ['plan', 'Rencana', null],
+            ['batches', 'Batch', pendingCount],
+            ['recipes', 'Resep Aktif', producibleGoods.length],
+          ] as const
+        ).map(([value, label, count]) => (
+          <button
+            key={value}
+            type="button"
+            aria-pressed={productionFlow === value}
+            className={productionFlow === value ? 'active' : ''}
+            onClick={() => setProductionFlow(value)}
+          >
+            {label}
+            {count !== null && <span>{count}</span>}
+          </button>
+        ))}
+      </nav>
+
       <div className="production-layout">
-        <section className="operations-panel">
-          <header className="operations-panel-header">
-            <div>
-              <p className="eyebrow">RENCANA</p>
-              <h2>Rencana Produksi</h2>
-            </div>
-            <span className="operations-icon">
-              <Icon name="activity" />
-            </span>
-          </header>
+        {productionFlow === 'plan' && (
+          <section className="operations-panel">
+            <header className="operations-panel-header">
+              <div>
+                <p className="eyebrow">RENCANA</p>
+                <h2>Rencana Produksi</h2>
+              </div>
+              <span className="operations-icon">
+                <Icon name="activity" />
+              </span>
+            </header>
 
-          {loading ? (
-            <div
-              className="operations-card-skeleton production-loading"
-              aria-label="Memuat produksi"
-            >
-              <span />
-              <span />
-            </div>
-          ) : producibleGoods.length === 0 ? (
-            <div className="empty-state">
-              <strong>Belum ada BOM Aktif.</strong>
-              <p>
-                Produksi hanya dapat dibuat untuk barang jadi dengan BOM Aktif.
-              </p>
-            </div>
-          ) : (
-            <form className="stack-form" onSubmit={createBatch}>
-              {selectedGood && (
-                <div className="production-selected-good">
-                  <span className="operations-icon large">
-                    <Icon name="product" size={26} />
-                  </span>
-                  <span>
-                    <small>Barang jadi terpilih</small>
-                    <strong>{selectedGood.displayName}</strong>
-                    <em>
-                      {selectedGood.code} · BOM v{selectedBom?.version ?? '-'} ·
-                      Yield {selectedBom?.yieldQuantity ?? '-'}{' '}
-                      {selectedGood.baseUnit}
-                    </em>
-                  </span>
-                </div>
-              )}
-              <label>
-                Lokasi produksi
-                <select
-                  value={locationId}
-                  onChange={(event) => setLocationId(event.target.value)}
-                  required
-                >
-                  {overview.locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.displayName}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <label>
-                Barang jadi
-                <select
-                  value={finishedGoodId}
-                  onChange={(event) => setFinishedGoodId(event.target.value)}
-                  required
-                >
-                  {producibleGoods.map((good) => {
-                    const bom = activeBomMap.get(good.id);
-                    return (
-                      <option key={good.id} value={good.id}>
-                        {good.displayName} · BOM v{bom?.version ?? '-'}
+            {loading ? (
+              <div
+                className="operations-card-skeleton production-loading"
+                aria-label="Memuat produksi"
+              >
+                <span />
+                <span />
+              </div>
+            ) : producibleGoods.length === 0 ? (
+              <div className="empty-state">
+                <strong>Belum ada BOM Aktif.</strong>
+                <p>
+                  Produksi hanya dapat dibuat untuk barang jadi dengan BOM
+                  Aktif.
+                </p>
+              </div>
+            ) : (
+              <form className="stack-form" onSubmit={createBatch}>
+                {selectedGood && (
+                  <div className="production-selected-good">
+                    <span className="operations-icon large">
+                      <Icon name="product" size={26} />
+                    </span>
+                    <span>
+                      <small>Barang jadi terpilih</small>
+                      <strong>{selectedGood.displayName}</strong>
+                      <em>
+                        {selectedGood.code} · BOM v{selectedBom?.version ?? '-'}{' '}
+                        · Yield {selectedBom?.yieldQuantity ?? '-'}{' '}
+                        {selectedGood.baseUnit}
+                      </em>
+                    </span>
+                  </div>
+                )}
+                <label>
+                  Lokasi produksi
+                  <select
+                    value={locationId}
+                    onChange={(event) => setLocationId(event.target.value)}
+                    required
+                  >
+                    {overview.locations.map((location) => (
+                      <option key={location.id} value={location.id}>
+                        {location.displayName}
                       </option>
-                    );
-                  })}
-                </select>
-              </label>
+                    ))}
+                  </select>
+                </label>
 
-              <label>
-                Target output
-                <input
-                  type="number"
-                  inputMode="decimal"
-                  min="0.001"
-                  step="0.001"
-                  value={plannedOutput}
-                  onChange={(event) =>
-                    setPlannedOutput(Number(event.target.value))
-                  }
-                  required
-                />
-              </label>
+                <label>
+                  Barang jadi
+                  <select
+                    value={finishedGoodId}
+                    onChange={(event) => setFinishedGoodId(event.target.value)}
+                    required
+                  >
+                    {producibleGoods.map((good) => {
+                      const bom = activeBomMap.get(good.id);
+                      return (
+                        <option key={good.id} value={good.id}>
+                          {good.displayName} · BOM v{bom?.version ?? '-'}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </label>
 
-              <button className="primary-button" type="submit" disabled={busy}>
-                <Icon name="operations" size={18} />
-                <span>Buat Batch Produksi</span>
-              </button>
-            </form>
-          )}
-        </section>
+                <label>
+                  Target output
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0.001"
+                    step="0.001"
+                    value={plannedOutput}
+                    onChange={(event) =>
+                      setPlannedOutput(Number(event.target.value))
+                    }
+                    required
+                  />
+                </label>
 
-        <section className="operations-panel">
-          <header className="operations-panel-header">
-            <div>
-              <p className="eyebrow">RESEP PRODUKSI</p>
-              <h2>BOM Aktif</h2>
-            </div>
-          </header>
+                <button
+                  className="primary-button"
+                  type="submit"
+                  disabled={busy}
+                >
+                  <Icon name="operations" size={18} />
+                  <span>Buat Batch Produksi</span>
+                </button>
+              </form>
+            )}
+          </section>
+        )}
 
-          {loading ? (
-            <div
-              className="operations-card-skeleton production-loading"
-              aria-label="Memuat BOM"
-            >
-              <span />
-              <span />
-            </div>
-          ) : (
-            <div className="production-bom-list">
-              {producibleGoods.map((good) => {
-                const bom = activeBomMap.get(good.id);
-                return (
-                  <article key={good.id}>
-                    <span>
-                      <strong>{good.displayName}</strong>
-                      <small>{good.code}</small>
-                    </span>
-                    <span>
-                      v{bom?.version ?? '-'} · Yield {bom?.yieldQuantity ?? '-'}{' '}
-                      {good.baseUnit}
-                    </span>
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
+        {productionFlow === 'recipes' && (
+          <section className="operations-panel">
+            <header className="operations-panel-header">
+              <div>
+                <p className="eyebrow">RESEP PRODUKSI</p>
+                <h2>BOM Aktif</h2>
+              </div>
+            </header>
+
+            {loading ? (
+              <div
+                className="operations-card-skeleton production-loading"
+                aria-label="Memuat BOM"
+              >
+                <span />
+                <span />
+              </div>
+            ) : (
+              <div className="production-bom-list">
+                {producibleGoods.map((good) => {
+                  const bom = activeBomMap.get(good.id);
+                  return (
+                    <article key={good.id}>
+                      <span>
+                        <strong>{good.displayName}</strong>
+                        <small>{good.code}</small>
+                      </span>
+                      <span>
+                        v{bom?.version ?? '-'} · Yield{' '}
+                        {bom?.yieldQuantity ?? '-'} {good.baseUnit}
+                      </span>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
       </div>
 
-      <section className="operations-panel">
-        <header className="operations-panel-header">
-          <div>
-            <p className="eyebrow">EKSEKUSI</p>
-            <h2>Batch Produksi</h2>
-          </div>
-          <small>{overview.batches.length} batch terbaru</small>
-        </header>
-
-        {loading ? (
-          <div
-            className="operations-card-skeleton production-loading"
-            aria-label="Memuat batch produksi"
-          >
-            <span />
-            <span />
-          </div>
-        ) : overview.batches.length === 0 ? (
-          <p className="operations-empty">Belum ada batch produksi.</p>
-        ) : (
-          <div className="production-batch-grid">
-            {overview.batches.map((batch) => (
-              <article
-                className={
-                  batch.status === 'POSTED'
-                    ? 'production-batch-card posted'
-                    : 'production-batch-card'
-                }
-                key={batch.id}
+      {productionFlow === 'batches' && (
+        <section className="operations-panel">
+          <header className="operations-panel-header">
+            <div>
+              <p className="eyebrow">EKSEKUSI</p>
+              <h2>Batch Produksi</h2>
+            </div>
+            <small>
+              {overview.batches.length} dari maksimal 50 batch terbaru
+            </small>
+          </header>
+          <nav className="production-batch-filters" aria-label="Status batch">
+            {(
+              [
+                ['DRAFT', 'Perlu Posting'],
+                ['POSTED', 'Selesai'],
+                ['ALL', 'Semua'],
+              ] as const
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={batchFilter === value}
+                className={batchFilter === value ? 'active' : ''}
+                onClick={() => {
+                  setBatchFilter(value);
+                  setBatchPage(0);
+                }}
               >
-                <header>
-                  <span>
-                    <strong>{batch.finishedGoodName}</strong>
-                    <small>
-                      {batch.finishedGoodCode} · {batch.locationName}
-                    </small>
-                  </span>
-                  <span className={operationalStatusClass(batch.status)}>
-                    {statusLabel(batch.status)}
-                  </span>
-                </header>
-
-                <dl>
-                  <div>
-                    <dt>Rencana</dt>
-                    <dd>
-                      {batch.plannedOutput} {batch.baseUnit}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>BOM</dt>
-                    <dd>v{batch.bomVersion || '-'}</dd>
-                  </div>
-                  <div>
-                    <dt>Dibuat</dt>
-                    <dd>{formatDateTime(batch.createdAt)}</dd>
-                  </div>
-                </dl>
-
-                {batch.status === 'DRAFT' ? (
-                  <div className="production-post-row">
-                    <label>
-                      Output aktual
-                      <input
-                        type="number"
-                        inputMode="decimal"
-                        min="0.001"
-                        step="0.001"
-                        value={actualOutputs[batch.id] ?? batch.plannedOutput}
-                        onChange={(event) =>
-                          setActualOutputs((current) => ({
-                            ...current,
-                            [batch.id]: Number(event.target.value),
-                          }))
-                        }
-                      />
-                    </label>
-                    <button
-                      className="primary-button"
-                      type="button"
-                      disabled={busy}
-                      onClick={() =>
-                        void postBatch(batch.id, batch.plannedOutput)
-                      }
-                    >
-                      Posting Produksi
-                    </button>
-                  </div>
-                ) : (
-                  <p className="production-posted-note">
-                    Output aktual {batch.actualOutput} {batch.baseUnit} ·
-                    diposting{' '}
-                    {batch.postedAt ? formatDateTime(batch.postedAt) : '-'}
-                  </p>
-                )}
-              </article>
+                {label}
+              </button>
             ))}
-          </div>
-        )}
-      </section>
+          </nav>
+
+          {loading ? (
+            <div
+              className="operations-card-skeleton production-loading"
+              aria-label="Memuat batch produksi"
+            >
+              <span />
+              <span />
+            </div>
+          ) : batchList.length === 0 ? (
+            <p className="operations-empty">
+              Tidak ada batch untuk status yang dipilih.
+            </p>
+          ) : (
+            <div className="production-batch-grid">
+              {visibleBatches.map((batch) => (
+                <article
+                  className={
+                    batch.status === 'POSTED'
+                      ? 'production-batch-card posted'
+                      : 'production-batch-card'
+                  }
+                  key={batch.id}
+                >
+                  <header>
+                    <span>
+                      <strong>{batch.finishedGoodName}</strong>
+                      <small>
+                        {batch.finishedGoodCode} · {batch.locationName}
+                      </small>
+                    </span>
+                    <span className={operationalStatusClass(batch.status)}>
+                      {statusLabel(batch.status)}
+                    </span>
+                  </header>
+
+                  <dl>
+                    <div>
+                      <dt>Rencana</dt>
+                      <dd>
+                        {batch.plannedOutput} {batch.baseUnit}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>BOM</dt>
+                      <dd>v{batch.bomVersion || '-'}</dd>
+                    </div>
+                    <div>
+                      <dt>Dibuat</dt>
+                      <dd>{formatDateTime(batch.createdAt)}</dd>
+                    </div>
+                  </dl>
+
+                  {batch.status === 'DRAFT' ? (
+                    <div className="production-post-row">
+                      <label>
+                        Output aktual
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          min="0.001"
+                          step="0.001"
+                          value={actualOutputs[batch.id] ?? batch.plannedOutput}
+                          onChange={(event) =>
+                            setActualOutputs((current) => ({
+                              ...current,
+                              [batch.id]: Number(event.target.value),
+                            }))
+                          }
+                        />
+                      </label>
+                      <button
+                        className="primary-button"
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          void postBatch(batch.id, batch.plannedOutput)
+                        }
+                      >
+                        Posting Produksi
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="production-posted-note">
+                      Output aktual {batch.actualOutput} {batch.baseUnit} ·
+                      diposting{' '}
+                      {batch.postedAt ? formatDateTime(batch.postedAt) : '-'}
+                    </p>
+                  )}
+                </article>
+              ))}
+            </div>
+          )}
+          {batchList.length > 10 && (
+            <nav
+              className="production-batch-pagination"
+              aria-label="Halaman batch"
+            >
+              <span>
+                {visiblePage * 10 + 1}–
+                {Math.min((visiblePage + 1) * 10, batchList.length)} dari{' '}
+                {batchList.length}
+              </span>
+              <div>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  disabled={visiblePage === 0}
+                  onClick={() => setBatchPage((page) => Math.max(0, page - 1))}
+                >
+                  Sebelumnya
+                </button>
+                <button
+                  type="button"
+                  className="secondary-button"
+                  disabled={visiblePage >= pageCount - 1}
+                  onClick={() =>
+                    setBatchPage((page) => Math.min(pageCount - 1, page + 1))
+                  }
+                >
+                  Berikutnya
+                </button>
+              </div>
+            </nav>
+          )}
+        </section>
+      )}
     </main>
   );
 }

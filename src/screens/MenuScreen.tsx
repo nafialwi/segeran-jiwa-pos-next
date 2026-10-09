@@ -51,6 +51,10 @@ function MenuGroup({
 export function MenuScreen() {
   const { authority, switchUser, logout } = useAuth();
   const { confirmAction } = useActionDialog();
+  const [menuCategory, setMenuCategory] = useState<
+    'operations' | 'business' | 'system'
+  >('operations');
+  const [menuSearch, setMenuSearch] = useState('');
   const [accountBusy, setAccountBusy] = useState(false);
   const [accountError, setAccountError] = useState('');
 
@@ -247,7 +251,7 @@ export function MenuScreen() {
   if (canAccessOwnerArea(authority)) {
     business.push({
       label: 'Keuangan',
-      detail: 'Kas, bank, QRIS, hutang, dan modal',
+      detail: 'Kas, bank, QRIS, piutang, dan modal',
       to: '/keuangan',
       icon: 'cash',
     });
@@ -274,6 +278,20 @@ export function MenuScreen() {
     );
   }
 
+  const search = menuSearch.trim().toLocaleLowerCase('id-ID');
+  const visibleEntries = (entries: MenuEntry[]) =>
+    search
+      ? entries.filter((entry) =>
+          (entry.label + ' ' + entry.detail)
+            .toLocaleLowerCase('id-ID')
+            .includes(search),
+        )
+      : entries;
+  const resultCount = [operations, business, system].reduce(
+    (sum, entries) => sum + visibleEntries(entries).length,
+    0,
+  );
+
   return (
     <main className="shell menu-screen">
       <header className="topbar">
@@ -286,9 +304,71 @@ export function MenuScreen() {
         </div>
       </header>
 
-      <MenuGroup title="Operasional" entries={operations} />
-      <MenuGroup title="Bisnis" entries={business} />
-      <MenuGroup title="Sistem" entries={system} />
+      <div className="menu-discovery">
+        <label className="field-label" htmlFor="sj-menu-search">
+          Cari menu
+        </label>
+        <input
+          id="sj-menu-search"
+          type="search"
+          placeholder="Contoh: laporan, stok, pengguna"
+          value={menuSearch}
+          onChange={(event) => setMenuSearch(event.target.value)}
+        />
+        {!search && (
+          <nav className="menu-category-tabs" aria-label="Kategori menu">
+            {(
+              [
+                ['operations', 'Operasional', operations.length],
+                ['business', 'Bisnis', business.length],
+                ['system', 'Sistem', system.length],
+              ] as const
+            ).map(([value, label, count]) => (
+              <button
+                key={value}
+                type="button"
+                className={menuCategory === value ? 'active' : ''}
+                aria-pressed={menuCategory === value}
+                onClick={() => setMenuCategory(value)}
+              >
+                {label} <span>{count}</span>
+              </button>
+            ))}
+          </nav>
+        )}
+      </div>
+
+      {search ? (
+        resultCount ? (
+          <>
+            <p className="muted menu-search-count">
+              {resultCount} menu ditemukan
+            </p>
+            <MenuGroup
+              title="Operasional"
+              entries={visibleEntries(operations)}
+            />
+            <MenuGroup title="Bisnis" entries={visibleEntries(business)} />
+            <MenuGroup title="Sistem" entries={visibleEntries(system)} />
+          </>
+        ) : (
+          <p className="operations-empty">
+            Menu tidak ditemukan. Coba kata lain.
+          </p>
+        )
+      ) : (
+        <>
+          {menuCategory === 'operations' && (
+            <MenuGroup title="Operasional" entries={operations} />
+          )}
+          {menuCategory === 'business' && (
+            <MenuGroup title="Bisnis" entries={business} />
+          )}
+          {menuCategory === 'system' && (
+            <MenuGroup title="Sistem" entries={system} />
+          )}
+        </>
+      )}
 
       <section className="menu-account-card">
         <div>

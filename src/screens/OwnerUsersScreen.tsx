@@ -6,6 +6,7 @@ import {
   useState,
   type FormEvent,
 } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ControlCenterNav } from '../components/ControlCenterNav';
 import { OperationalState } from '../components/OperationalState';
 import { useActionDialog } from '../components/ActionDialogProvider';
@@ -254,6 +255,7 @@ async function edgeFunctionErrorMessage(
 
 export function OwnerUsersScreen() {
   const { refreshAuthority } = useAuth();
+  const location = useLocation();
   const { confirmAction, promptAction } = useActionDialog();
   const [users, setUsers] = useState<OwnerUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(true);
@@ -272,6 +274,19 @@ export function OwnerUsersScreen() {
   const [userDetailTab, setUserDetailTab] = useState<'permissions' | 'devices'>(
     'permissions',
   );
+  // Keep Pusat Kontrol deep links useful even when the hash changes on this route.
+  useEffect(() => {
+    if (location.hash === '#devices') {
+      setUserDetailTab('devices');
+    } else if (location.hash === '#permissions') {
+      const selectedIsOwner = users.some(
+        (user) =>
+          user.profile_id === selectedProfileId && user.role_code === 'OWNER',
+      );
+      setUserDetailTab(selectedIsOwner ? 'devices' : 'permissions');
+    }
+  }, [location.hash, selectedProfileId, users]);
+
   const [newUsername, setNewUsername] = useState('');
   const [newDisplayName, setNewDisplayName] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -599,7 +614,8 @@ export function OwnerUsersScreen() {
   function selectUser(profileId: string) {
     setSelectedProfileId(profileId);
     setUserDetailTab(
-      users.find((user) => user.profile_id === profileId)?.role_code === 'OWNER'
+      users.find((user) => user.profile_id === profileId)?.role_code ===
+        'OWNER' || location.hash === '#devices'
         ? 'devices'
         : 'permissions',
     );
@@ -695,6 +711,15 @@ export function OwnerUsersScreen() {
       )}
 
       <section className="owner-users-list-section">
+        {!selectedProfileId &&
+          (location.hash === '#permissions' ||
+            location.hash === '#devices') && (
+            <p className="muted owner-user-deep-link-hint" role="status">
+              {location.hash === '#devices'
+                ? 'Pilih pengguna untuk melihat perangkat yang terdaftar.'
+                : 'Pilih staf untuk melihat dan mengatur izinnya.'}
+            </p>
+          )}
         <div className="owner-users-section-head">
           <div>
             <p className="eyebrow">AKUN & ROLE</p>

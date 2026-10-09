@@ -10094,3 +10094,116 @@ pre {
     text-align: center;
   }
 }
+
+/* C11-F16 — findable menu, scoped owner deep links and short production workflows */
+.menu-discovery {
+  display: grid;
+  gap: 9px;
+  margin-top: 12px;
+}
+
+.menu-discovery > input[type='search'] {
+  width: 100%;
+  min-height: var(--sj-touch-min);
+}
+
+.menu-category-tabs,
+.production-flow-tabs,
+.production-batch-filters {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  gap: 7px;
+  overflow-x: auto;
+  padding: 5px 0 9px;
+  scrollbar-width: thin;
+  overscroll-behavior-inline: contain;
+}
+
+.menu-category-tabs button,
+.production-flow-tabs button,
+.production-batch-filters button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--sj-touch-min);
+  padding: 0 13px;
+  border: 1px solid var(--sj-border);
+  border-radius: 12px;
+  background: var(--sj-surface);
+  color: var(--sj-text-muted);
+  font: inherit;
+  font-size: var(--sj-font-caption);
+  font-weight: 800;
+}
+
+.menu-category-tabs button.active,
+.production-flow-tabs button.active,
+.production-batch-filters button.active {
+  border-color: var(--sj-brand-900);
+  background: var(--sj-brand-soft);
+  color: var(--sj-brand-900);
+}
+
+.menu-category-tabs button span,
+.production-flow-tabs button span {
+  font-size: 0.75rem;
+  opacity: 0.72;
+}
+
+.menu-search-count {
+  margin: 8px 0 0;
+}
+
+.owner-user-deep-link-hint {
+  padding: 10px 12px;
+  border: 1px solid var(--sj-border);
+  border-radius: 12px;
+  background: var(--sj-surface-muted);
+}
+
+.production-flow-tabs {
+  margin: 9px 0;
+}
+
+.production-layout > .operations-panel {
+  grid-column: 1 / -1;
+}
+
+.production-batch-filters {
+  margin-bottom: 8px;
+}
+
+.production-batch-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.production-batch-pagination > div {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 520px) {
+  .menu-screen .menu-card {
+    min-height: 68px;
+    padding: 10px;
+  }
+
+  .menu-screen .menu-card small {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+    overflow: hidden;
+  }
+
+  .production-batch-pagination > div,
+  .production-batch-pagination > div > button {
+    flex: 1 1 auto;
+  }
+}
