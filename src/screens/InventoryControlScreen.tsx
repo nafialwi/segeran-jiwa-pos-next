@@ -55,6 +55,7 @@ export function InventoryControlScreen() {
     useState<InventoryControlOverview>(EMPTY_OVERVIEW);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [showAdjustHistory, setShowAdjustHistory] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
@@ -441,10 +442,7 @@ export function InventoryControlScreen() {
         <div>
           <p className="eyebrow">OPERASIONAL · KONTROL STOK</p>
           <h1>Kontrol Stok</h1>
-          <p className="muted">
-            Restock, transfer, opname, dan penyesuaian tetap memakai satu
-            inventory movement authority.
-          </p>
+          <p className="muted">Pilih pekerjaan stok lalu periksa hasilnya.</p>
         </div>
       </header>
 
@@ -1103,50 +1101,62 @@ export function InventoryControlScreen() {
             </form>
           </section>
 
-          <section className="operations-panel">
-            <header className="operations-panel-header">
-              <div>
-                <p className="eyebrow">FAKTA</p>
-                <h2>Penyesuaian Terbaru</h2>
+          <button
+            type="button"
+            className="secondary-button inventory-activity-toggle"
+            aria-expanded={showAdjustHistory}
+            onClick={() => setShowAdjustHistory((open) => !open)}
+          >
+            {showAdjustHistory
+              ? 'Tutup Riwayat Penyesuaian'
+              : `Lihat Riwayat Penyesuaian (${overview.adjustments.length})`}
+          </button>
+          {showAdjustHistory && (
+            <section className="operations-panel">
+              <header className="operations-panel-header">
+                <div>
+                  <p className="eyebrow">FAKTA</p>
+                  <h2>Penyesuaian Terbaru</h2>
+                </div>
+              </header>
+              <div className="inventory-control-list">
+                {overview.adjustments.length === 0 ? (
+                  <p className="operations-empty">
+                    Belum ada penyesuaian persediaan.
+                  </p>
+                ) : (
+                  overview.adjustments.map((row) => (
+                    <article key={row.id}>
+                      <header>
+                        <span>
+                          <strong>
+                            {itemMap.get(row.stockItemId)?.displayName ??
+                              row.stockItemId}
+                          </strong>
+                          <small>
+                            {locationMap.get(row.locationId) ?? row.locationId}{' '}
+                            · {formatDateTime(row.createdAt)}
+                          </small>
+                        </span>
+                        <span
+                          className={
+                            row.quantityDelta > 0
+                              ? 'inventory-delta positive'
+                              : 'inventory-delta negative'
+                          }
+                        >
+                          {signed(row.quantityDelta)}
+                        </span>
+                      </header>
+                      <p>
+                        {row.adjustmentKind} · {row.reasonCode}
+                      </p>
+                    </article>
+                  ))
+                )}
               </div>
-            </header>
-            <div className="inventory-control-list">
-              {overview.adjustments.length === 0 ? (
-                <p className="operations-empty">
-                  Belum ada penyesuaian persediaan.
-                </p>
-              ) : (
-                overview.adjustments.map((row) => (
-                  <article key={row.id}>
-                    <header>
-                      <span>
-                        <strong>
-                          {itemMap.get(row.stockItemId)?.displayName ??
-                            row.stockItemId}
-                        </strong>
-                        <small>
-                          {locationMap.get(row.locationId) ?? row.locationId} ·{' '}
-                          {formatDateTime(row.createdAt)}
-                        </small>
-                      </span>
-                      <span
-                        className={
-                          row.quantityDelta > 0
-                            ? 'inventory-delta positive'
-                            : 'inventory-delta negative'
-                        }
-                      >
-                        {signed(row.quantityDelta)}
-                      </span>
-                    </header>
-                    <p>
-                      {row.adjustmentKind} · {row.reasonCode}
-                    </p>
-                  </article>
-                ))
-              )}
-            </div>
-          </section>
+            </section>
+          )}
         </div>
       )}
     </main>

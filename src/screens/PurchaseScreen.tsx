@@ -67,6 +67,8 @@ export function PurchaseScreen() {
   const [loadingOptions, setLoadingOptions] = useState(true);
   const [loadingFinance, setLoadingFinance] = useState(true);
   const [purchaseTab, setPurchaseTab] = useState<PurchaseTab>('DIRECT');
+  const [masterKind, setMasterKind] = useState<'SUPPLIER' | 'ITEM'>('SUPPLIER');
+  const [showPayables, setShowPayables] = useState(false);
 
   const [supplierCode, setSupplierCode] = useState('');
   const [supplierName, setSupplierName] = useState('');
@@ -543,8 +545,7 @@ export function PurchaseScreen() {
           <p className="eyebrow">OPERASIONAL · PEMBELIAN</p>
           <h1>Pembelian & Pemasok</h1>
           <p className="muted">
-            Pisahkan pembelian langsung, pesanan, dan penerimaan agar status
-            stok selalu jelas.
+            Pilih belanja langsung, buat pesanan, atau terima barang.
           </p>
         </div>
       </header>
@@ -791,108 +792,132 @@ export function PurchaseScreen() {
 
       {purchaseTab === 'MASTER' && (
         <div className="purchase-master-grid">
-          <section className="operations-panel">
-            <header className="operations-panel-header">
-              <div>
-                <p className="eyebrow">MASTER</p>
-                <h2>Tambah Pemasok</h2>
-              </div>
-            </header>
-            <form className="stack-form" onSubmit={saveSupplier}>
-              <label>
-                Kode
-                <input
-                  value={supplierCode}
-                  onChange={(event) => setSupplierCode(event.target.value)}
-                  placeholder="MISAL: TOKO_A"
-                  required
-                />
-              </label>
-              <label>
-                Nama Pemasok
-                <input
-                  value={supplierName}
-                  onChange={(event) => setSupplierName(event.target.value)}
-                  required
-                />
-              </label>
-              <label>
-                Telepon
-                <input
-                  value={supplierPhone}
-                  onChange={(event) => setSupplierPhone(event.target.value)}
-                />
-              </label>
-              <button
-                className="secondary-button"
-                type="submit"
-                disabled={busy}
-              >
-                Tambah Pemasok
-              </button>
-            </form>
-          </section>
-
-          <section className="operations-panel">
-            <header className="operations-panel-header">
-              <div>
-                <p className="eyebrow">MASTER</p>
-                <h2>Tambah Barang</h2>
-              </div>
-            </header>
-            <form className="stack-form" onSubmit={saveItem}>
-              <label>
-                Kode
-                <input
-                  value={itemCode}
-                  onChange={(event) => setItemCode(event.target.value)}
-                  placeholder="MISAL: GULA"
-                  required
-                />
-              </label>
-              <label>
-                Nama Barang
-                <input
-                  value={itemName}
-                  onChange={(event) => setItemName(event.target.value)}
-                  required
-                />
-              </label>
-              <label>
-                Jenis
-                <select
-                  value={itemKind}
-                  onChange={(event) => setItemKind(event.target.value)}
+          <nav
+            className="purchase-master-switch"
+            aria-label="Pilih master pembelian"
+          >
+            <button
+              type="button"
+              aria-pressed={masterKind === 'SUPPLIER'}
+              className={masterKind === 'SUPPLIER' ? 'active' : ''}
+              onClick={() => setMasterKind('SUPPLIER')}
+            >
+              Tambah Pemasok
+            </button>
+            <button
+              type="button"
+              aria-pressed={masterKind === 'ITEM'}
+              className={masterKind === 'ITEM' ? 'active' : ''}
+              onClick={() => setMasterKind('ITEM')}
+            >
+              Tambah Barang
+            </button>
+          </nav>
+          {masterKind === 'SUPPLIER' && (
+            <section className="operations-panel">
+              <header className="operations-panel-header">
+                <div>
+                  <p className="eyebrow">MASTER</p>
+                  <h2>Tambah Pemasok</h2>
+                </div>
+              </header>
+              <form className="stack-form" onSubmit={saveSupplier}>
+                <label>
+                  Kode
+                  <input
+                    value={supplierCode}
+                    onChange={(event) => setSupplierCode(event.target.value)}
+                    placeholder="MISAL: TOKO_A"
+                    required
+                  />
+                </label>
+                <label>
+                  Nama Pemasok
+                  <input
+                    value={supplierName}
+                    onChange={(event) => setSupplierName(event.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  Telepon
+                  <input
+                    value={supplierPhone}
+                    onChange={(event) => setSupplierPhone(event.target.value)}
+                  />
+                </label>
+                <button
+                  className="secondary-button"
+                  type="submit"
+                  disabled={busy}
                 >
-                  <option value="MATERIAL">Bahan</option>
-                  <option value="FINISHED_GOOD">Barang Jadi</option>
-                  <option value="PACKAGING">Kemasan</option>
-                  <option value="OTHER">Lainnya</option>
-                </select>
-              </label>
-              <label>
-                Satuan Dasar
-                <select
-                  value={itemUnitId}
-                  onChange={(event) => setItemUnitId(event.target.value)}
-                  required
+                  Tambah Pemasok
+                </button>
+              </form>
+            </section>
+          )}
+          {masterKind === 'ITEM' && (
+            <section className="operations-panel">
+              <header className="operations-panel-header">
+                <div>
+                  <p className="eyebrow">MASTER</p>
+                  <h2>Tambah Barang</h2>
+                </div>
+              </header>
+              <form className="stack-form" onSubmit={saveItem}>
+                <label>
+                  Kode
+                  <input
+                    value={itemCode}
+                    onChange={(event) => setItemCode(event.target.value)}
+                    placeholder="MISAL: GULA"
+                    required
+                  />
+                </label>
+                <label>
+                  Nama Barang
+                  <input
+                    value={itemName}
+                    onChange={(event) => setItemName(event.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  Jenis
+                  <select
+                    value={itemKind}
+                    onChange={(event) => setItemKind(event.target.value)}
+                  >
+                    <option value="MATERIAL">Bahan</option>
+                    <option value="FINISHED_GOOD">Barang Jadi</option>
+                    <option value="PACKAGING">Kemasan</option>
+                    <option value="OTHER">Lainnya</option>
+                  </select>
+                </label>
+                <label>
+                  Satuan Dasar
+                  <select
+                    value={itemUnitId}
+                    onChange={(event) => setItemUnitId(event.target.value)}
+                    required
+                  >
+                    {options.units.map((unit) => (
+                      <option key={unit.id} value={unit.id}>
+                        {unit.display_name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  className="secondary-button"
+                  type="submit"
+                  disabled={busy}
                 >
-                  {options.units.map((unit) => (
-                    <option key={unit.id} value={unit.id}>
-                      {unit.display_name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                className="secondary-button"
-                type="submit"
-                disabled={busy}
-              >
-                Tambah Barang
-              </button>
-            </form>
-          </section>
+                  Tambah Barang
+                </button>
+              </form>
+            </section>
+          )}
         </div>
       )}
 
@@ -904,28 +929,39 @@ export function PurchaseScreen() {
           </div>
           <strong>{formatIdr(payableBalance)}</strong>
         </header>
-        {payables.length === 0 ? (
-          <p className="operations-empty">Belum ada Utang Pemasok.</p>
-        ) : (
-          <div className="inventory-control-list">
-            {payables.map((row) => (
-              <article key={row.payable_id}>
-                <header>
-                  <span>
-                    <strong>{row.supplier_name}</strong>
-                    <small>
-                      {row.invoice_reference ?? 'Tanpa referensi invoice'}
-                    </small>
-                  </span>
-                  <span className={operationalStatusClass(row.status)}>
-                    {statusLabel(row.status)}
-                  </span>
-                </header>
-                <p>Sisa {formatIdr(Number(row.balance))}</p>
-              </article>
-            ))}
-          </div>
-        )}
+        <button
+          type="button"
+          className="secondary-button purchase-payable-toggle"
+          aria-expanded={showPayables}
+          onClick={() => setShowPayables((open) => !open)}
+        >
+          {showPayables
+            ? 'Tutup Daftar Utang'
+            : `Lihat Rincian Utang (${payables.length})`}
+        </button>
+        {showPayables &&
+          (payables.length === 0 ? (
+            <p className="operations-empty">Belum ada Utang Pemasok.</p>
+          ) : (
+            <div className="inventory-control-list">
+              {payables.map((row) => (
+                <article key={row.payable_id}>
+                  <header>
+                    <span>
+                      <strong>{row.supplier_name}</strong>
+                      <small>
+                        {row.invoice_reference ?? 'Tanpa referensi invoice'}
+                      </small>
+                    </span>
+                    <span className={operationalStatusClass(row.status)}>
+                      {statusLabel(row.status)}
+                    </span>
+                  </header>
+                  <p>Sisa {formatIdr(Number(row.balance))}</p>
+                </article>
+              ))}
+            </div>
+          ))}
       </section>
     </main>
   );

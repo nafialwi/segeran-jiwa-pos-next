@@ -49,6 +49,7 @@ export function ProductOperationsScreen() {
   const [products, setProducts] = useState<ProductOperationsProduct[]>([]);
   const [bomComponents, setBomComponents] = useState<BomStockOption[]>([]);
   const [selectedId, setSelectedId] = useState('');
+  const [mobileView, setMobileView] = useState<'list' | 'detail'>('list');
   const [tab, setTab] = useState<ProductTab>('INFO');
   const [search, setSearch] = useState('');
   const [error, setError] = useState('');
@@ -329,6 +330,7 @@ export function ProductOperationsScreen() {
 
   function selectProduct(productId: string) {
     setSelectedId(productId);
+    setMobileView('detail');
     setTab('INFO');
     if (window.matchMedia('(max-width: 720px)').matches) {
       window.requestAnimationFrame(() => {
@@ -395,7 +397,7 @@ export function ProductOperationsScreen() {
           <p className="eyebrow">OPERASIONAL · PRODUK</p>
           <h1>Produk & Resep</h1>
           <p className="muted">
-            Produk jual, varian, konsumsi saat penjualan, dan BOM Produksi.
+            Cari produk, lalu pilih Informasi, Varian, Resep, atau Kemasan.
           </p>
         </div>
       </header>
@@ -413,7 +415,7 @@ export function ProductOperationsScreen() {
         </p>
       )}
 
-      <section className="product-ops-layout">
+      <section className="product-ops-layout" data-mobile-view={mobileView}>
         <aside className="product-ops-list">
           <div className="product-ops-list-tools">
             <label className="product-ops-search">
@@ -499,6 +501,13 @@ export function ProductOperationsScreen() {
           ref={detailRef}
           tabIndex={-1}
         >
+          <button
+            type="button"
+            className="secondary-button product-ops-back-list"
+            onClick={() => setMobileView('list')}
+          >
+            Kembali ke Daftar Produk
+          </button>
           {!selected ? (
             loadingProducts ? (
               <div

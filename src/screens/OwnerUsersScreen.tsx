@@ -79,6 +79,43 @@ const OPERATIONAL_PERMISSIONS: Array<{
   { code: 'SETTINGS_NONCRITICAL', label: 'Pengaturan Non-Kritis' },
 ];
 
+const PERMISSION_GROUPS: Array<{ label: string; codes: PermissionCode[] }> = [
+  {
+    label: 'Kasir & Pembayaran',
+    codes: [
+      'EXPENSE_SHIFT_CREATE',
+      'PAYMENT_QRIS',
+      'PAYMENT_TRANSFER',
+      'CUSTOMER_DEBT_MANAGE',
+      'CORRECTION_LIMITED',
+    ],
+  },
+  {
+    label: 'Barang & Operasional',
+    codes: [
+      'INVENTORY_READ',
+      'INVENTORY_TRANSFER',
+      'PURCHASE_MANAGE',
+      'PRODUCT_MANAGE',
+      'PRODUCTION_MANAGE',
+      'OPERATIONAL_MESSAGE_MANAGE',
+    ],
+  },
+  { label: 'Pelanggan & Staf', codes: ['CUSTOMER_MANAGE', 'EMPLOYEE_MANAGE'] },
+  {
+    label: 'Riwayat & Laporan',
+    codes: [
+      'HISTORY_OWN',
+      'HISTORY_ALL',
+      'REPORT_SALES_LIMITED',
+      'REPORT_INVENTORY',
+      'REPORT_PURCHASE',
+      'REPORT_PRODUCTION',
+    ],
+  },
+  { label: 'Pengaturan', codes: ['SETTINGS_NONCRITICAL'] },
+];
+
 function parseUsers(value: unknown): OwnerUser[] {
   if (!Array.isArray(value)) return [];
 
@@ -231,6 +268,10 @@ export function OwnerUsersScreen() {
   const [devices, setDevices] = useState<OwnerDevice[]>([]);
   const [showRemovedDevices, setShowRemovedDevices] = useState(false);
 
+  const [showCreateStaff, setShowCreateStaff] = useState(false);
+  const [userDetailTab, setUserDetailTab] = useState<'permissions' | 'devices'>(
+    'permissions',
+  );
   const [newUsername, setNewUsername] = useState('');
   const [newDisplayName, setNewDisplayName] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -424,6 +465,7 @@ export function OwnerUsersScreen() {
     if (result) {
       setNewUsername('');
       setNewDisplayName('');
+      setShowCreateStaff(false);
     }
   }
 
@@ -556,6 +598,11 @@ export function OwnerUsersScreen() {
 
   function selectUser(profileId: string) {
     setSelectedProfileId(profileId);
+    setUserDetailTab(
+      users.find((user) => user.profile_id === profileId)?.role_code === 'OWNER'
+        ? 'devices'
+        : 'permissions',
+    );
     if (window.matchMedia('(max-width: 759px)').matches) {
       window.requestAnimationFrame(() => {
         userDetailAnchorRef.current?.scrollIntoView({
@@ -597,43 +644,55 @@ export function OwnerUsersScreen() {
         </p>
       )}
 
-      <section className="identity-card">
-        <h2>Tambah Staf</h2>
-        <form className="stack" onSubmit={createStaff}>
-          <label>
-            <span className="field-label">Username</span>
-            <input
-              value={newUsername}
-              onChange={(event) => setNewUsername(event.target.value)}
-              autoComplete="off"
-              required
-            />
-          </label>
-          <label>
-            <span className="field-label">Nama Tampilan</span>
-            <input
-              value={newDisplayName}
-              onChange={(event) => setNewDisplayName(event.target.value)}
-              required
-            />
-          </label>
-          <label>
-            <span className="field-label">Password Awal</span>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              autoComplete="new-password"
-              minLength={8}
-              maxLength={72}
-              required
-            />
-          </label>
-          <button className="primary-button" disabled={busy} type="submit">
-            Tambah Staf
-          </button>
-        </form>
-      </section>
+      <div className="owner-users-create-toggle">
+        <button
+          type="button"
+          className="secondary-button"
+          aria-expanded={showCreateStaff}
+          onClick={() => setShowCreateStaff((open) => !open)}
+        >
+          {showCreateStaff ? 'Tutup Formulir' : '+ Tambah Staf'}
+        </button>
+      </div>
+      {showCreateStaff && (
+        <section className="identity-card owner-users-create-panel">
+          <h2>Tambah Staf</h2>
+          <form className="stack" onSubmit={createStaff}>
+            <label>
+              <span className="field-label">Username</span>
+              <input
+                value={newUsername}
+                onChange={(event) => setNewUsername(event.target.value)}
+                autoComplete="off"
+                required
+              />
+            </label>
+            <label>
+              <span className="field-label">Nama Tampilan</span>
+              <input
+                value={newDisplayName}
+                onChange={(event) => setNewDisplayName(event.target.value)}
+                required
+              />
+            </label>
+            <label>
+              <span className="field-label">Password Awal</span>
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+                autoComplete="new-password"
+                minLength={8}
+                maxLength={72}
+                required
+              />
+            </label>
+            <button className="primary-button" disabled={busy} type="submit">
+              Tambah Staf
+            </button>
+          </form>
+        </section>
+      )}
 
       <section className="owner-users-list-section">
         <div className="owner-users-section-head">
@@ -725,42 +784,43 @@ export function OwnerUsersScreen() {
                   </span>
                 </button>
 
-                {user.role_code !== 'OWNER' && (
-                  <div className="button-row">
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void resetPassword(user)}
-                    >
-                      Reset Password
-                    </button>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void setStatus(user, 'ACTIVE')}
-                    >
-                      Aktif
-                    </button>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void setStatus(user, 'LEAVE')}
-                    >
-                      Cuti
-                    </button>
-                    <button
-                      className="secondary-button"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void setStatus(user, 'DISABLED')}
-                    >
-                      Dinonaktifkan
-                    </button>
-                  </div>
-                )}
+                {user.role_code !== 'OWNER' &&
+                  selectedProfileId === user.profile_id && (
+                    <div className="button-row">
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void resetPassword(user)}
+                      >
+                        Reset Password
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void setStatus(user, 'ACTIVE')}
+                      >
+                        Aktif
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void setStatus(user, 'LEAVE')}
+                      >
+                        Cuti
+                      </button>
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        disabled={busy}
+                        onClick={() => void setStatus(user, 'DISABLED')}
+                      >
+                        Dinonaktifkan
+                      </button>
+                    </div>
+                  )}
               </article>
             ))
           )}
@@ -775,35 +835,74 @@ export function OwnerUsersScreen() {
         />
       )}
 
-      {selected && selected.role_code !== 'OWNER' && (
-        <section className="identity-card" id="permissions">
-          <h2>Izin Operasional · {selected.display_name}</h2>
-          <div className="stack">
-            {OPERATIONAL_PERMISSIONS.map(({ code, label }) => (
-              <label key={code}>
-                <span className="field-label">{label}</span>
-                <select
-                  value={overrideEffect(selected, code)}
-                  disabled={busy}
-                  onChange={(event) =>
-                    void setPermission(
-                      selected,
-                      code,
-                      event.target.value as PermissionEffect,
-                    )
-                  }
-                >
-                  <option value="INHERIT">Ikuti Role</option>
-                  <option value="ALLOW">Izinkan</option>
-                  <option value="DENY">Tolak</option>
-                </select>
-              </label>
-            ))}
-          </div>
-        </section>
+      {selected && (
+        <nav className="owner-users-detail-tabs" aria-label="Detail pengguna">
+          {selected.role_code !== 'OWNER' && (
+            <button
+              type="button"
+              aria-pressed={userDetailTab === 'permissions'}
+              className={userDetailTab === 'permissions' ? 'active' : ''}
+              onClick={() => setUserDetailTab('permissions')}
+            >
+              Izin
+            </button>
+          )}
+          <button
+            type="button"
+            aria-pressed={userDetailTab === 'devices'}
+            className={userDetailTab === 'devices' ? 'active' : ''}
+            onClick={() => setUserDetailTab('devices')}
+          >
+            Perangkat
+          </button>
+        </nav>
       )}
 
-      {selected && (
+      {selected &&
+        selected.role_code !== 'OWNER' &&
+        userDetailTab === 'permissions' && (
+          <section className="identity-card" id="permissions">
+            <h2>Izin Operasional · {selected.display_name}</h2>
+            <p className="muted">
+              Pilih kelompok izin. Perubahan disimpan per izin.
+            </p>
+            <div className="owner-permission-groups">
+              {PERMISSION_GROUPS.map((group) => (
+                <details key={group.label} className="owner-permission-group">
+                  <summary>
+                    {group.label} · {group.codes.length} izin
+                  </summary>
+                  <div className="stack">
+                    {OPERATIONAL_PERMISSIONS.filter(({ code }) =>
+                      group.codes.includes(code),
+                    ).map(({ code, label }) => (
+                      <label key={code}>
+                        <span className="field-label">{label}</span>
+                        <select
+                          value={overrideEffect(selected, code)}
+                          disabled={busy}
+                          onChange={(event) =>
+                            void setPermission(
+                              selected,
+                              code,
+                              event.target.value as PermissionEffect,
+                            )
+                          }
+                        >
+                          <option value="INHERIT">Ikuti Role</option>
+                          <option value="ALLOW">Izinkan</option>
+                          <option value="DENY">Tolak</option>
+                        </select>
+                      </label>
+                    ))}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </section>
+        )}
+
+      {selected && userDetailTab === 'devices' && (
         <section className="identity-card" id="devices">
           <div className="topbar">
             <div>

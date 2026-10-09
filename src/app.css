@@ -9975,3 +9975,94 @@ pre {
     min-height: 94px;
   }
 }
+
+/* C11-F12 — progressive owner, purchase, inventory, product on mobile */
+.owner-users-create-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin: 6px 0 12px;
+}
+
+.owner-users-detail-tabs,
+.purchase-master-switch {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+  overflow-x: auto;
+  padding: 3px 1px;
+  scrollbar-width: thin;
+}
+
+.owner-users-detail-tabs > button,
+.purchase-master-switch > button {
+  flex: 0 0 auto;
+  min-height: var(--sj-touch-min);
+  padding: 0 14px;
+  border: 1px solid var(--sj-border);
+  border-radius: 12px;
+  background: var(--sj-surface);
+  color: var(--sj-text-muted);
+  font: inherit;
+  font-weight: 800;
+}
+
+.owner-users-detail-tabs > button.active,
+.purchase-master-switch > button.active {
+  border-color: var(--sj-brand-900);
+  background: var(--sj-brand-soft);
+  color: var(--sj-brand-900);
+}
+
+.owner-permission-groups {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.owner-permission-group {
+  padding: 10px 12px;
+  border: 1px solid var(--sj-border);
+  border-radius: 12px;
+  background: var(--sj-surface);
+}
+.owner-permission-group > summary {
+  min-height: 32px;
+  cursor: pointer;
+  font-weight: 800;
+}
+.owner-permission-group .stack {
+  margin-top: 12px;
+}
+
+.purchase-master-switch {
+  grid-column: 1 / -1;
+}
+.purchase-payable-toggle,
+.inventory-activity-toggle {
+  width: 100%;
+  justify-content: center;
+  margin: 9px 0;
+}
+
+.product-ops-back-list {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  .product-ops-layout[data-mobile-view='list'] .product-ops-detail,
+  .product-ops-layout[data-mobile-view='detail'] .product-ops-list {
+    display: none;
+  }
+  .product-ops-back-list {
+    display: inline-flex;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+  .owner-users-list .owner-user-card > .button-row {
+    padding-top: 8px;
+  }
+  .owner-users-create-toggle > button,
+  .purchase-master-switch > button {
+    min-height: var(--sj-touch-min);
+  }
+}
