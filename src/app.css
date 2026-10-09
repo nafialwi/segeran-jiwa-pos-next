@@ -10243,3 +10243,25 @@ pre {
   outline: 3px solid var(--sj-brand-900);
   outline-offset: 2px;
 }
+
+/* C11-F19 — compact finance overview at narrow phone widths */
+@media (max-width: 360px) {
+  .finance-workspace .finance-hero-icon {
+    display: none;
+  }
+
+  .finance-workspace .finance-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .finance-workspace .finance-summary-grid > article {
+    min-height: 100px;
+    padding: 10px;
+  }
+
+  .finance-workspace .finance-summary-grid article > strong {
+    font-size: 0.8rem;
+    overflow-wrap: anywhere;
+  }
+}
