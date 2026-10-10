@@ -1,0 +1,220 @@
+{
+  "source": "Supabase list_migrations read-only",
+  "project_ref": "pkynjaqrxhhnnfuaxoqp",
+  "observed_date": "2026-10-10",
+  "note": "Historical registry entries, not evidence that SQL source is identical. No DDL executed.",
+  "migrations": [
+    {
+      "version": "20260906171822",
+      "name": "cs02_system_metadata"
+    },
+    {
+      "version": "20260906171939",
+      "name": "cs02_identity_and_reference"
+    },
+    {
+      "version": "20260906172647",
+      "name": "cs02_idempotency_and_audit"
+    },
+    {
+      "version": "20260906172811",
+      "name": "cs02_inventory_authority"
+    },
+    {
+      "version": "20260906172916",
+      "name": "cs02_money_authority"
+    },
+    {
+      "version": "20260906173018",
+      "name": "cs02_rls_and_grants"
+    },
+    {
+      "version": "20260906173113",
+      "name": "cs02_explicit_read_grants"
+    },
+    {
+      "version": "20260906173248",
+      "name": "cs02_restrict_auto_rls_helper"
+    },
+    {
+      "version": "20260906173339",
+      "name": "cs02_performance_hardening"
+    },
+    {
+      "version": "20260907013121",
+      "name": "cs02_correct_schema_source_anchor"
+    },
+    {
+      "version": "20260907125437",
+      "name": "cs02_revoke_non_dml_table_privileges"
+    },
+    {
+      "version": "20260908101808",
+      "name": "cs03_identity_session_permission"
+    },
+    {
+      "version": "20260908102825",
+      "name": "cs03_revoke_private_helper_execute"
+    },
+    {
+      "version": "20260908125026",
+      "name": "cs03_bootstrap_uuid_correction"
+    },
+    {
+      "version": "20260920052018",
+      "name": "create_xp_termux_bridge"
+    },
+    {
+      "version": "20260920052104",
+      "name": "secure_xp_termux_relay_rls"
+    },
+    {
+      "version": "20260920055045",
+      "name": "cs05_cs06_closure_security_hardening"
+    },
+    {
+      "version": "20260920061428",
+      "name": "fin_p1_finance_foundation"
+    },
+    {
+      "version": "20260920062619",
+      "name": "fin_p2a_shift_funding_bridge"
+    },
+    {
+      "version": "20260920072419",
+      "name": "fin_p2b_shift_expense"
+    },
+    {
+      "version": "20260920072831",
+      "name": "fin_p2b1_expense_index_hardening"
+    },
+    {
+      "version": "20260920074406",
+      "name": "fin_p3_customer_debt_foundation"
+    },
+    {
+      "version": "20260920074800",
+      "name": "fin_p3a_rls_authority_bridge"
+    },
+    {
+      "version": "20260920080053",
+      "name": "fin_p4_qris_settlement_reconciliation"
+    },
+    {
+      "version": "20260920081641",
+      "name": "fin_p5_supplier_payable_foundation"
+    },
+    {
+      "version": "20260920082053",
+      "name": "fin_p5a_supplier_payment_method_api"
+    },
+    {
+      "version": "20260920082350",
+      "name": "fin_p5b_supplier_read_authority"
+    },
+    {
+      "version": "20260920083848",
+      "name": "fin_p6_expense_approval"
+    },
+    {
+      "version": "20260920102325",
+      "name": "uat_blocker_core_ui_recovery"
+    },
+    {
+      "version": "20260920102835",
+      "name": "uat_r1_sale_replay_stock_gate"
+    },
+    {
+      "version": "20260920103114",
+      "name": "uat_r2_recovery_index_hardening"
+    },
+    {
+      "version": "20260920104151",
+      "name": "uat_r3_purchase_front_door"
+    },
+    {
+      "version": "20260920104952",
+      "name": "uat_r1_sale_replay_stock_gate"
+    },
+    {
+      "version": "20260920131453",
+      "name": "fin_p7_employee_kasbon_foundation"
+    },
+    {
+      "version": "20260920133829",
+      "name": "fin_closure_owner_equity_personal_accounts"
+    },
+    {
+      "version": "20260920140136",
+      "name": "hrr_p1_transaction_history"
+    },
+    {
+      "version": "20260920161746",
+      "name": "hrr_p2_sale_refund"
+    },
+    {
+      "version": "20260920165744",
+      "name": "hrr_p3_reports_excel"
+    },
+    {
+      "version": "20260920223359",
+      "name": "hrr_p4_sale_correction"
+    },
+    {
+      "version": "20260921013229",
+      "name": "xp_connector_v2_additive_atomic_claim"
+    },
+    {
+      "version": "20260921013517",
+      "name": "xp_connector_v2_isolate_legacy_runner"
+    },
+    {
+      "version": "20260922125603",
+      "name": "c2a_product_variant_foundation"
+    },
+    {
+      "version": "20260922125644",
+      "name": "c2b_sale_execution_snapshot"
+    },
+    {
+      "version": "20260922125837",
+      "name": "c2c_read_projection_convergence"
+    },
+    {
+      "version": "20260922125859",
+      "name": "c3b_sales_facts_checkout"
+    },
+    {
+      "version": "20260922154038",
+      "name": "c10_shift_packaging_read_authority"
+    },
+    {
+      "version": "20260922160957",
+      "name": "c10_finance_overview_authority"
+    },
+    {
+      "version": "20260923102342",
+      "name": "c11f0a_product_master_editor"
+    },
+    {
+      "version": "20260923103004",
+      "name": "c11f0a_product_master_finished_good_guard"
+    },
+    {
+      "version": "20260923103505",
+      "name": "c11f0a_product_variant_source_sync"
+    },
+    {
+      "version": "20260923103536",
+      "name": "c11f0a_product_master_source_sync"
+    },
+    {
+      "version": "20260924050442",
+      "name": "c11f5_product_media"
+    },
+    {
+      "version": "20260924053235",
+      "name": "c11f5a_product_media_storage_policy_fix"
+    }
+  ]
+}
